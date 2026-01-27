@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getSession } from '@/lib/auth';
 import { InteractiveToolsSection } from './components/InteractiveToolsSection';
 import { Interactive5StepJourney } from './components/Interactive5StepJourney';
 import { RealSocialProof } from './components/RealSocialProof';
 import { WorkingTestimonialCarousel } from './components/WorkingTestimonialCarousel';
+import { TimCollinsStory } from './components/TimCollinsStory';
 
 function OrbitingSteps() {
   const [rotation, setRotation] = useState(0);
@@ -85,7 +88,7 @@ function OrbitingSteps() {
                   {step.num}
                 </div>
                 <h3 className="text-sm font-bold text-gray-900 text-center">{step.title}</h3>
-                <p className="text-xs text-gray-600 text-center mt-1">{step.desc}</p>
+                <p className="text-xs text-gray-800 text-center mt-1">{step.desc}</p>
               </div>
             </div>
           );
@@ -100,7 +103,25 @@ function OrbitingSteps() {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const session = await getSession();
+        // Only redirect if we have a confirmed session with a user
+        if (session && session.user) {
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        // If there's an error checking auth, don't redirect
+        console.error('Auth check error:', error);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -133,13 +154,13 @@ export default function Home() {
               LifeAligner
             </div>
             <div className="flex gap-6 items-center">
-              <Link href="#preview" className="text-gray-600 hover:text-gray-900 transition">
+              <Link href="#preview" className="text-gray-800 hover:text-gray-900 transition">
                 Preview
               </Link>
-              <Link href="#pricing" className="text-gray-600 hover:text-gray-900 transition">
+              <Link href="#pricing" className="text-gray-800 hover:text-gray-900 transition">
                 Pricing
               </Link>
-              <Link href="/login" className="text-gray-600 hover:text-gray-900 transition">
+              <Link href="/login" className="text-gray-800 hover:text-gray-900 transition">
                 Sign In
               </Link>
               <Link
@@ -175,9 +196,8 @@ export default function Home() {
               <p className="text-2xl md:text-3xl text-gray-700 mb-8">
                 Define what contentment means for <em>you</em> and create a roadmap to live it.
               </p>
-              <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto lg:mx-0">
-                Through the LifeAligner framework, you'll clarify your values, uncover your interests,
-                and build a personalized roadmap aligned with your purpose.
+              <p className="text-xl text-gray-800 mb-12 max-w-2xl mx-auto lg:mx-0">
+                A personal growth platform for <em>college students & young professionals</em>, built around the tools and frameworks that helped create billion-dollar success.
               </p>
               <div className="flex gap-4 justify-center lg:justify-start flex-wrap">
                 <Link
@@ -218,25 +238,19 @@ export default function Home() {
             </svg>
           </div>
         </div>
-
-        {/* Wave Divider - matches next section's background */}
-        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 z-20">
-          <svg className="relative block w-full h-24" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="waveGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: '#0a1f44', stopOpacity: 1 }} />
-                <stop offset="50%" style={{ stopColor: '#1e4d7b', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#3b8b9f', stopOpacity: 1 }} />
-              </linearGradient>
-            </defs>
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
-              fill="url(#waveGradient1)"></path>
-          </svg>
-        </div>
       </section>
+
+      {/* Tim Collins Story Section */}
+      <TimCollinsStory />
 
       {/* What is Contentment Section */}
       <section id="contentment" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#0a1f44] via-[#1e4d7b] to-[#3b8b9f] relative overflow-hidden">
+        {/* Decorative illustration - peaceful meditation */}
+        <img
+          src="/illustrations/peaceful-reflection.png"
+          alt=""
+          className="absolute top-8 right-8 w-32 h-32 opacity-80 pointer-events-none hidden md:block"
+        />
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -296,11 +310,17 @@ export default function Home() {
               fill="url(#waveGradient2)"></path>
           </svg>
         </div>
-      </section>
+      </section >
 
 
       {/* The Process Section */}
       <section id="process" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#a78bca] via-[#8b5fbf] to-[#5d2a8f] relative overflow-hidden">
+        {/* Decorative illustration - journey path */}
+        <img
+          src="/illustrations/journey-path.png"
+          alt=""
+          className="absolute bottom-256 left-8 w-32 h-32 opacity-100 pointer-events-none hidden md:block"
+        />
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-white mb-6">
@@ -322,7 +342,12 @@ export default function Home() {
               definitions for <em>you</em>."
             </p>
           </div>
-
+          {/* Decorative illustration - values thinking */}
+          <img
+            src="/illustrations/values-person.png"
+            alt=""
+            className="absolute top-8 right-8 w-32 h-32 opacity-80 pointer-events-none hidden md:block"
+          />
           {/* Interactive 5-Step Journey */}
           <Interactive5StepJourney />
         </div>
@@ -334,19 +359,19 @@ export default function Home() {
               className="fill-white"></path>
           </svg>
         </div>
-      </section>
+      </section >
 
       {/* The Tools Section */}
-      <InteractiveToolsSection />
+      < InteractiveToolsSection />
 
       {/* Social Proof - TEDx & Real Stats */}
-      <RealSocialProof />
+      < RealSocialProof />
 
       {/* Testimonial Carousel */}
-      <WorkingTestimonialCarousel />
+      < WorkingTestimonialCarousel />
 
       {/* CTA Section - FIXED: Changed text color from white to dark */}
-      <section id="cta" className="min-h-screen flex items-center py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
+      < section id="cta" className="min-h-screen flex items-center py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden" >
         <div className="max-w-4xl mx-auto px-4 text-center text-white">
           <h2 className="text-5xl md:text-6xl font-bold mb-6">
             Ready to Start Your Journey?

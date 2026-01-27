@@ -76,7 +76,7 @@ export function WorkingTestimonialCarousel() {
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">
                         Helping Thousands Find Their Path
                     </h2>
-                    <p className="text-xl text-gray-600">
+                    <p className="text-xl text-gray-800">
                         Students, professionals, and life-seekers discovering contentment
                     </p>
                 </div>
@@ -97,7 +97,7 @@ export function WorkingTestimonialCarousel() {
                                             </div>
                                             <div>
                                                 <h4 className="font-bold text-gray-900 text-lg">{testimonial.name}</h4>
-                                                <p className="text-gray-600">{testimonial.role}</p>
+                                                <p className="text-gray-800">{testimonial.role}</p>
                                             </div>
                                         </div>
                                         <p className="text-xl text-gray-700 italic leading-relaxed mb-4">

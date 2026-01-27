@@ -6,13 +6,19 @@ export function InteractiveToolsSection() {
     const [activeTab, setActiveTab] = useState<'lifeframe' | 'roadmap'>('lifeframe');
 
     return (
-        <section id="tools" className="min-h-screen flex items-center py-20 bg-white">
+        <section id="tools" className="min-h-screen flex items-center py-20 bg-white relative overflow-hidden">
+            {/* Decorative illustration - achievement */}
+            <img
+                src="/illustrations/achievement-checklist.png"
+                alt=""
+                className="absolute top-12 right-12 w-36 h-36 opacity-60 pointer-events-none hidden md:block"
+            />
             <div className="max-w-6xl mx-auto px-4 w-full">
                 <div className="text-center mb-12">
                     <h2 className="text-5xl font-bold text-gray-900 mb-6">
                         The LifeAligner Tools
                     </h2>
-                    <p className="text-xl text-gray-600">
+                    <p className="text-xl text-gray-800">
                         Interactive frameworks that evolve with you
                     </p>
                 </div>
@@ -22,8 +28,8 @@ export function InteractiveToolsSection() {
                     <button
                         onClick={() => setActiveTab('lifeframe')}
                         className={`px-8 py-4 rounded-full font-semibold text-lg transition-all ${activeTab === 'lifeframe'
-                                ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg scale-105'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-lg scale-105'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                             }`}
                     >
                         📋 LifeFrame
@@ -31,8 +37,8 @@ export function InteractiveToolsSection() {
                     <button
                         onClick={() => setActiveTab('roadmap')}
                         className={`px-8 py-4 rounded-full font-semibold text-lg transition-all ${activeTab === 'roadmap'
-                                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                             }`}
                     >
                         🗺️ Roadmap
@@ -56,21 +62,21 @@ export function InteractiveToolsSection() {
                                     <div className="space-y-4">
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-teal-500">
                                             <h4 className="font-bold text-gray-900 mb-2">📌 Values</h4>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-800">
                                                 Your principles and standards - the non-negotiables that guide your decisions
                                             </p>
                                         </div>
 
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-blue-500">
                                             <h4 className="font-bold text-gray-900 mb-2">❤️ Interests</h4>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-800">
                                                 Activities that energize you and deploy your creativity to help others
                                             </p>
                                         </div>
 
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-purple-500">
                                             <h4 className="font-bold text-gray-900 mb-2">🎯 Life Categories</h4>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-800">
                                                 The key areas of your life, including your Purpose
                                             </p>
                                         </div>
@@ -155,21 +161,21 @@ export function InteractiveToolsSection() {
                                     <div className="space-y-4">
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-blue-500">
                                             <h4 className="font-bold text-gray-900 mb-2">🎯 Life Categories</h4>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-800">
                                                 Health, Career, Relationships, Purpose, etc.
                                             </p>
                                         </div>
 
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-purple-500">
                                             <h4 className="font-bold text-gray-900 mb-2">⭐ Goals & Behavior Changes</h4>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-800">
                                                 Specific outcomes you want to achieve in each category
                                             </p>
                                         </div>
 
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-pink-500">
                                             <h4 className="font-bold text-gray-900 mb-2">✅ Activities</h4>
-                                            <p className="text-sm text-gray-600">
+                                            <p className="text-sm text-gray-800">
                                                 Concrete actions to accomplish your goals (next 3 months)
                                             </p>
                                         </div>
@@ -198,7 +204,7 @@ export function InteractiveToolsSection() {
                                             <p className="text-sm font-semibold text-gray-900 mb-2">
                                                 Goal: Improve physical fitness
                                             </p>
-                                            <div className="space-y-1 text-xs text-gray-600 ml-4">
+                                            <div className="space-y-1 text-xs text-gray-800 ml-4">
                                                 <div className="flex items-start gap-2">
                                                     <span className="text-green-600">✓</span>
                                                     <span>Exercise 5x per week</span>
@@ -226,7 +232,7 @@ export function InteractiveToolsSection() {
                                             <p className="text-sm font-semibold text-gray-900 mb-2">
                                                 Goal: Develop leadership skills
                                             </p>
-                                            <div className="space-y-1 text-xs text-gray-600 ml-4">
+                                            <div className="space-y-1 text-xs text-gray-800 ml-4">
                                                 <div className="flex items-start gap-2">
                                                     <span className="text-blue-600">✓</span>
                                                     <span>Lead team project Q1</span>

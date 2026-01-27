@@ -7,7 +7,7 @@ export function RealSocialProof() {
                     <h3 className="text-3xl font-bold text-gray-900 mb-4">
                         As Seen On TEDx
                     </h3>
-                    <p className="text-lg text-gray-600 mb-8">
+                    <p className="text-lg text-gray-800 mb-8">
                         Watch Tim Collins' talk: "Redefining Contentment"
                     </p>
 
@@ -36,7 +36,7 @@ export function RealSocialProof() {
                         <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
                             40+
                         </div>
-                        <p className="text-gray-600 text-lg">Years of Real-World Testing</p>
+                        <p className="text-gray-800 text-lg">Years of Real-World Testing</p>
                         <p className="text-sm text-gray-500 mt-2">Created at age 19, refined over decades</p>
                     </div>
 
@@ -44,7 +44,7 @@ export function RealSocialProof() {
                         <div className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                             $2B+
                         </div>
-                        <p className="text-gray-600 text-lg">Company Built Using This Framework</p>
+                        <p className="text-gray-800 text-lg">Company Built Using This Framework</p>
                         <p className="text-sm text-gray-500 mt-2">Tim grew EBSCO using these exact tools</p>
                     </div>
 
@@ -52,7 +52,7 @@ export function RealSocialProof() {
                         <div className="text-5xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent mb-2">
                             Free
                         </div>
-                        <p className="text-gray-600 text-lg">Always Free to Use</p>
+                        <p className="text-gray-800 text-lg">Always Free to Use</p>
                         <p className="text-sm text-gray-500 mt-2">No credit card required, ever</p>
                     </div>
                 </div>
