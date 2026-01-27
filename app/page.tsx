@@ -218,10 +218,25 @@ export default function Home() {
             </svg>
           </div>
         </div>
+
+        {/* Wave Divider - matches next section's background */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 z-20">
+          <svg className="relative block w-full h-24" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="waveGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: '#0a1f44', stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: '#1e4d7b', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#3b8b9f', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+              fill="url(#waveGradient1)"></path>
+          </svg>
+        </div>
       </section>
 
       {/* What is Contentment Section */}
-      <section id="contentment" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#0a1f44] via-[#1e4d7b] to-[#3b8b9f]">
+      <section id="contentment" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#0a1f44] via-[#1e4d7b] to-[#3b8b9f] relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -266,11 +281,26 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Wave Divider - matches next section's background */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 z-20">
+          <svg className="relative block w-full h-24" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style={{ stopColor: '#a78bca', stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: '#8b5fbf', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#5d2a8f', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+              fill="url(#waveGradient2)"></path>
+          </svg>
+        </div>
       </section>
 
 
       {/* The Process Section */}
-      <section id="process" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#a78bca] via-[#8b5fbf] to-[#5d2a8f]">
+      <section id="process" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#a78bca] via-[#8b5fbf] to-[#5d2a8f] relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-bold text-white mb-6">
@@ -296,6 +326,14 @@ export default function Home() {
           {/* Interactive 5-Step Journey */}
           <Interactive5StepJourney />
         </div>
+
+        {/* Wave Divider - matches next section's background (white) */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 z-20">
+          <svg className="relative block w-full h-24" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+              className="fill-white"></path>
+          </svg>
+        </div>
       </section>
 
       {/* The Tools Section */}
@@ -307,8 +345,8 @@ export default function Home() {
       {/* Testimonial Carousel */}
       <WorkingTestimonialCarousel />
 
-      {/* CTA Section */}
-      < section id="cta" className="min-h-screen flex items-center py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600" >
+      {/* CTA Section - FIXED: Changed text color from white to dark */}
+      <section id="cta" className="min-h-screen flex items-center py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
         <div className="max-w-4xl mx-auto px-4 text-center text-white">
           <h2 className="text-5xl md:text-6xl font-bold mb-6">
             Ready to Start Your Journey?
@@ -317,7 +355,7 @@ export default function Home() {
             Join thousands discovering their path to contentment
           </p>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-12 mb-12 animate-fade-in">
+          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-12 mb-12 animate-fade-in border border-white/20">
             <blockquote className="text-xl md:text-2xl italic mb-4">
               "When I created my first Roadmap at age 19, I had no idea I would be using it
               for the next 40 years or that doing so would enable me to find contentment."
