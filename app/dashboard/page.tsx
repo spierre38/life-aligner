@@ -162,10 +162,19 @@ export default function DashboardPage() {
 
                             {/* Step 2: Interests */}
                             <Link
-                                href="/workbook/interests"
-                                className={`p-6 rounded-xl border-2 transition-all hover:scale-105 ${progress.interests
-                                    ? 'bg-green-50 border-green-500'
-                                    : 'bg-gray-50 border-gray-200 hover:border-purple-500'
+                                href={progress.values ? "/workbook/interests" : "#"}
+                                onClick={(e) => {
+                                    if (!progress.values) {
+                                        e.preventDefault();
+                                        alert('Please complete the Values worksheet first.');
+                                    }
+                                }}
+                                className={`p-6 rounded-xl border-2 transition-all ${progress.values ? 'hover:scale-105' : 'cursor-not-allowed'
+                                    } ${progress.interests
+                                        ? 'bg-green-50 border-green-500'
+                                        : progress.values
+                                            ? 'bg-gray-50 border-gray-200 hover:border-purple-500'
+                                            : 'bg-gray-100 border-gray-300 opacity-50'
                                     }`}
                             >
                                 <div className="flex items-center gap-3 mb-3">
@@ -175,24 +184,45 @@ export default function DashboardPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
-                                    ) : (
+                                    ) : progress.values ? (
                                         <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                                             <span className="text-purple-600 font-bold">2</span>
+                                        </div>
+                                    ) : (
+                                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center relative">
+                                            <span className="text-gray-500 font-bold">2</span>
+                                            <svg className="w-4 h-4 text-gray-500 absolute -top-1 -right-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                            </svg>
                                         </div>
                                     )}
                                     <h4 className="text-lg font-bold text-gray-900">Interests</h4>
                                 </div>
                                 <p className="text-sm text-gray-800">
-                                    {progress.interests ? 'Completed ✓' : 'Identify your passions'}
+                                    {progress.interests
+                                        ? 'Completed ✓'
+                                        : progress.values
+                                            ? 'Identify your passions'
+                                            : '🔒 Complete Values first'}
                                 </p>
                             </Link>
 
 
                             {/* Step 3: Life Categories */}
-                            <div
-                                className={`p-6 rounded-xl border-2 ${progress.lifeCategories
-                                    ? 'bg-green-50 border-green-500'
-                                    : 'bg-gray-100 border-gray-200 opacity-50'
+                            <Link
+                                href={progress.interests ? "/workbook/life-categories" : "#"}
+                                onClick={(e) => {
+                                    if (!progress.interests) {
+                                        e.preventDefault();
+                                        alert('Please complete the Interests worksheet first.');
+                                    }
+                                }}
+                                className={`p-6 rounded-xl border-2 transition-all ${progress.interests ? 'hover:scale-105' : 'cursor-not-allowed'
+                                    } ${progress.lifeCategories
+                                        ? 'bg-green-50 border-green-500'
+                                        : progress.interests
+                                            ? 'bg-gray-50 border-gray-200 hover:border-purple-500'
+                                            : 'bg-gray-100 border-gray-300 opacity-50'
                                     }`}
                             >
                                 <div className="flex items-center gap-3 mb-3">
@@ -202,17 +232,29 @@ export default function DashboardPage() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
+                                    ) : progress.interests ? (
+                                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                            <span className="text-purple-600 font-bold">3</span>
+                                        </div>
                                     ) : (
-                                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                                            <span className="text-gray-800 font-bold">3</span>
+                                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center relative">
+                                            <span className="text-gray-500 font-bold">3</span>
+                                            <svg className="w-4 h-4 text-gray-500 absolute -top-1 -right-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                            </svg>
                                         </div>
                                     )}
                                     <h4 className="text-lg font-bold text-gray-900">Life Categories</h4>
                                 </div>
                                 <p className="text-sm text-gray-800">
-                                    {progress.lifeCategories ? 'Completed ✓' : 'Coming soon'}
+                                    {progress.lifeCategories
+                                        ? 'Completed ✓'
+                                        : progress.interests
+                                            ? 'Define your key areas'
+                                            : '🔒 Complete Interests first'}
                                 </p>
-                            </div>
+                            </Link>
+
 
                             {/* Step 4: LifeFrame */}
                             <div
