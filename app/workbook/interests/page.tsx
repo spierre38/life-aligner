@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
-import { AuthNavbar } from '@/app/components/AuthNavbar';
+import AuthNavbar from '@/app/components/AuthNavbar';
 
 // Interests from workbook page 15 - organized by category
 const INTERESTS_BY_CATEGORY = {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
-import { AuthNavbar } from '@/app/components/AuthNavbar';
+import AuthNavbar from '@/app/components/AuthNavbar';
 
 type LifeCategory = {
     name: string;
@@ -472,7 +472,7 @@ export default function LifeCategoriesWorksheet() {
                         </div>
                     )}
 
-                    {/* Step 5: The Actual Worksheet */}
+                    {/* Step 5: Gamified Card Builder */}
                     {currentStep === 5 && (
                         <div className="py-8 animate-fade-in">
                             <button
@@ -485,292 +485,296 @@ export default function LifeCategoriesWorksheet() {
                                 Back to Dashboard
                             </button>
 
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                                    🎯
+                            {/* Header with Progress */}
+                            <div className="mb-8">
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                                        🎯
+                                    </div>
+                                    <div>
+                                        <h1 className="text-4xl font-bold text-gray-900">Build Your LifeFrame</h1>
+                                        <p className="text-lg text-gray-800">Select categories, then define your purpose</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h1 className="text-4xl font-bold text-gray-900">Your Life Categories</h1>
-                                    <p className="text-lg text-gray-800">Define the key areas of your life</p>
-                                </div>
-                            </div>
 
-                            <div className="bg-white rounded-xl p-6 mb-8">
-                                <p className="text-gray-800">
-                                    These are the major areas of your life where you'll set goals. Start with the suggested
-                                    categories, then add or remove to make it personal to you.
-                                </p>
-                            </div>
-
-                            {/* Standard Categories Section */}
-                            <div className="mb-12">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Standard Life Categories</h2>
-                                <p className="text-gray-800 mb-6">
-                                    Click a category to add sub-categories (optional). Remove any that don't apply to you.
-                                </p>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {['Health', 'Relationships', 'Community', 'Education', 'Career', 'Financial', 'Spirituality'].map((cat) => {
-                                        const existing = categoryDetails.find(c => c.name === cat);
-                                        const isSelected = selectedCategories.has(cat);
-
-                                        return (
-                                            <div key={cat} className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 overflow-hidden">
-                                                <div className="p-4">
-                                                    <div className="flex items-start justify-between mb-3">
-                                                        <div className="flex items-center gap-3 flex-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    const newSelected = new Set(selectedCategories);
-                                                                    if (isSelected) {
-                                                                        newSelected.delete(cat);
-                                                                        // Remove from details too
-                                                                        setCategoryDetails(prev => prev.filter(c => c.name !== cat));
-                                                                    } else {
-                                                                        newSelected.add(cat);
-                                                                        // Add to details if not exists
-                                                                        if (!existing) {
-                                                                            setCategoryDetails(prev => [...prev, { name: cat, subCategories: [] }]);
-                                                                        }
-                                                                    }
-                                                                    setSelectedCategories(newSelected);
-                                                                }}
-                                                                className={`
-                                  w-6 h-6 rounded border-2 flex items-center justify-center transition-all
-                                  ${isSelected
-                                                                        ? 'bg-indigo-600 border-indigo-600'
-                                                                        : 'border-gray-300 hover:border-indigo-400'
-                                                                    }
-                                `}
-                                                            >
-                                                                {isSelected && (
-                                                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                    </svg>
-                                                                )}
-                                                            </button>
-                                                            <h3 className="text-lg font-bold text-gray-900">{cat}</h3>
-                                                        </div>
-                                                        {isSelected && (
-                                                            <button
-                                                                onClick={() => setEditingCategory(editingCategory === cat ? null : cat)}
-                                                                className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold"
-                                                            >
-                                                                {editingCategory === cat ? 'Done' : '+ Sub-categories'}
-                                                            </button>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Sub-categories */}
-                                                    {isSelected && existing && existing.subCategories.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mb-3">
-                                                            {existing.subCategories.map((sub) => (
-                                                                <div key={sub} className="bg-white px-3 py-1 rounded-full text-sm text-gray-800 flex items-center gap-2">
-                                                                    {sub}
-                                                                    <button
-                                                                        onClick={() => removeSubCategory(cat, sub)}
-                                                                        className="text-red-500 hover:text-red-700"
-                                                                    >
-                                                                        ×
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Add sub-category input */}
-                                                    {editingCategory === cat && isSelected && (
-                                                        <div className="flex gap-2 mt-3">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="e.g., Physical Health"
-                                                                value={customSubCategory}
-                                                                onChange={(e) => setCustomSubCategory(e.target.value)}
-                                                                onKeyPress={(e) => e.key === 'Enter' && addSubCategory(cat)}
-                                                                className="flex-1 px-3 py-2 border-2 border-gray-300 text-gray-900 rounded-lg focus:border-indigo-600 focus:outline-none text-sm"
-                                                            />
-                                                            <button
-                                                                onClick={() => addSubCategory(cat)}
-                                                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-semibold"
-                                                            >
-                                                                Add
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                {/* Visual Progress Tracker */}
+                                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-semibold text-gray-700">Your Progress</span>
+                                        <span className="text-sm font-bold text-indigo-600">
+                                            {categoryDetails.length + purposeElements.filter(p => p.name.trim()).length} items
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-xs text-gray-600">Categories</span>
+                                                <span className="text-xs font-bold text-blue-600">{categoryDetails.length}</span>
                                             </div>
+                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500"
+                                                    style={{ width: `${Math.min(100, (categoryDetails.length / 5) * 100)}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-xs text-gray-600">Purpose</span>
+                                                <span className="text-xs font-bold text-yellow-600">
+                                                    {purposeElements.filter(p => p.name.trim()).length}
+                                                </span>
+                                            </div>
+                                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-gradient-to-r from-yellow-500 to-orange-600 transition-all duration-500"
+                                                    style={{ width: `${Math.min(100, (purposeElements.filter(p => p.name.trim()).length / 3) * 100)}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Step 5A: Pick Your Categories */}
+                            <div className="mb-12">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                                        1
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Pick Your Categories</h2>
+                                        <p className="text-gray-800">Tap to add to your LifeFrame (aim for 5-8)</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                                    {[
+                                        { name: 'Health', emoji: '💪', color: 'from-red-500 to-pink-500' },
+                                        { name: 'Relationships', emoji: '❤️', color: 'from-pink-500 to-rose-500' },
+                                        { name: 'Community', emoji: '🤝', color: 'from-purple-500 to-indigo-500' },
+                                        { name: 'Education', emoji: '📚', color: 'from-blue-500 to-cyan-500' },
+                                        { name: 'Career', emoji: '💼', color: 'from-cyan-500 to-teal-500' },
+                                        { name: 'Financial', emoji: '💰', color: 'from-green-500 to-emerald-500' },
+                                        { name: 'Spirituality', emoji: '🙏', color: 'from-amber-500 to-yellow-500' },
+                                        { name: 'Creative', emoji: '🎨', color: 'from-orange-500 to-red-500' }
+                                    ].map((cat) => {
+                                        const isSelected = selectedCategories.has(cat.name);
+                                        return (
+                                            <button
+                                                key={cat.name}
+                                                onClick={() => {
+                                                    const newSelected = new Set(selectedCategories);
+                                                    if (isSelected) {
+                                                        newSelected.delete(cat.name);
+                                                        setCategoryDetails(prev => prev.filter(c => c.name !== cat.name));
+                                                    } else {
+                                                        newSelected.add(cat.name);
+                                                        const existing = categoryDetails.find(c => c.name === cat.name);
+                                                        if (!existing) {
+                                                            setCategoryDetails(prev => [...prev, { name: cat.name, subCategories: [] }]);
+                                                        }
+                                                    }
+                                                    setSelectedCategories(newSelected);
+                                                }}
+                                                className={`
+                          relative p-4 rounded-2xl transition-all duration-300 transform hover:scale-105
+                          ${isSelected
+                                                        ? `bg-gradient-to-br ${cat.color} text-white shadow-xl scale-105`
+                                                        : 'bg-white border-2 border-gray-200 hover:border-indigo-300 text-gray-800'
+                                                    }
+                        `}
+                                            >
+                                                <div className="text-3xl mb-2">{cat.emoji}</div>
+                                                <div className="font-bold text-sm">{cat.name}</div>
+                                                {isSelected && (
+                                                    <div className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </button>
                                         );
                                     })}
                                 </div>
-                            </div>
 
-                            {/* Add Custom Category */}
-                            <div className="mb-12">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-4">Add Your Own Categories</h2>
-                                <p className="text-gray-800 mb-6">
-                                    Have a unique category? Add it here (e.g., Creative Projects, Travel, Hobbies)
-                                </p>
-
-                                <div className="flex gap-3 mb-6">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter category name..."
-                                        value={customCategory}
-                                        onChange={(e) => setCustomCategory(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && addCategory()}
-                                        className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-900 rounded-xl focus:border-indigo-600 focus:outline-none"
-                                    />
-                                    <button
-                                        onClick={addCategory}
-                                        disabled={!customCategory.trim()}
-                                        className={`
-                      px-6 py-3 rounded-xl font-semibold transition
-                      ${customCategory.trim()
-                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                            }
-                    `}
-                                    >
-                                        Add Category
-                                    </button>
-                                </div>
-
-                                {/* Display custom categories */}
-                                {categoryDetails.filter(c => !['Health', 'Relationships', 'Community', 'Education', 'Career', 'Financial', 'Spirituality'].includes(c.name)).length > 0 && (
-                                    <div className="space-y-3">
-                                        {categoryDetails
-                                            .filter(c => !['Health', 'Relationships', 'Community', 'Education', 'Career', 'Financial', 'Spirituality'].includes(c.name))
-                                            .map((category) => (
-                                                <div key={category.name} className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 p-4">
-                                                    <div className="flex items-start justify-between mb-3">
-                                                        <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => setEditingCategory(editingCategory === category.name ? null : category.name)}
-                                                                className="text-purple-600 hover:text-purple-800 text-sm font-semibold"
-                                                            >
-                                                                {editingCategory === category.name ? 'Done' : '+ Sub-categories'}
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setCategoryDetails(prev => prev.filter(c => c.name !== category.name));
-                                                                    setSelectedCategories(prev => {
-                                                                        const newSet = new Set(prev);
-                                                                        newSet.delete(category.name);
-                                                                        return newSet;
-                                                                    });
-                                                                }}
-                                                                className="text-red-500 hover:text-red-700 text-sm font-semibold"
-                                                            >
-                                                                Remove
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Sub-categories */}
-                                                    {category.subCategories.length > 0 && (
-                                                        <div className="flex flex-wrap gap-2 mb-3">
-                                                            {category.subCategories.map((sub) => (
-                                                                <div key={sub} className="bg-white px-3 py-1 rounded-full text-sm text-gray-800 flex items-center gap-2">
-                                                                    {sub}
-                                                                    <button
-                                                                        onClick={() => removeSubCategory(category.name, sub)}
-                                                                        className="text-red-500 hover:text-red-700"
-                                                                    >
-                                                                        ×
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-
-                                                    {/* Add sub-category */}
-                                                    {editingCategory === category.name && (
-                                                        <div className="flex gap-2 mt-3">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Add sub-category..."
-                                                                value={customSubCategory}
-                                                                onChange={(e) => setCustomSubCategory(e.target.value)}
-                                                                onKeyPress={(e) => e.key === 'Enter' && addSubCategory(category.name)}
-                                                                className="flex-1 px-3 py-2 border-2 border-gray-300 text-gray-900 rounded-lg focus:border-purple-600 focus:outline-none text-sm"
-                                                            />
-                                                            <button
-                                                                onClick={() => addSubCategory(category.name)}
-                                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-semibold"
-                                                            >
-                                                                Add
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
+                                {/* Add Custom Category - Simplified */}
+                                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
+                                    <div className="flex gap-3">
+                                        <input
+                                            type="text"
+                                            placeholder="+ Add your own category (e.g., Travel, Hobbies)"
+                                            value={customCategory}
+                                            onChange={(e) => setCustomCategory(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && addCategory()}
+                                            className="flex-1 px-4 py-3 text-gray-900 rounded-lg border-2 border-gray-300 focus:border-indigo-600 focus:outline-none"
+                                        />
+                                        <button
+                                            onClick={addCategory}
+                                            disabled={!customCategory.trim()}
+                                            className={`
+                        px-6 py-3 rounded-lg font-semibold transition whitespace-nowrap
+                        ${customCategory.trim()
+                                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                }
+                      `}
+                                        >
+                                            Add
+                                        </button>
                                     </div>
-                                )}
+                                </div>
                             </div>
 
-                            {/* Purpose Section - Special Treatment */}
-                            <div className="mb-12">
-                                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border-3 border-yellow-300 p-8 mb-6">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-3xl">
-                                            ⭐
+                            {/* Step 5B: Your Selected Categories (Editable Cards) */}
+                            {categoryDetails.length > 0 && (
+                                <div className="mb-12">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold">
+                                            2
                                         </div>
                                         <div>
-                                            <h2 className="text-3xl font-bold text-gray-900">Your Purpose</h2>
-                                            <p className="text-gray-700">The most important category</p>
+                                            <h2 className="text-2xl font-bold text-gray-900">Refine Your Categories</h2>
+                                            <p className="text-gray-800">Optional: Add sub-categories for more detail</p>
                                         </div>
                                     </div>
 
-                                    <p className="text-gray-800 mb-4">
-                                        Define the elements of your purpose - your long-term goals that are both meaningful
-                                        to you and beneficial to others.
-                                    </p>
-
-                                    <div className="bg-white rounded-xl p-4 mb-4">
-                                        <p className="text-sm font-semibold text-gray-800 mb-2">Example Purpose Elements:</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {['Help Others', 'Help the Environment', 'Mentor Youth', 'Address Adult Loneliness',
-                                                'Improve Teen Financial Literacy', 'Cure Alzheimer\'s', 'Protect My Family'].map((example) => (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {categoryDetails.map((category) => (
+                                            <div key={category.name} className="bg-white rounded-xl border-2 border-indigo-200 p-5 hover:shadow-lg transition">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
                                                     <button
-                                                        key={example}
                                                         onClick={() => {
-                                                            // Quick-add example
-                                                            setPurposeElements(prev => [...prev, { name: example, description: '' }]);
+                                                            setCategoryDetails(prev => prev.filter(c => c.name !== category.name));
+                                                            setSelectedCategories(prev => {
+                                                                const newSet = new Set(prev);
+                                                                newSet.delete(category.name);
+                                                                return newSet;
+                                                            });
                                                         }}
-                                                        className="px-3 py-1 bg-yellow-100 hover:bg-yellow-200 text-gray-800 rounded-full text-sm transition"
+                                                        className="text-gray-400 hover:text-red-500 transition"
                                                     >
-                                                        + {example}
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
                                                     </button>
-                                                ))}
-                                        </div>
+                                                </div>
+
+                                                {/* Sub-categories display */}
+                                                {category.subCategories.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 mb-3">
+                                                        {category.subCategories.map((sub) => (
+                                                            <div key={sub} className="bg-indigo-50 px-3 py-1 rounded-full text-sm text-indigo-700 flex items-center gap-1">
+                                                                {sub}
+                                                                <button
+                                                                    onClick={() => removeSubCategory(category.name, sub)}
+                                                                    className="hover:text-red-500"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Add sub-category */}
+                                                {editingCategory === category.name ? (
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Add detail..."
+                                                            value={customSubCategory}
+                                                            onChange={(e) => setCustomSubCategory(e.target.value)}
+                                                            onKeyPress={(e) => e.key === 'Enter' && addSubCategory(category.name)}
+                                                            className="flex-1 px-3 py-2 text-gray-900 border border-gray-300 rounded-lg focus:border-indigo-600 focus:outline-none text-sm"
+                                                            autoFocus
+                                                        />
+                                                        <button
+                                                            onClick={() => addSubCategory(category.name)}
+                                                            className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-semibold"
+                                                        >
+                                                            ✓
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingCategory(null)}
+                                                            className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setEditingCategory(category.name)}
+                                                        className="text-sm text-indigo-600 hover:text-indigo-800 font-semibold"
+                                                    >
+                                                        + Add sub-category
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Step 5C: Define Your Purpose */}
+                            <div className="mb-12">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold">
+                                        ⭐
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Define Your Purpose</h2>
+                                        <p className="text-gray-800">How will you make a positive impact?</p>
                                     </div>
                                 </div>
 
-                                {/* Purpose Elements List */}
+                                {/* Quick-add examples */}
+                                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-200 mb-6">
+                                    <p className="text-sm font-semibold text-gray-800 mb-3">💡 Quick Add Examples:</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['Help Others', 'Help the Environment', 'Mentor Youth', 'Address Adult Loneliness',
+                                            'Improve Teen Financial Literacy', 'Protect My Family'].map((example) => (
+                                                <button
+                                                    key={example}
+                                                    onClick={() => {
+                                                        if (!purposeElements.find(p => p.name === example)) {
+                                                            setPurposeElements(prev => [...prev, { name: example, description: '' }]);
+                                                        }
+                                                    }}
+                                                    className="px-4 py-2 bg-white hover:bg-yellow-100 text-gray-800 rounded-lg text-sm font-medium transition shadow-sm hover:shadow"
+                                                >
+                                                    + {example}
+                                                </button>
+                                            ))}
+                                    </div>
+                                </div>
+
+                                {/* Purpose elements */}
                                 <div className="space-y-4">
                                     {purposeElements.map((element, index) => (
-                                        <div key={index} className="bg-white rounded-xl border-2 border-yellow-200 p-6">
-                                            <div className="flex items-start gap-4">
-                                                <div className="flex-1 space-y-3">
+                                        <div key={index} className="bg-white rounded-xl border-2 border-yellow-300 p-5 shadow-sm hover:shadow-md transition">
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
                                                     <input
                                                         type="text"
-                                                        placeholder="Purpose element (e.g., Help Others)"
+                                                        placeholder="Your purpose (e.g., Help Others)"
                                                         value={element.name}
                                                         onChange={(e) => updatePurposeElement(index, 'name', e.target.value)}
-                                                        className="w-full px-4 py-2 border-2 border-gray-300 text-gray-900 rounded-lg focus:border-yellow-500 focus:outline-none font-semibold"
+                                                        className="w-full px-4 py-2 text-gray-900 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none font-semibold mb-2"
                                                     />
                                                     <textarea
-                                                        placeholder="Optional: Describe how you want to achieve this..."
+                                                        placeholder="How will you achieve this? (optional)"
                                                         value={element.description}
                                                         onChange={(e) => updatePurposeElement(index, 'description', e.target.value)}
                                                         rows={2}
-                                                        className="w-full px-4 py-2 border-2 border-gray-300 text-gray-900 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
+                                                        className="w-full px-4 py-2 text-gray-900 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
                                                     />
                                                 </div>
                                                 <button
                                                     onClick={() => removePurposeElement(index)}
-                                                    className="text-red-500 hover:text-red-700 p-2"
+                                                    className="text-gray-400 hover:text-red-500 transition"
                                                 >
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -780,21 +784,20 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
                                     ))}
 
-                                    {/* Add Purpose Element Button */}
                                     <button
                                         onClick={addPurposeElement}
                                         className="w-full py-4 border-2 border-dashed border-yellow-300 rounded-xl text-yellow-700 hover:bg-yellow-50 font-semibold transition"
                                     >
-                                        + Add Purpose Element
+                                        + Add Another Purpose Element
                                     </button>
                                 </div>
                             </div>
 
-                            {/* Save Button */}
-                            <div className="flex justify-center gap-4 sticky bottom-8">
+                            {/* Save Button - Sticky at bottom */}
+                            <div className="sticky bottom-8 flex justify-center gap-4 pt-6">
                                 <button
                                     onClick={() => setCurrentStep(4)}
-                                    className="px-8 py-4 rounded-full font-bold text-lg border-2 border-gray-300 text-gray-800 hover:border-indigo-600 hover:text-indigo-600 transition"
+                                    className="px-8 py-4 bg-white border-2 border-gray-300 text-gray-800 rounded-full font-bold text-lg hover:border-indigo-600 hover:text-indigo-600 transition shadow-lg"
                                 >
                                     ← Back
                                 </button>
@@ -802,14 +805,22 @@ export default function LifeCategoriesWorksheet() {
                                     onClick={saveCategories}
                                     disabled={saving || (categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0)}
                                     className={`
-                    px-10 py-5 rounded-full font-bold text-xl shadow-2xl transition-all transform hover:scale-105
+                    px-12 py-4 rounded-full font-bold text-xl shadow-2xl transition-all transform hover:scale-105
                     ${saving || (categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0)
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                             : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-2xl'
                                         }
                   `}
                                 >
-                                    {saving ? 'Saving...' : 'Save & Continue →'}
+                                    {saving ? (
+                                        <span className="flex items-center gap-2">
+                                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Saving...
+                                        </span>
+                                    ) : '✓ Complete LifeFrame'}
                                 </button>
                             </div>
                         </div>

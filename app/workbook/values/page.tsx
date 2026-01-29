@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
-import { AuthNavbar } from '@/app/components/AuthNavbar';
+import AuthNavbar from '@/app/components/AuthNavbar';
 
 // Values from the workbook (pages 12-13)
 const VALUES_LIST = [
@@ -695,10 +695,10 @@ export default function ValuesWorksheet() {
                                                     onDrop={(e) => handleDrop(e, value.name)}
                                                     onDragEnd={handleDragEnd}
                                                     className={`flex items-center gap-4 p-4 rounded-xl transition-all cursor-move ${draggedItem === value.name
-                                                            ? 'opacity-50 scale-95'
-                                                            : dragOverItem === value.name
-                                                                ? 'bg-gradient-to-r from-purple-100 to-blue-100 ring-2 ring-purple-400 scale-105'
-                                                                : 'bg-gradient-to-r from-blue-50 to-purple-50 hover:shadow-md'
+                                                        ? 'opacity-50 scale-95'
+                                                        : dragOverItem === value.name
+                                                            ? 'bg-gradient-to-r from-purple-100 to-blue-100 ring-2 ring-purple-400 scale-105'
+                                                            : 'bg-gradient-to-r from-blue-50 to-purple-50 hover:shadow-md'
                                                         }`}
                                                 >
                                                     {/* Drag handle icon */}
