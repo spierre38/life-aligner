@@ -56,11 +56,24 @@ export default function SignUpPage() {
                     data: {
                         full_name: formData.fullName,
                     },
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
                 },
             });
 
             if (authError) {
-                setError(authError.message);
+                // Handle specific error messages
+                if (authError.message.includes('already registered') || authError.message.includes('already been registered')) {
+                    setError('This email is already registered. Please sign in or use a different email.');
+                } else {
+                    setError(authError.message);
+                }
+                setLoading(false);
+                return;
+            }
+
+            // Check if this is a duplicate signup (Supabase returns existing user without error in some configs)
+            if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+                setError('This email is already registered. Please sign in instead.');
                 setLoading(false);
                 return;
             }
