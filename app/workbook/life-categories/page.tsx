@@ -174,7 +174,7 @@ export default function LifeCategoriesWorksheet() {
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-800">Checking prerequisites...</p>
+                    <p className="text-gray-600">Checking prerequisites...</p>
                 </div>
             </div>
         );
@@ -190,7 +190,7 @@ export default function LifeCategoriesWorksheet() {
                         </svg>
                     </div>
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">Life Categories Saved! ✨</h2>
-                    <p className="text-xl text-gray-800">Redirecting to your dashboard...</p>
+                    <p className="text-xl text-gray-600">Redirecting to your dashboard...</p>
                 </div>
             </div>
         );
@@ -209,7 +209,7 @@ export default function LifeCategoriesWorksheet() {
                 </div>
 
                 <div className="max-w-6xl mx-auto px-4 py-12">
-                    {/* Step 1: Introduction (Purple Gradient - Like Page 16) */}
+                    {/* Step 1: Introduction */}
                     {currentStep === 1 && (
                         <div className="min-h-screen flex items-center justify-center animate-fade-in">
                             <div className="relative">
@@ -223,12 +223,12 @@ export default function LifeCategoriesWorksheet() {
                                         <h1 className="text-5xl font-bold text-gray-900 mb-6">
                                             Your Life Categories
                                         </h1>
-                                        <p className="text-xl text-gray-800 leading-relaxed mb-8">
+                                        <p className="text-xl text-gray-700 leading-relaxed mb-8">
                                             Life Categories are the key areas of your life that you want to focus on and set goals within.
                                             They provide structure to your roadmap and help you ensure you're making progress across
                                             all aspects of your life that matter to you.
                                         </p>
-                                        <p className="text-lg text-gray-700 mb-8">
+                                        <p className="text-lg text-gray-600 mb-8">
                                             LifeFrame • Step 3 of 5 • 15-20 minutes
                                         </p>
                                         <button
@@ -249,7 +249,7 @@ export default function LifeCategoriesWorksheet() {
                             <div className="max-w-4xl w-full">
                                 <button
                                     onClick={() => router.push('/dashboard')}
-                                    className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                    className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -279,7 +279,7 @@ export default function LifeCategoriesWorksheet() {
                                         <h2 className="text-3xl font-bold text-gray-900 mb-4">
                                             Life Categories & Purpose Explained
                                         </h2>
-                                        <p className="text-gray-800 mb-6">
+                                        <p className="text-gray-700 mb-6">
                                             In this video, Tim Collins explains how to identify the key areas of your life,
                                             create meaningful sub-categories, and most importantly - define your Purpose.
                                         </p>
@@ -293,7 +293,7 @@ export default function LifeCategoriesWorksheet() {
                                             </button>
                                             <button
                                                 onClick={() => setCurrentStep(1)}
-                                                className="px-8 py-4 rounded-full font-bold border-2 border-gray-300 text-gray-800 hover:border-purple-600 hover:text-purple-600 transition"
+                                                className="px-8 py-4 rounded-full font-bold border-2 border-gray-300 text-gray-700 hover:border-purple-600 hover:text-purple-600 transition"
                                             >
                                                 ← Back
                                             </button>
@@ -304,13 +304,13 @@ export default function LifeCategoriesWorksheet() {
                         </div>
                     )}
 
-                    {/* Step 3: Tim's Example (Like Page 17) */}
+                    {/* Step 3: Tim's Example */}
                     {currentStep === 3 && (
                         <div className="min-h-screen flex items-center justify-center py-20 animate-fade-in">
                             <div className="max-w-5xl w-full">
                                 <button
                                     onClick={() => setCurrentStep(2)}
-                                    className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                    className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -322,7 +322,7 @@ export default function LifeCategoriesWorksheet() {
                                     <h2 className="text-4xl font-bold text-gray-900 mb-6">
                                         Tim's Life Categories Example
                                     </h2>
-                                    <p className="text-lg text-gray-800 mb-8">
+                                    <p className="text-lg text-gray-600 mb-8">
                                         Here's how Tim Collins organized his Life Categories and Purpose over time:
                                     </p>
 
@@ -331,8 +331,8 @@ export default function LifeCategoriesWorksheet() {
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
                                                 <h3 className="text-xl font-bold text-gray-900 mb-3">Health</h3>
-                                                <p className="text-sm text-gray-700 mb-2">Sub-categories:</p>
-                                                <ul className="text-gray-800 space-y-1">
+                                                <p className="text-sm text-gray-600 mb-2">Sub-categories:</p>
+                                                <ul className="text-gray-700 space-y-1">
                                                     <li>• Physical Health</li>
                                                     <li>• Mental Health</li>
                                                 </ul>
@@ -340,8 +340,8 @@ export default function LifeCategoriesWorksheet() {
 
                                             <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
                                                 <h3 className="text-xl font-bold text-gray-900 mb-3">Relationships</h3>
-                                                <p className="text-sm text-gray-700 mb-2">Sub-categories:</p>
-                                                <ul className="text-gray-800 space-y-1">
+                                                <p className="text-sm text-gray-600 mb-2">Sub-categories:</p>
+                                                <ul className="text-gray-700 space-y-1">
                                                     <li>• Family</li>
                                                     <li>• Friends</li>
                                                     <li>• Partnership</li>
@@ -350,8 +350,8 @@ export default function LifeCategoriesWorksheet() {
 
                                             <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
                                                 <h3 className="text-xl font-bold text-gray-900 mb-3">Career</h3>
-                                                <p className="text-sm text-gray-700 mb-2">Sub-categories:</p>
-                                                <ul className="text-gray-800 space-y-1">
+                                                <p className="text-sm text-gray-600 mb-2">Sub-categories:</p>
+                                                <ul className="text-gray-700 space-y-1">
                                                     <li>• Business Growth</li>
                                                     <li>• Leadership Development</li>
                                                 </ul>
@@ -359,8 +359,8 @@ export default function LifeCategoriesWorksheet() {
 
                                             <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200">
                                                 <h3 className="text-xl font-bold text-gray-900 mb-3">Purpose</h3>
-                                                <p className="text-sm text-gray-700 mb-2">Elements:</p>
-                                                <ul className="text-gray-800 space-y-1">
+                                                <p className="text-sm text-gray-600 mb-2">Elements:</p>
+                                                <ul className="text-gray-700 space-y-1">
                                                     <li>• Help Others</li>
                                                     <li>• Help the Environment</li>
                                                 </ul>
@@ -368,7 +368,7 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
 
                                         <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
-                                            <p className="text-gray-800 italic">
+                                            <p className="text-gray-700 italic">
                                                 💡 <strong>Tim's Insight:</strong> "My categories evolved significantly over time.
                                                 In my 20s, I focused only on Health and Career. In my 30s, I added Relationships
                                                 and Purpose. Balance came gradually as I learned what truly mattered to me."
@@ -389,13 +389,13 @@ export default function LifeCategoriesWorksheet() {
                         </div>
                     )}
 
-                    {/* Step 4: Purpose Explanation (Like Page 18) */}
+                    {/* Step 4: Purpose Explanation */}
                     {currentStep === 4 && (
                         <div className="min-h-screen flex items-center justify-center py-20 animate-fade-in">
                             <div className="max-w-4xl w-full">
                                 <button
                                     onClick={() => setCurrentStep(3)}
-                                    className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                    className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -411,7 +411,7 @@ export default function LifeCategoriesWorksheet() {
                                         <h2 className="text-4xl font-bold text-gray-900 mb-4">
                                             Understanding Purpose
                                         </h2>
-                                        <p className="text-xl text-gray-800">
+                                        <p className="text-xl text-gray-600">
                                             The most important Life Category
                                         </p>
                                     </div>
@@ -419,7 +419,7 @@ export default function LifeCategoriesWorksheet() {
                                     <div className="space-y-8">
                                         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-8 border-2 border-indigo-200">
                                             <h3 className="text-2xl font-bold text-gray-900 mb-4">What is Purpose?</h3>
-                                            <p className="text-gray-800 leading-relaxed">
+                                            <p className="text-gray-700 leading-relaxed">
                                                 Purpose is possessing a deeply held belief in the value of one's life, driven by
                                                 long-term goals that are both <strong>meaningful to you</strong> and{' '}
                                                 <strong>beneficial to others</strong>.
@@ -429,7 +429,7 @@ export default function LifeCategoriesWorksheet() {
                                         <div className="grid md:grid-cols-2 gap-6">
                                             <div className="p-6 bg-gray-50 rounded-xl">
                                                 <h4 className="font-bold text-gray-900 mb-3">Questions to Ask:</h4>
-                                                <ul className="space-y-2 text-gray-800">
+                                                <ul className="space-y-2 text-gray-700">
                                                     <li>• What problems do I want to help solve?</li>
                                                     <li>• What impact do I want to make?</li>
                                                     <li>• How can I use my creativity to benefit others?</li>
@@ -439,7 +439,7 @@ export default function LifeCategoriesWorksheet() {
 
                                             <div className="p-6 bg-gray-50 rounded-xl">
                                                 <h4 className="font-bold text-gray-900 mb-3">Example Elements:</h4>
-                                                <ul className="space-y-2 text-gray-800">
+                                                <ul className="space-y-2 text-gray-700">
                                                     <li>• Help Others</li>
                                                     <li>• Help the Environment</li>
                                                     <li>• Mentor Youth</li>
@@ -472,12 +472,12 @@ export default function LifeCategoriesWorksheet() {
                         </div>
                     )}
 
-                    {/* Step 5: Gamified Card Builder */}
+                    {/* Step 5: Gamified Card Builder - CONTINUED IN NEXT MESSAGE DUE TO LENGTH */}
                     {currentStep === 5 && (
                         <div className="py-8 animate-fade-in">
                             <button
                                 onClick={() => router.push('/dashboard')}
-                                className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -493,14 +493,14 @@ export default function LifeCategoriesWorksheet() {
                                     </div>
                                     <div>
                                         <h1 className="text-4xl font-bold text-gray-900">Build Your LifeFrame</h1>
-                                        <p className="text-lg text-gray-800">Select categories, then define your purpose</p>
+                                        <p className="text-lg text-gray-600">Select categories, then define your purpose</p>
                                     </div>
                                 </div>
 
                                 {/* Visual Progress Tracker */}
                                 <div className="bg-white rounded-2xl p-6 shadow-lg">
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-sm font-semibold text-gray-700">Your Progress</span>
+                                        <span className="text-sm font-semibold text-gray-600">Your Progress</span>
                                         <span className="text-sm font-bold text-indigo-600">
                                             {categoryDetails.length + purposeElements.filter(p => p.name.trim()).length} items
                                         </span>
@@ -508,7 +508,7 @@ export default function LifeCategoriesWorksheet() {
                                     <div className="flex gap-2">
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs text-gray-600">Categories</span>
+                                                <span className="text-xs text-gray-500">Categories</span>
                                                 <span className="text-xs font-bold text-blue-600">{categoryDetails.length}</span>
                                             </div>
                                             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -520,7 +520,7 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs text-gray-600">Purpose</span>
+                                                <span className="text-xs text-gray-500">Purpose</span>
                                                 <span className="text-xs font-bold text-yellow-600">
                                                     {purposeElements.filter(p => p.name.trim()).length}
                                                 </span>
@@ -544,20 +544,20 @@ export default function LifeCategoriesWorksheet() {
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-bold text-gray-900">Pick Your Categories</h2>
-                                        <p className="text-gray-800">Tap to add to your LifeFrame (aim for 5-8)</p>
+                                        <p className="text-gray-600">Tap to add to your LifeFrame (aim for 5-8)</p>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                                     {[
-                                        { name: 'Health', emoji: '💪', color: 'from-red-500 to-pink-500' },
-                                        { name: 'Relationships', emoji: '❤️', color: 'from-pink-500 to-rose-500' },
-                                        { name: 'Community', emoji: '🤝', color: 'from-purple-500 to-indigo-500' },
-                                        { name: 'Education', emoji: '📚', color: 'from-blue-500 to-cyan-500' },
-                                        { name: 'Career', emoji: '💼', color: 'from-cyan-500 to-teal-500' },
-                                        { name: 'Financial', emoji: '💰', color: 'from-green-500 to-emerald-500' },
-                                        { name: 'Spirituality', emoji: '🙏', color: 'from-amber-500 to-yellow-500' },
-                                        { name: 'Creative', emoji: '🎨', color: 'from-orange-500 to-red-500' }
+                                        { name: 'Health', emoji: '💪', color: 'from-red-50 to-pink-50', glow: 'shadow-red-200/50', selected: 'from-red-500 to-pink-500' },
+                                        { name: 'Relationships', emoji: '❤️', color: 'from-pink-50 to-rose-50', glow: 'shadow-pink-200/50', selected: 'from-pink-500 to-rose-500' },
+                                        { name: 'Community', emoji: '🤝', color: 'from-purple-50 to-indigo-50', glow: 'shadow-purple-200/50', selected: 'from-purple-500 to-indigo-500' },
+                                        { name: 'Education', emoji: '📚', color: 'from-blue-50 to-cyan-50', glow: 'shadow-blue-200/50', selected: 'from-blue-500 to-cyan-500' },
+                                        { name: 'Career', emoji: '💼', color: 'from-cyan-50 to-teal-50', glow: 'shadow-cyan-200/50', selected: 'from-cyan-500 to-teal-500' },
+                                        { name: 'Financial', emoji: '💰', color: 'from-green-50 to-emerald-50', glow: 'shadow-green-200/50', selected: 'from-green-500 to-emerald-500' },
+                                        { name: 'Spirituality', emoji: '🙏', color: 'from-amber-50 to-yellow-50', glow: 'shadow-amber-200/50', selected: 'from-amber-500 to-yellow-500' },
+                                        { name: 'Creative', emoji: '🎨', color: 'from-orange-50 to-red-50', glow: 'shadow-orange-200/50', selected: 'from-orange-500 to-red-500' }
                                     ].map((cat) => {
                                         const isSelected = selectedCategories.has(cat.name);
                                         return (
@@ -578,12 +578,15 @@ export default function LifeCategoriesWorksheet() {
                                                     setSelectedCategories(newSelected);
                                                 }}
                                                 className={`
-                          relative p-4 rounded-2xl transition-all duration-300 transform hover:scale-105
+                          relative p-6 rounded-2xl transition-all duration-300 transform
                           ${isSelected
-                                                        ? `bg-gradient-to-br ${cat.color} text-white shadow-xl scale-105`
-                                                        : 'bg-white border-2 border-gray-200 hover:border-indigo-300 text-gray-800'
+                                                        ? `bg-gradient-to-br ${cat.selected} text-white shadow-2xl scale-105`
+                                                        : `bg-gradient-to-br ${cat.color} border border-gray-100 text-gray-700 hover:scale-105 hover:shadow-xl hover:${cat.glow}`
                                                     }
                         `}
+                                                style={!isSelected ? {
+                                                    boxShadow: '0 4px 14px 0 rgba(0, 0, 0, 0.05)'
+                                                } : undefined}
                                             >
                                                 <div className="text-3xl mb-2">{cat.emoji}</div>
                                                 <div className="font-bold text-sm">{cat.name}</div>
@@ -608,7 +611,7 @@ export default function LifeCategoriesWorksheet() {
                                             value={customCategory}
                                             onChange={(e) => setCustomCategory(e.target.value)}
                                             onKeyPress={(e) => e.key === 'Enter' && addCategory()}
-                                            className="flex-1 px-4 py-3 text-gray-900 rounded-lg border-2 border-gray-300 focus:border-indigo-600 focus:outline-none"
+                                            className="flex-1 px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-indigo-600 focus:outline-none"
                                         />
                                         <button
                                             onClick={addCategory}
@@ -636,7 +639,7 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
                                         <div>
                                             <h2 className="text-2xl font-bold text-gray-900">Refine Your Categories</h2>
-                                            <p className="text-gray-800">Optional: Add sub-categories for more detail</p>
+                                            <p className="text-gray-600">Optional: Add sub-categories for more detail</p>
                                         </div>
                                     </div>
 
@@ -688,7 +691,7 @@ export default function LifeCategoriesWorksheet() {
                                                             value={customSubCategory}
                                                             onChange={(e) => setCustomSubCategory(e.target.value)}
                                                             onKeyPress={(e) => e.key === 'Enter' && addSubCategory(category.name)}
-                                                            className="flex-1 px-3 py-2 text-gray-900 border border-gray-300 rounded-lg focus:border-indigo-600 focus:outline-none text-sm"
+                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-indigo-600 focus:outline-none text-sm"
                                                             autoFocus
                                                         />
                                                         <button
@@ -726,13 +729,13 @@ export default function LifeCategoriesWorksheet() {
                                     </div>
                                     <div>
                                         <h2 className="text-2xl font-bold text-gray-900">Define Your Purpose</h2>
-                                        <p className="text-gray-800">How will you make a positive impact?</p>
+                                        <p className="text-gray-600">How will you make a positive impact?</p>
                                     </div>
                                 </div>
 
                                 {/* Quick-add examples */}
                                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-200 mb-6">
-                                    <p className="text-sm font-semibold text-gray-800 mb-3">💡 Quick Add Examples:</p>
+                                    <p className="text-sm font-semibold text-gray-700 mb-3">💡 Quick Add Examples:</p>
                                     <div className="flex flex-wrap gap-2">
                                         {['Help Others', 'Help the Environment', 'Mentor Youth', 'Address Adult Loneliness',
                                             'Improve Teen Financial Literacy', 'Protect My Family'].map((example) => (
@@ -743,7 +746,7 @@ export default function LifeCategoriesWorksheet() {
                                                             setPurposeElements(prev => [...prev, { name: example, description: '' }]);
                                                         }
                                                     }}
-                                                    className="px-4 py-2 bg-white hover:bg-yellow-100 text-gray-800 rounded-lg text-sm font-medium transition shadow-sm hover:shadow"
+                                                    className="px-4 py-2 bg-white hover:bg-yellow-100 text-gray-700 rounded-lg text-sm font-medium transition shadow-sm hover:shadow"
                                                 >
                                                     + {example}
                                                 </button>
@@ -762,14 +765,14 @@ export default function LifeCategoriesWorksheet() {
                                                         placeholder="Your purpose (e.g., Help Others)"
                                                         value={element.name}
                                                         onChange={(e) => updatePurposeElement(index, 'name', e.target.value)}
-                                                        className="w-full px-4 py-2 text-gray-900 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none font-semibold mb-2"
+                                                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none font-semibold mb-2"
                                                     />
                                                     <textarea
                                                         placeholder="How will you achieve this? (optional)"
                                                         value={element.description}
                                                         onChange={(e) => updatePurposeElement(index, 'description', e.target.value)}
                                                         rows={2}
-                                                        className="w-full px-4 py-2 text-gray-900 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
+                                                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none text-sm"
                                                     />
                                                 </div>
                                                 <button
@@ -797,7 +800,7 @@ export default function LifeCategoriesWorksheet() {
                             <div className="sticky bottom-8 flex justify-center gap-4 pt-6">
                                 <button
                                     onClick={() => setCurrentStep(4)}
-                                    className="px-8 py-4 bg-white border-2 border-gray-300 text-gray-800 rounded-full font-bold text-lg hover:border-indigo-600 hover:text-indigo-600 transition shadow-lg"
+                                    className="px-8 py-4 bg-white border-2 border-gray-300 text-gray-700 rounded-full font-bold text-lg hover:border-indigo-600 hover:text-indigo-600 transition shadow-lg"
                                 >
                                     ← Back
                                 </button>
