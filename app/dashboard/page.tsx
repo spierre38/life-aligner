@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import WelcomeAnimation from '@/app/components/WelcomeAnimation';
 
 type WorksheetStatus = {
     values: boolean;
@@ -22,6 +23,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [showWelcome, setShowWelcome] = useState(false);
     const [status, setStatus] = useState<WorksheetStatus>({
         values: false,
         interests: false,
@@ -43,6 +45,11 @@ export default function DashboardPage() {
                     return;
                 }
                 setUser(userWithProfile);
+
+                // Check if this is first time seeing welcome
+                if (!userWithProfile.profile?.welcome_seen) {
+                    setShowWelcome(true);
+                }
 
                 // Check completion status
                 const { data: worksheets } = await supabase
@@ -148,6 +155,16 @@ export default function DashboardPage() {
                     <p className="text-gray-600">Loading your dashboard...</p>
                 </div>
             </div>
+        );
+    }
+
+    // Show welcome animation on first login
+    if (showWelcome) {
+        return (
+            <WelcomeAnimation
+                onComplete={() => setShowWelcome(false)}
+                userName={user?.profile?.full_name}
+            />
         );
     }
 

@@ -106,6 +106,18 @@ export default function Home() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('hero');
 
+  // Handle auth tokens in URL hash (from email verification)
+  useEffect(() => {
+    const hash = window.location.hash;
+
+    if (hash && hash.includes('access_token')) {
+      // User was redirected here after email verification with tokens in hash
+      // Extract tokens and redirect to dashboard
+      console.log('Auth tokens detected in URL hash, redirecting to dashboard...');
+      router.push('/dashboard');
+    }
+  }, [router]);
+
   // Redirect authenticated users to dashboard
   useEffect(() => {
     const checkAuth = async () => {
