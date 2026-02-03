@@ -50,10 +50,10 @@ export function RealSocialProof() {
 
                     <div className="text-center bg-white rounded-2xl p-8 shadow-lg">
                         <div className="text-5xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                            Free
+                            Proven
                         </div>
-                        <p className="text-gray-800 text-lg">Always Free to Use</p>
-                        <p className="text-sm text-gray-500 mt-2">No credit card required, ever</p>
+                        <p className="text-gray-800 text-lg">Time-Tested Framework</p>
+                        <p className="text-sm text-gray-500 mt-2">Validated by decades of consistent results</p>
                     </div>
                 </div>
             </div>

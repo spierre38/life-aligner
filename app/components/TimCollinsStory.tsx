@@ -39,9 +39,9 @@ export function TimCollinsStory() {
 
                         <div className="space-y-4 text-lg text-gray-700 leading-relaxed">
                             <p>
-                                I spent decades developing and creating <strong>EBSCO</strong>,
-                                building a <strong>$2 billion company</strong>. On paper, I had everything.
-                                But something was missing.
+                                It took me <strong>20 years</strong> to build the company I co-founded while in college
+                                into a <strong>successful industry leader</strong>...only to learn that despite all
+                                my accomplishments in business, <strong>I wasn't feeling content</strong>.
                             </p>
 
                             <p>
@@ -57,8 +57,8 @@ export function TimCollinsStory() {
                         {/* Attribution */}
                         <div className="pt-4 border-t border-gray-200">
                             <p className="font-semibold text-gray-900 text-lg">Tim Collins</p>
-                            <p className="text-gray-800">Former Executive and Co-Founder, The EBSCO Company</p>
-                            <p className="text-gray-800">TEDx Speaker • Framework Creator</p>
+                            <p className="text-gray-800">Founder EBSCO Publishing, Former CEO </p>
+                            <p className="text-gray-800">TEDx Speaker • LifeAligner Framework Creator</p>
                         </div>
                     </div>
                 </div>

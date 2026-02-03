@@ -20,15 +20,8 @@ function LoginFormWithParams() {
     // Check for URL parameters (verification success/error)
     useEffect(() => {
         const errorParam = searchParams.get('error');
-
         if (errorParam === 'verification_failed') {
             setError('Email verification failed. Please try signing up again or contact support.');
-        } else if (errorParam === 'link_expired') {
-            setError('Your verification link has expired. Please sign up again to receive a new verification email.');
-        } else if (errorParam === 'link_used') {
-            setError('This verification link has already been used. If you created an account, please sign in below.');
-        } else if (errorParam === 'access_denied') {
-            setError('Access denied. The verification link may be invalid or expired. Please try signing up again.');
         }
     }, [searchParams]);
 

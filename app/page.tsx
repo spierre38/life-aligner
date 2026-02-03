@@ -106,18 +106,6 @@ export default function Home() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('hero');
 
-  // Handle auth tokens in URL hash (from email verification)
-  useEffect(() => {
-    const hash = window.location.hash;
-
-    if (hash && hash.includes('access_token')) {
-      // User was redirected here after email verification with tokens in hash
-      // Extract tokens and redirect to dashboard
-      console.log('Auth tokens detected in URL hash, redirecting to dashboard...');
-      router.push('/dashboard');
-    }
-  }, [router]);
-
   // Redirect authenticated users to dashboard
   useEffect(() => {
     const checkAuth = async () => {
@@ -209,7 +197,7 @@ export default function Home() {
                 Define what contentment means for <em>you</em> and create a roadmap to live it.
               </p>
               <p className="text-xl text-gray-800 mb-12 max-w-2xl mx-auto lg:mx-0">
-                A personal growth platform for <em>college students & young professionals</em>, built around the tools and frameworks that helped create billion-dollar success.
+                A personal growth platform for <em>all ages</em>, built around the tools and frameworks that helped create billion-dollar success.
               </p>
               <div className="flex gap-4 justify-center lg:justify-start flex-wrap">
                 <Link
@@ -271,11 +259,11 @@ export default function Home() {
               </h2>
               <blockquote className="text-2xl text-blue-100 italic border-l-4 border-blue-400 pl-6">
                 "Feeling good about yourself and your life because you are engaging in activities
-                that cause you to experience Happiness and Fulfillment."
+                that you enjoy, that cause you to experience Happiness and Fulfillment."
               </blockquote>
               <p className="text-lg text-blue-200 leading-relaxed">
                 <strong className="text-white">Happiness</strong> comes from activities that
-                rejuvenate you. But contentment requires more—it needs <strong className="text-white">sustained
+                rejuvenate you. But contentment also requires <strong className="text-white">sustained
                   fulfillment</strong> from pursuing goals aligned with your values and purpose.
               </p>
             </div>
@@ -289,6 +277,14 @@ export default function Home() {
                 </p>
               </div>
 
+              <div className="bg-gradient-to-br from-pink-700 to-pink-800 p-8 rounded-2xl animate-fade-in border border-pink-600">
+                <h3 className="text-2xl font-bold text-pink-100 mb-4">Your Interests</h3>
+                <p className="text-pink-200">
+                  Activities that bring you joy, rejuvenation, and allow you to deploy
+                  your creativity to benefit others.
+                </p>
+              </div>
+
               <div className="bg-gradient-to-br from-purple-700 to-purple-800 p-8 rounded-2xl animate-fade-in border border-purple-600">
                 <h3 className="text-2xl font-bold text-purple-100 mb-4">Your Purpose</h3>
                 <p className="text-purple-200">
@@ -297,13 +293,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-pink-700 to-pink-800 p-8 rounded-2xl animate-fade-in border border-pink-600">
-                <h3 className="text-2xl font-bold text-pink-100 mb-4">Your Interests</h3>
-                <p className="text-pink-200">
-                  Activities that bring you joy, rejuvenation, and allow you to deploy
-                  your creativity to benefit others.
-                </p>
-              </div>
+
             </div>
           </div>
         </div>

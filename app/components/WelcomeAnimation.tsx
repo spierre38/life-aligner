@@ -257,10 +257,10 @@ export default function WelcomeAnimation({ onComplete, userName }: WelcomeAnimat
                         <div
                             key={index}
                             className={`w-2 h-2 rounded-full transition-all ${index + 2 === currentSlide
-                                    ? 'bg-white w-8'
-                                    : index + 2 < currentSlide
-                                        ? 'bg-white/50'
-                                        : 'bg-white/20'
+                                ? 'bg-white w-8'
+                                : index + 2 < currentSlide
+                                    ? 'bg-white/50'
+                                    : 'bg-white/20'
                                 }`}
                         ></div>
                     ))}

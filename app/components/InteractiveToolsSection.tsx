@@ -63,14 +63,14 @@ export function InteractiveToolsSection() {
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-teal-500">
                                             <h4 className="font-bold text-gray-900 mb-2">📌 Values</h4>
                                             <p className="text-sm text-gray-800">
-                                                Your principles and standards - the non-negotiables that guide your decisions
+                                                Your principles and standards of behavior - the non-negotiables that guide your decisions
                                             </p>
                                         </div>
 
                                         <div className="bg-white rounded-xl p-4 border-l-4 border-blue-500">
                                             <h4 className="font-bold text-gray-900 mb-2">❤️ Interests</h4>
                                             <p className="text-sm text-gray-800">
-                                                Activities that energize you and deploy your creativity to help others
+                                                Activities that energize you and enable you to deploy your creativity to help others
                                             </p>
                                         </div>
 
@@ -98,10 +98,10 @@ export function InteractiveToolsSection() {
                                     <div className="mb-6">
                                         <div className="flex items-center gap-2 mb-3">
                                             <span className="text-xl">📌</span>
-                                            <h5 className="font-semibold text-gray-900">Top Values</h5>
+                                            <h5 className="font-semibold text-gray-900">Values</h5>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
-                                            {['Integrity', 'Growth', 'Family', 'Creativity'].map((value) => (
+                                            {['Continuous Improvement', 'Generosity', 'Honesty', 'Humility', 'Open Mindedness', 'Positivity'].map((value) => (
                                                 <span
                                                     key={value}
                                                     className="bg-gradient-to-r from-teal-100 to-blue-100 px-3 py-1 rounded-full text-sm font-medium text-gray-700"
@@ -116,7 +116,7 @@ export function InteractiveToolsSection() {
                                     <div className="mb-6">
                                         <div className="flex items-center gap-2 mb-3">
                                             <span className="text-xl">❤️</span>
-                                            <h5 className="font-semibold text-gray-900">Key Interests</h5>
+                                            <h5 className="font-semibold text-gray-900">Interests</h5>
                                         </div>
                                         <div className="space-y-2">
                                             <div className="bg-blue-50 rounded-lg px-3 py-2 text-sm text-gray-700">
@@ -132,7 +132,7 @@ export function InteractiveToolsSection() {
                                     <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-xl">🎯</span>
-                                            <h5 className="font-semibold text-gray-900">My Purpose</h5>
+                                            <h5 className="font-semibold text-gray-900">Purpose</h5>
                                         </div>
                                         <p className="text-sm text-gray-700 italic">
                                             "Help others discover meaningful work that aligns with their values"
