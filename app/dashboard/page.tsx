@@ -67,32 +67,39 @@ export default function DashboardPage() {
 
                 // Load roadmap data and calculate stats
                 const roadmapEntry = worksheets?.find(w => w.category === 'roadmap');
-                if (roadmapEntry && roadmapEntry.content?.goals) {
+                if (roadmapEntry && roadmapEntry.content?.items) {
                     setHasRoadmap(true);
-                    const goals = roadmapEntry.content.goals;
+                    const items = roadmapEntry.content.items;
 
-                    // Calculate stats
-                    const active = goals.filter((g: any) => !g.completed).length;
-                    const completed = goals.filter((g: any) => g.completed).length;
+                    // Calculate stats based on new roadmap structure
+                    const activeItems = items.filter((item: any) => !item.archived);
+                    const archivedItems = items.filter((item: any) => item.archived);
 
-                    // Calculate weekly progress based on habits
-                    let habitsCompleted = 0;
-                    let totalHabits = 0;
-                    goals.forEach((goal: any) => {
-                        goal.activities?.forEach((activity: any) => {
-                            if (activity.is_habit && activity.habit_days) {
-                                totalHabits += 7;
-                                habitsCompleted += activity.habit_days.filter(Boolean).length;
+                    // Count total reflections across all items
+                    const totalReflections = items.reduce((sum: number, item: any) =>
+                        sum + (item.reflections?.length || 0), 0
+                    );
+
+                    // Calculate activity completion rate (activities done at least once)
+                    let totalActivities = 0;
+                    let completedActivities = 0;
+                    items.forEach((item: any) => {
+                        item.activities?.forEach((activity: any) => {
+                            totalActivities++;
+                            if (activity.completed_dates && activity.completed_dates.length > 0) {
+                                completedActivities++;
                             }
                         });
                     });
 
-                    const weeklyProgress = totalHabits > 0 ? Math.round((habitsCompleted / totalHabits) * 100) : 0;
+                    const activityProgress = totalActivities > 0
+                        ? Math.round((completedActivities / totalActivities) * 100)
+                        : 0;
 
                     setRoadmapStats({
-                        activeGoals: active,
-                        completedGoals: completed,
-                        weeklyProgress
+                        activeGoals: activeItems.length,
+                        completedGoals: totalReflections,
+                        weeklyProgress: activityProgress
                     });
                 } else {
                     setHasRoadmap(false);
@@ -327,15 +334,15 @@ export default function DashboardPage() {
                                 <div className="grid md:grid-cols-3 gap-4">
                                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 text-center">
                                         <div className="text-3xl font-bold text-indigo-600 mb-2">{roadmapStats.activeGoals}</div>
-                                        <div className="text-sm text-gray-600">Active Goals</div>
+                                        <div className="text-sm text-gray-600">Active Items</div>
                                     </div>
                                     <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 text-center">
                                         <div className="text-3xl font-bold text-green-600 mb-2">{roadmapStats.completedGoals}</div>
-                                        <div className="text-sm text-gray-600">Completed</div>
+                                        <div className="text-sm text-gray-600">Reflections</div>
                                     </div>
                                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 text-center">
                                         <div className="text-3xl font-bold text-purple-600 mb-2">{roadmapStats.weeklyProgress}%</div>
-                                        <div className="text-sm text-gray-600">This Week</div>
+                                        <div className="text-sm text-gray-600">Activities Started</div>
                                     </div>
                                 </div>
                             ) : (

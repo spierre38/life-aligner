@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
@@ -109,6 +109,9 @@ export default function ValuesWorksheet() {
     const [hoveredValue, setHoveredValue] = useState<string | null>(null);
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+    const [editingPriority, setEditingPriority] = useState<{ name: string, value: string } | null>(null);
+    // Ref for auto-scroll during drag
+    const scrollInterval = useRef<NodeJS.Timeout | null>(null);
 
     // Check authentication on mount
     useEffect(() => {
@@ -150,6 +153,15 @@ export default function ValuesWorksheet() {
         checkAuth();
     }, [router]);
 
+    // Cleanup scroll interval on unmount
+    useEffect(() => {
+        return () => {
+            if (scrollInterval.current) {
+                clearInterval(scrollInterval.current);
+            }
+        };
+    }, []);
+
     const toggleValue = (valueName: string) => {
         const newSelected = new Set(selectedValues);
         if (newSelected.has(valueName)) {
@@ -172,11 +184,44 @@ export default function ValuesWorksheet() {
 
     const updatePriority = (valueName: string, newPriority: number) => {
         setPrioritizedValues(prev => {
-            const updated = prev.map(v =>
-                v.name === valueName ? { ...v, priority: newPriority } : v
-            );
-            return updated.sort((a, b) => a.priority - b.priority);
+            // Clamp the priority to valid range
+            const clampedPriority = Math.max(1, Math.min(prev.length, Math.floor(newPriority)));
+
+            // Find the item being updated
+            const updatingIndex = prev.findIndex(v => v.name === valueName);
+            if (updatingIndex === -1) return prev;
+
+            // Create a new array without the updating item
+            const otherValues = prev.filter((_, i) => i !== updatingIndex);
+
+            // Insert the item at its new priority position (priority is 1-indexed)
+            const newValues = [...otherValues];
+            newValues.splice(clampedPriority - 1, 0, {
+                ...prev[updatingIndex],
+                priority: clampedPriority
+            });
+
+            // Renumber all priorities sequentially
+            return newValues.map((v, index) => ({ ...v, priority: index + 1 }));
         });
+    };
+
+    const handlePriorityInputChange = (valueName: string, inputValue: string) => {
+        setEditingPriority({ name: valueName, value: inputValue });
+    };
+
+    const handlePriorityInputBlur = (valueName: string) => {
+        if (editingPriority && editingPriority.name === valueName) {
+            const numValue = parseInt(editingPriority.value) || 1;
+            updatePriority(valueName, numValue);
+            setEditingPriority(null);
+        }
+    };
+
+    const handlePriorityKeyDown = (e: React.KeyboardEvent, valueName: string) => {
+        if (e.key === 'Enter') {
+            (e.currentTarget as HTMLInputElement).blur(); // Trigger blur to save
+        }
     };
 
     const removeValue = (valueName: string) => {
@@ -191,6 +236,35 @@ export default function ValuesWorksheet() {
         });
     };
 
+    // Auto-scroll during drag
+    const handleAutoScroll = (clientY: number) => {
+        const scrollThreshold = 100; // pixels from edge to trigger scroll
+        const scrollSpeed = 10; // pixels per interval
+
+        const windowHeight = window.innerHeight;
+        const distanceFromTop = clientY;
+        const distanceFromBottom = windowHeight - clientY;
+
+        // Clear any existing scroll interval
+        if (scrollInterval.current) {
+            clearInterval(scrollInterval.current);
+            scrollInterval.current = null;
+        }
+
+        // Scroll up if near top
+        if (distanceFromTop < scrollThreshold) {
+            scrollInterval.current = setInterval(() => {
+                window.scrollBy(0, -scrollSpeed);
+            }, 16); // ~60fps
+        }
+        // Scroll down if near bottom
+        else if (distanceFromBottom < scrollThreshold) {
+            scrollInterval.current = setInterval(() => {
+                window.scrollBy(0, scrollSpeed);
+            }, 16);
+        }
+    };
+
     // Drag and drop handlers
     const handleDragStart = (e: React.DragEvent, valueName: string) => {
         setDraggedItem(valueName);
@@ -201,14 +275,28 @@ export default function ValuesWorksheet() {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         setDragOverItem(valueName);
+
+        // Trigger auto-scroll
+        handleAutoScroll(e.clientY);
     };
 
     const handleDragLeave = () => {
         setDragOverItem(null);
+        // Stop auto-scroll when leaving an item
+        if (scrollInterval.current) {
+            clearInterval(scrollInterval.current);
+            scrollInterval.current = null;
+        }
     };
 
     const handleDrop = (e: React.DragEvent, targetValueName: string) => {
         e.preventDefault();
+
+        // Stop auto-scroll
+        if (scrollInterval.current) {
+            clearInterval(scrollInterval.current);
+            scrollInterval.current = null;
+        }
 
         if (!draggedItem || draggedItem === targetValueName) {
             setDraggedItem(null);
@@ -237,6 +325,12 @@ export default function ValuesWorksheet() {
     const handleDragEnd = () => {
         setDraggedItem(null);
         setDragOverItem(null);
+
+        // Stop auto-scroll
+        if (scrollInterval.current) {
+            clearInterval(scrollInterval.current);
+            scrollInterval.current = null;
+        }
     };
 
     const saveValues = async () => {
@@ -510,7 +604,7 @@ export default function ValuesWorksheet() {
 
                                 <div className="bg-white rounded-3xl shadow-2xl p-12">
                                     <div className="text-center mb-10">
-                                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                                        <h2 className=" text-4xl font-bold text-gray-900 mb-4">
                                             Why Values Matter
                                         </h2>
                                         <p className="text-xl text-gray-800">
@@ -595,20 +689,75 @@ export default function ValuesWorksheet() {
                                 <div className={`h-2 flex-1 rounded-full ${phase === 'prioritize' ? 'bg-purple-600' : 'bg-gray-300'}`}></div>
                             </div>
 
+                            {/* Instructions Box */}
+                            {phase === 'select' && (
+                                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                                    <div className="flex items-start gap-3">
+                                        <div className="text-3xl">💡</div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 text-lg mb-2">How to Select Your Values</h3>
+                                            <ul className="space-y-2 text-gray-800">
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-blue-600 font-bold">•</span>
+                                                    <span><strong>Click on values</strong> that resonate with you (they'll turn purple)</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-blue-600 font-bold">•</span>
+                                                    <span><strong>Hover to read</strong> the full description of each value</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-blue-600 font-bold">•</span>
+                                                    <span><strong>Aim for 10-15 values</strong> — the ones most important to who you want to be</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-blue-600 font-bold">•</span>
+                                                    <span>Think about: <em>What type of person do I want to be?</em></span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {phase === 'prioritize' && (
+                                <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                                    <div className="flex items-start gap-3">
+                                        <div className="text-3xl">🎯</div>
+                                        <div>
+                                            <h3 className="font-bold text-gray-900 text-lg mb-2">How to Prioritize Your Values</h3>
+                                            <ul className="space-y-2 text-gray-800">
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-purple-600 font-bold">•</span>
+                                                    <span><strong>Drag and drop</strong> values to reorder them (use the ⋮⋮ handle)</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-purple-600 font-bold">•</span>
+                                                    <span><strong>Type a number</strong> to set priority directly (1 = most important)</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-purple-600 font-bold">•</span>
+                                                    <span><strong>Remove values</strong> by clicking the X if you change your mind</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <span className="text-purple-600 font-bold">•</span>
+                                                    <span>Your #1 value should be the most important principle guiding your life</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <p className="text-gray-800 mb-6">
                                 {phase === 'select'
-                                    ? "Select the values that resonate most with you. Think about what type of person you want to be."
-                                    : "Now prioritize your selected values. Assign numbers to reflect which are most important to you."
+                                    ? `Selected: ${selectedValues.size} values`
+                                    : "Your values are now prioritized from most to least important."
                                 }
                             </p>
 
                             {/* Phase 1: Select Values */}
                             {phase === 'select' && (
                                 <>
-                                    <p className="text-sm text-gray-700 mb-6">
-                                        Selected: {selectedValues.size} values (aim for 10-15)
-                                    </p>
-
                                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                                         {VALUES_LIST.map((value) => (
                                             <div
@@ -708,15 +857,27 @@ export default function ValuesWorksheet() {
                                                         </svg>
                                                     </div>
 
-                                                    <input
-                                                        type="number"
-                                                        min="1"
-                                                        max={prioritizedValues.length}
-                                                        value={value.priority}
-                                                        onChange={(e) => updatePriority(value.name, parseInt(e.target.value) || 1)}
-                                                        className="w-16 px-3 py-2 text-center font-bold text-lg text-gray-900 border-2 border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max={prioritizedValues.length}
+                                                            value={editingPriority?.name === value.name ? editingPriority.value : value.priority}
+                                                            onChange={(e) => handlePriorityInputChange(value.name, e.target.value)}
+                                                            onBlur={() => handlePriorityInputBlur(value.name)}
+                                                            onKeyDown={(e) => handlePriorityKeyDown(e, value.name)}
+                                                            className={`w-16 px-3 py-2 text-center font-bold text-lg text-gray-900 border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors ${editingPriority?.name === value.name
+                                                                    ? 'border-blue-500 focus:ring-blue-600'
+                                                                    : 'border-purple-300 focus:ring-purple-600'
+                                                                }`}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        {editingPriority?.name === value.name && (
+                                                            <div className="absolute -bottom-5 left-0 text-xs text-blue-600 whitespace-nowrap">
+                                                                Press Enter ↵
+                                                            </div>
+                                                        )}
+                                                    </div>
 
                                                     <div className="flex-1">
                                                         <h3 className="font-bold text-gray-900">{value.name}</h3>
@@ -775,7 +936,7 @@ export default function ValuesWorksheet() {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
         </>
     );
 }
