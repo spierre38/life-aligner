@@ -5,25 +5,24 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import QuickLogModal from '@/app/components/QuickLogModal';
+import LifeFrameConnection from '@/app/components/LifeFrameConnection';
+import { useToast } from '@/app/components/Toast';
+import { SkeletonGoalCard } from '@/app/components/Skeleton';
 
-type RoadmapItem = {
-    id: string;
-    category: string;
-    type: 'goal' | 'behavior_change';
-    title: string;
-    why: string; // Why this matters (connection to values/purpose)
-    activities: Activity[];
-    quarter: string; // e.g., "Q1 2026"
-    reflections: Reflection[];
-    archived: boolean;
-    archived_date?: string;
+type ActivityLog = {
+    date: string; // ISO format "2026-02-03"
+    feeling: 'great' | 'okay' | 'hard';
+    note: string;
+    logged_at: string; // Full timestamp
 };
 
 type Activity = {
     id: string;
     text: string;
-    completed_dates: string[]; // Track when it was done
-    notes: string; // What you learned from doing this
+    completed_dates: string[]; // Keep for backward compatibility
+    logs: ActivityLog[]; // NEW - detailed log history
+    notes: string; // Deprecated but keep for compatibility
 };
 
 type Reflection = {
@@ -35,13 +34,183 @@ type Reflection = {
     next_steps: string;
 };
 
+type RoadmapItem = {
+    id: string;
+    category: string;
+    type: 'goal' | 'behavior_change';
+    title: string;
+    why: string;
+    activities: Activity[];
+    quarter: string;
+    reflections: Reflection[];
+    archived: boolean;
+    archived_date?: string;
+    connected_values?: string[]; // Connected LifeFrame values
+    connected_purpose?: string[]; // Connected LifeFrame purpose elements
+};
+
 type CategoryDetail = {
     name: string;
     subCategories: string[];
 };
 
+// ConnectionSelector Component for editing LifeFrame connections
+function ConnectionSelector({
+    itemId,
+    currentValues,
+    currentPurpose,
+    userValues,
+    userPurpose,
+    onUpdate
+}: {
+    itemId: string;
+    currentValues: string[];
+    currentPurpose: string[];
+    userValues: string[];
+    userPurpose: string[];
+    onUpdate: (values: string[], purpose: string[]) => void;
+}) {
+    const [showSelector, setShowSelector] = useState(false);
+    const [selectedValues, setSelectedValues] = useState<string[]>(currentValues);
+    const [selectedPurpose, setSelectedPurpose] = useState<string[]>(currentPurpose);
+
+    const toggleValue = (value: string) => {
+        const updated = selectedValues.includes(value)
+            ? selectedValues.filter(v => v !== value)
+            : [...selectedValues, value];
+        setSelectedValues(updated);
+        onUpdate(updated, selectedPurpose);
+    };
+
+    const togglePurpose = (purpose: string) => {
+        const updated = selectedPurpose.includes(purpose)
+            ? selectedPurpose.filter(p => p !== purpose)
+            : [...selectedPurpose, purpose];
+        setSelectedPurpose(updated);
+        onUpdate(selectedValues, updated);
+    };
+
+    const hasConnections = selectedValues.length > 0 || selectedPurpose.length > 0;
+
+    if (userValues.length === 0 && userPurpose.length === 0) {
+        return (
+            <div className="text-xs text-gray-600 italic">
+                Complete your Values and Purpose worksheets to connect them here.
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            {/* Display badges when selector is closed */}
+            {!showSelector && hasConnections && (
+                <div className="mb-3">
+                    <LifeFrameConnection
+                        selectedValues={selectedValues}
+                        selectedPurpose={selectedPurpose}
+                    />
+                </div>
+            )}
+
+            {/* Toggle button */}
+            {!showSelector ? (
+                <button
+                    onClick={() => setShowSelector(true)}
+                    className="text-sm text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1"
+                >
+                    {hasConnections ? '✏️ Edit connections' : '🔗 Connect to LifeFrame'}
+                </button>
+            ) : (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border-2 border-indigo-200">
+                    <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-bold text-gray-900 text-sm">Connect to Your LifeFrame</h4>
+                        <button
+                            onClick={() => setShowSelector(false)}
+                            className="text-gray-500 hover:text-gray-700"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Values selector */}
+                    {userValues.length > 0 && (
+                        <div className="mb-4">
+                            <label className="block text-xs font-semibold text-gray-700 mb-2">
+                                💎 Values this goal aligns with:
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {userValues.map((value) => (
+                                    <button
+                                        key={value}
+                                        onClick={() => toggleValue(value)}
+                                        className={`
+                                            px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all
+                                            ${selectedValues.includes(value)
+                                                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                                : 'bg-white text-gray-600 border-gray-300 hover:border-indigo-300'
+                                            }
+                                        `}
+                                    >
+                                        {selectedValues.includes(value) && '✓ '}
+                                        {value}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Purpose selector */}
+                    {userPurpose.length > 0 && (
+                        <div className="mb-4">
+                            <label className="block text-xs font-semibold text-gray-700 mb-2">
+                                🎯 Purpose elements this supports:
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {userPurpose.map((purpose) => (
+                                    <button
+                                        key={purpose}
+                                        onClick={() => togglePurpose(purpose)}
+                                        className={`
+                                            px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all
+                                            ${selectedPurpose.includes(purpose)
+                                                ? 'bg-purple-100 text-purple-700 border-purple-300'
+                                                : 'bg-white text-gray-600 border-gray-300 hover:border-purple-300'
+                                            }
+                                        `}
+                                    >
+                                        {selectedPurpose.includes(purpose) && '✓ '}
+                                        {purpose}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tip */}
+                    <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                        <div className="flex items-start gap-2 text-xs text-purple-800">
+                            <span>💡</span>
+                            <span>
+                                Connecting goals to your values and purpose helps you stay motivated when things get tough.
+                            </span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setShowSelector(false)}
+                        className="w-full mt-3 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition text-sm"
+                    >
+                        Done
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function RoadmapPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [showWelcome, setShowWelcome] = useState(false);
@@ -53,11 +222,25 @@ export default function RoadmapPage() {
     const [reflectingOn, setReflectingOn] = useState<string | null>(null);
     const [currentQuarter, setCurrentQuarter] = useState('Q1 2026');
 
+    // NEW: Modal state for quick logging
+    const [loggingActivity, setLoggingActivity] = useState<{
+        itemId: string;
+        activityId: string;
+        activityText: string;
+        existingCount: number;
+    } | null>(null);
+
     // New item form state
     const [newType, setNewType] = useState<'goal' | 'behavior_change'>('goal');
     const [newTitle, setNewTitle] = useState('');
     const [newWhy, setNewWhy] = useState('');
     const [newActivities, setNewActivities] = useState<string[]>(['', '', '']);
+    const [newValues, setNewValues] = useState<string[]>([]); // NEW: Selected values
+    const [newPurpose, setNewPurpose] = useState<string[]>([]); // NEW: Selected purpose
+
+    // LifeFrame data (loaded from user's workbook)
+    const [userValues, setUserValues] = useState<string[]>([]); // User's core values
+    const [userPurpose, setUserPurpose] = useState<string[]>([]); // User's purpose elements
 
     // Reflection form state
     const [reflectionWhatWorked, setReflectionWhatWorked] = useState('');
@@ -115,6 +298,43 @@ export default function RoadmapPage() {
                     setCategories(categoriesData.content.categories || []);
                 }
 
+                // Load LifeFrame data (values and purpose)
+                const { data: valuesData } = await supabase
+                    .from('workbook_entries')
+                    .select('content')
+                    .eq('user_id', userWithProfile.user.id)
+                    .eq('category', 'values')
+                    .single();
+
+                if (valuesData && mounted) {
+                    // Extract selected values from the values workbook
+                    if (valuesData.content.selected_values) {
+                        const valueNames = valuesData.content.selected_values.map((v: any) =>
+                            typeof v === 'string' ? v : v.name
+                        );
+                        setUserValues(valueNames);
+                    }
+                }
+
+                // Load purpose from life_categories (Purpose subcategories)
+                const { data: purposeData } = await supabase
+                    .from('workbook_entries')
+                    .select('content')
+                    .eq('user_id', userWithProfile.user.id)
+                    .eq('category', 'life_categories')
+                    .single();
+
+                if (purposeData && mounted) {
+                    const categories = purposeData.content.categories || [];
+                    const purposeCategory = categories.find((cat: any) =>
+                        cat.name === 'Purpose' && cat.subCategories?.length > 0
+                    );
+
+                    if (purposeCategory?.subCategories) {
+                        setUserPurpose(purposeCategory.subCategories);
+                    }
+                }
+
                 // Load roadmap
                 const { data: roadmapData } = await supabase
                     .from('workbook_entries')
@@ -131,7 +351,15 @@ export default function RoadmapPage() {
                         if (mounted) setShowWelcome(false);
                     }, 3000);
                 } else {
-                    setRoadmapItems(roadmapData.content.items || []);
+                    // MIGRATION: Ensure activities have logs array
+                    const migratedItems = (roadmapData.content.items || []).map((item: RoadmapItem) => ({
+                        ...item,
+                        activities: item.activities.map((activity: any) => ({
+                            ...activity,
+                            logs: activity.logs || [] // Initialize if doesn't exist
+                        }))
+                    }));
+                    setRoadmapItems(migratedItems);
                 }
 
             } catch (error) {
@@ -168,42 +396,6 @@ export default function RoadmapPage() {
         }
     };
 
-    const addItem = (category: string) => {
-        if (!newTitle.trim()) return;
-
-        const newItem: RoadmapItem = {
-            id: `item_${Date.now()}`,
-            category,
-            type: newType,
-            title: newTitle,
-            why: newWhy,
-            activities: newActivities
-                .filter(a => a.trim())
-                .map(text => ({
-                    id: `activity_${Date.now()}_${Math.random()}`,
-                    text,
-                    completed_dates: [],
-                    notes: ''
-                })),
-            quarter: currentQuarter,
-            reflections: [],
-            archived: false
-        };
-
-        const updatedItems = [...roadmapItems, newItem];
-        setRoadmapItems(updatedItems);
-
-        // Reset form
-        setNewTitle('');
-        setNewWhy('');
-        setNewType('goal');
-        setNewActivities(['', '', '']);
-        setAddingTo(null);
-
-        // Save with the updated items
-        saveRoadmapImmediate(updatedItems);
-    };
-
     const saveRoadmapImmediate = async (items: RoadmapItem[]) => {
         if (!userId) return;
 
@@ -224,22 +416,39 @@ export default function RoadmapPage() {
         }
     };
 
-    const logActivity = (itemId: string, activityId: string) => {
+    // ========================================================================
+    // FEATURE 1.2: QUICK LOGGING FUNCTIONS
+    // ========================================================================
+
+    const startLogActivity = (itemId: string, activityId: string, activityText: string, existingCount: number) => {
+        setLoggingActivity({ itemId, activityId, activityText, existingCount });
+    };
+
+    const saveLogActivity = (feeling: 'great' | 'okay' | 'hard', note: string) => {
+        if (!loggingActivity) return;
+
         const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
 
         const updatedItems = roadmapItems.map(item => {
-            if (item.id === itemId) {
+            if (item.id === loggingActivity.itemId) {
                 return {
                     ...item,
                     activities: item.activities.map(activity => {
-                        if (activity.id === activityId) {
-                            // Toggle: if already logged today, remove it; otherwise add it
-                            const hasToday = activity.completed_dates.includes(today);
+                        if (activity.id === loggingActivity.activityId) {
+                            const newLog: ActivityLog = {
+                                date: today,
+                                feeling,
+                                note,
+                                logged_at: now
+                            };
+
                             return {
                                 ...activity,
-                                completed_dates: hasToday
-                                    ? activity.completed_dates.filter(d => d !== today)
-                                    : [...activity.completed_dates, today]
+                                completed_dates: activity.completed_dates.includes(today)
+                                    ? activity.completed_dates
+                                    : [...activity.completed_dates, today],
+                                logs: [...activity.logs, newLog]
                             };
                         }
                         return activity;
@@ -251,7 +460,60 @@ export default function RoadmapPage() {
 
         setRoadmapItems(updatedItems);
         saveRoadmapImmediate(updatedItems);
+        setLoggingActivity(null);
+        showToast('Activity logged successfully! 🎉', 'success');
     };
+
+    const getFeelingEmoji = (feeling: 'great' | 'okay' | 'hard') => {
+        const map = { great: '😊', okay: '😐', hard: '😔' };
+        return map[feeling];
+    };
+
+    const addItem = (category: string) => {
+        if (!newTitle.trim()) return;
+
+        const newItem: RoadmapItem = {
+            id: `item_${Date.now()}`,
+            category,
+            type: newType,
+            title: newTitle,
+            why: newWhy,
+            activities: newActivities
+                .filter(a => a.trim())
+                .map(text => ({
+                    id: `activity_${Date.now()}_${Math.random()}`,
+                    text,
+                    completed_dates: [],
+                    logs: [], // Initialize empty logs array
+                    notes: ''
+                })),
+            quarter: currentQuarter,
+            reflections: [],
+            archived: false,
+            connected_values: newValues.length > 0 ? newValues : undefined, // Add selected values
+            connected_purpose: newPurpose.length > 0 ? newPurpose : undefined // Add selected purpose
+        };
+
+        const updatedItems = [...roadmapItems, newItem];
+        setRoadmapItems(updatedItems);
+
+        // Reset form
+        setNewTitle('');
+        setNewWhy('');
+        setNewType('goal');
+        setNewActivities(['', '', '']);
+        setNewValues([]); // Reset values selection
+        setNewPurpose([]); // Reset purpose selection
+        setAddingTo(null);
+
+        // Save with the updated items
+        saveRoadmapImmediate(updatedItems);
+
+        // Show success message
+        const itemType = newType === 'goal' ? 'Goal' : 'Behavior Change';
+        showToast(`${itemType} created successfully!`, 'success');
+    };
+
 
     const addReflection = (itemId: string) => {
         if (!reflectionLearning.trim()) return;
@@ -299,6 +561,17 @@ export default function RoadmapPage() {
                 ? { ...item, archived: false, archived_date: undefined, quarter: currentQuarter }
                 : item
         );
+        setRoadmapItems(updatedItems);
+        saveRoadmapImmediate(updatedItems);
+    };
+
+    const updateItemConnections = (itemId: string, values: string[], purpose: string[]) => {
+        const updatedItems = roadmapItems.map(item =>
+            item.id === itemId
+                ? { ...item, connected_values: values, connected_purpose: purpose }
+                : item
+        );
+
         setRoadmapItems(updatedItems);
         saveRoadmapImmediate(updatedItems);
     };
@@ -364,6 +637,17 @@ export default function RoadmapPage() {
     return (
         <>
             <AuthNavbar />
+
+            {/* FEATURE 1.2: Quick Log Modal */}
+            {loggingActivity && (
+                <QuickLogModal
+                    activityText={loggingActivity.activityText}
+                    existingCount={loggingActivity.existingCount}
+                    onSave={saveLogActivity}
+                    onCancel={() => setLoggingActivity(null)}
+                />
+            )}
+
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-16">
                 {/* Header */}
                 <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
@@ -512,6 +796,20 @@ export default function RoadmapPage() {
                                                                             <strong>Why this matters:</strong> {item.why}
                                                                         </p>
                                                                     )}
+
+                                                                    {/* Feature 1.3 - Editable LifeFrame Connection */}
+                                                                    <div className="mb-4">
+                                                                        <ConnectionSelector
+                                                                            itemId={item.id}
+                                                                            currentValues={item.connected_values || []}
+                                                                            currentPurpose={item.connected_purpose || []}
+                                                                            userValues={userValues}
+                                                                            userPurpose={userPurpose}
+                                                                            onUpdate={(values, purpose) => {
+                                                                                updateItemConnections(item.id, values, purpose);
+                                                                            }}
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                                 <button
                                                                     onClick={() => archiveItem(item.id)}
@@ -527,33 +825,57 @@ export default function RoadmapPage() {
                                                                 {item.activities.map(activity => {
                                                                     const today = new Date().toISOString().split('T')[0];
                                                                     const doneToday = activity.completed_dates.includes(today);
-                                                                    const doneCount = activity.completed_dates.length;
+                                                                    const doneCount = activity.logs.length;
+                                                                    const recentLogs = activity.logs.slice(-3).reverse();
 
                                                                     return (
                                                                         <div key={activity.id} className="bg-white rounded-lg p-4 border-2 border-gray-200">
                                                                             <div className="flex items-center gap-3 mb-2">
+                                                                                {/* Activity logging button with 📝 emoji */}
                                                                                 <button
-                                                                                    onClick={() => logActivity(item.id, activity.id)}
+                                                                                    onClick={() => startLogActivity(item.id, activity.id, activity.text, doneCount)}
                                                                                     className={`
-                                            w-10 h-10 rounded-lg flex items-center justify-center font-bold transition
-                                            ${doneToday
-                                                                                            ? 'bg-green-500 text-white'
-                                                                                            : 'bg-gray-100 hover:bg-gray-200 text-gray-400'
+                                                                                        w-10 h-10 rounded-lg flex items-center justify-center font-bold transition-all text-xl
+                                                                                        ${doneToday
+                                                                                            ? 'bg-green-500 text-white hover:bg-green-600 shadow-md hover:scale-110'
+                                                                                            : 'bg-white hover:bg-indigo-50 border-2 border-indigo-300 text-indigo-600 hover:border-indigo-400 hover:scale-105'
                                                                                         }
-                                          `}
+                                                                                    `}
+                                                                                    title={doneToday ? "Done today! Click to log again" : "Click to log this activity"}
                                                                                 >
-                                                                                    {doneToday ? '✓' : '○'}
+                                                                                    📝
                                                                                 </button>
                                                                                 <div className="flex-1">
                                                                                     <span className="text-gray-900 font-medium">{activity.text}</span>
                                                                                     <div className="text-xs text-gray-600 mt-1">
-                                                                                        {doneCount > 0 ? `Done ${doneCount} times` : 'Not started yet'}
+                                                                                        {doneCount > 0 ? (
+                                                                                            <>
+                                                                                                <span className={doneToday ? 'text-green-600 font-semibold' : 'text-gray-600'}>
+                                                                                                    {doneToday && '✓ '}Done {doneCount} times
+                                                                                                </span>
+                                                                                                {doneToday && <span className="text-gray-500"> (today!)</span>}
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <span className="text-indigo-600">Click 📝 to start logging</span>
+                                                                                        )}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            {activity.notes && (
-                                                                                <div className="ml-13 text-sm text-gray-700 bg-yellow-50 p-2 rounded">
-                                                                                    <strong>Notes:</strong> {activity.notes}
+
+                                                                            {/* NEW: Show recent logs with feelings */}
+                                                                            {recentLogs.length > 0 && (
+                                                                                <div className="ml-13 space-y-1">
+                                                                                    {recentLogs.map((log, idx) => (
+                                                                                        <div key={idx} className="text-xs bg-gray-50 p-2 rounded flex items-start gap-2">
+                                                                                            <span className="text-base">{getFeelingEmoji(log.feeling)}</span>
+                                                                                            <div className="flex-1">
+                                                                                                <div className="text-gray-500">{new Date(log.date).toLocaleDateString()}</div>
+                                                                                                {log.note && (
+                                                                                                    <div className="text-gray-800 mt-1">"{log.note}"</div>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -755,6 +1077,101 @@ export default function RoadmapPage() {
                                                                     </button>
                                                                 </div>
 
+                                                                {/* NEW: LifeFrame Connection - Feature 1.3 */}
+                                                                {(userValues.length > 0 || userPurpose.length > 0) && (
+                                                                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4">
+                                                                        <h4 className="text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
+                                                                            <span>🔗</span>
+                                                                            <span>Connect to Your LifeFrame (Optional)</span>
+                                                                        </h4>
+                                                                        <p className="text-xs text-purple-700 mb-3">
+                                                                            Link this goal to your core values or purpose to stay motivated
+                                                                        </p>
+
+                                                                        {/* Values Selection */}
+                                                                        {userValues.length > 0 && (
+                                                                            <div className="mb-3">
+                                                                                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                                                                                    💎 Values
+                                                                                </label>
+                                                                                <div className="flex flex-wrap gap-2">
+                                                                                    {userValues.map((value) => {
+                                                                                        const isSelected = newValues.includes(value);
+                                                                                        return (
+                                                                                            <button
+                                                                                                key={value}
+                                                                                                type="button"
+                                                                                                onClick={() => {
+                                                                                                    setNewValues(
+                                                                                                        isSelected
+                                                                                                            ? newValues.filter(v => v !== value)
+                                                                                                            : [...newValues, value]
+                                                                                                    );
+                                                                                                }}
+                                                                                                className={`
+                                                                                                    px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all
+                                                                                                    ${isSelected
+                                                                                                        ? 'bg-blue-600 text-white border-blue-600'
+                                                                                                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                                                                                                    }
+                                                                                                `}
+                                                                                            >
+                                                                                                {value}
+                                                                                            </button>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                                {newValues.length > 0 && (
+                                                                                    <div className="text-xs text-green-700 mt-1">
+                                                                                        ✓ {newValues.length} selected
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* Purpose Selection */}
+                                                                        {userPurpose.length > 0 && (
+                                                                            <div>
+                                                                                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                                                                                    🎯 Purpose
+                                                                                </label>
+                                                                                <div className="flex flex-wrap gap-2">
+                                                                                    {userPurpose.map((purpose) => {
+                                                                                        const isSelected = newPurpose.includes(purpose);
+                                                                                        return (
+                                                                                            <button
+                                                                                                key={purpose}
+                                                                                                type="button"
+                                                                                                onClick={() => {
+                                                                                                    setNewPurpose(
+                                                                                                        isSelected
+                                                                                                            ? newPurpose.filter(p => p !== purpose)
+                                                                                                            : [...newPurpose, purpose]
+                                                                                                    );
+                                                                                                }}
+                                                                                                className={`
+                                                                                                    px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all
+                                                                                                    ${isSelected
+                                                                                                        ? 'bg-purple-600 text-white border-purple-600'
+                                                                                                        : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400'
+                                                                                                    }
+                                                                                                `}
+                                                                                            >
+                                                                                                {purpose}
+                                                                                            </button>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                                {newPurpose.length > 0 && (
+                                                                                    <div className="text-xs text-green-700 mt-1">
+                                                                                        ✓ {newPurpose.length} selected
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+
                                                                 <div className="flex gap-3 pt-2">
                                                                     <button
                                                                         onClick={() => addItem(category.name)}
@@ -792,6 +1209,85 @@ export default function RoadmapPage() {
                                     );
                                 })
                             )}
+
+                            {/* Orphaned Goals Section - Goals from deleted categories */}
+                            {(() => {
+                                const categoryNames = categories.map(c => c.name);
+                                const orphanedItems = activeItems.filter(item => !categoryNames.includes(item.category));
+
+                                if (orphanedItems.length === 0) return null;
+
+                                return (
+                                    <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-lg">
+                                        <div className="flex items-start gap-4 mb-4">
+                                            <div className="text-4xl">⚠️</div>
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-bold text-yellow-900 mb-2">
+                                                    Goals from Deleted Categories ({orphanedItems.length})
+                                                </h3>
+                                                <p className="text-sm text-yellow-800 mb-4">
+                                                    These goals are from life categories that no longer exist. You should archive them since they don't fit your current life structure.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {orphanedItems.map(item => (
+                                                <div key={item.id} className="bg-white border-2 border-yellow-200 rounded-xl p-4">
+                                                    <div className="flex items-start justify-between mb-2">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
+                                                                    {item.category}
+                                                                </span>
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.type === 'goal' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'
+                                                                    }`}>
+                                                                    {item.type === 'goal' ? '🎯 Goal' : '🔄 Behavior Change'}
+                                                                </span>
+                                                            </div>
+                                                            <h4 className="font-bold text-gray-900">{item.title}</h4>
+                                                            {item.why && (
+                                                                <p className="text-sm text-gray-600 mt-1 italic">
+                                                                    Why: {item.why}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <button
+                                                            onClick={() => archiveItem(item.id)}
+                                                            className="ml-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold text-sm"
+                                                        >
+                                                            Archive
+                                                        </button>
+                                                    </div>
+                                                    {item.activities.length > 0 && (
+                                                        <div className="mt-2 text-sm text-gray-600">
+                                                            <strong>Activities:</strong> {item.activities.map(a => a.text).join(', ')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="mt-4 flex gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    orphanedItems.forEach(item => archiveItem(item.id));
+                                                    showToast('All orphaned goals archived!', 'success');
+                                                }}
+                                                className="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-bold"
+                                            >
+                                                Archive All {orphanedItems.length} Goals
+                                            </button>
+                                            <button
+                                                onClick={() => router.push('/workbook/life-categories')}
+                                                className="px-6 py-3 border-2 border-yellow-600 text-yellow-800 rounded-lg hover:bg-yellow-100 transition font-bold"
+                                            >
+                                                Edit Life Categories
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                         </div>
                     )}
 
