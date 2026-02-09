@@ -15,6 +15,7 @@ export default function Skeleton({
 }: SkeletonProps) {
     const baseClasses = 'animate-pulse bg-gray-200 rounded';
 
+
     const variantClasses = {
         text: 'h-4 w-full rounded',
         rect: 'w-full h-24 rounded-lg',

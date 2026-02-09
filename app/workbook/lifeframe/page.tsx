@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
-import AuthNavbar from '@/app/components/AuthNavbar';
+import ConstellationMap from './ConstellationMap';
 
 type SelectedValue = {
     name: string;
@@ -38,16 +38,87 @@ type LifeFrameData = {
     lifeCategories: LifeCategoriesData;
 };
 
-export default function LifeFramePage() {
+// SVG Icons
+const ValueIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+);
+
+const InterestIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2.69l2.12 6.56h6.88l-5.57 4.05 2.13 6.57L12 15.82l-5.56 4.05 2.13-6.57L3 9.25h6.88z" />
+    </svg>
+);
+
+const CategoryIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2v20M2 12h20" />
+    </svg>
+);
+
+const PurposeIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+    </svg>
+);
+
+export default function LifeFrameConstellation() {
     const router = useRouter();
-    const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [lifeFrameData, setLifeFrameData] = useState<LifeFrameData | null>(null);
-    const [completionStatus, setCompletionStatus] = useState({
-        values: false,
-        interests: false,
-        lifeCategories: false
-    });
+    const [activeSection, setActiveSection] = useState<'intro' | 'values' | 'interests' | 'categories' | 'purpose'>('intro');
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [scrollProgress, setScrollProgress] = useState(0);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Manual scroll tracking (no Framer Motion scroll hook)
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!containerRef.current) return;
+
+            const container = containerRef.current;
+            const scrollTop = window.scrollY;
+            const scrollHeight = container.scrollHeight - window.innerHeight;
+            const progress = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+
+            setScrollProgress(progress);
+
+            // Update active section
+            if (progress < 0.2) setActiveSection('intro');
+            else if (progress < 0.4) setActiveSection('values');
+            else if (progress < 0.6) setActiveSection('interests');
+            else if (progress < 0.8) setActiveSection('categories');
+            else {
+                setActiveSection('purpose');
+                // Trigger confetti as soon as Purpose section is active (at 80% scroll)
+                if (progress >= 0.8 && !showConfetti) {
+                    setShowConfetti(true);
+                    setTimeout(() => setShowConfetti(false), 3000);
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [showConfetti]);
+
+    // Calculate section opacities based on scroll progress
+    const getOpacity = (start: number, fadeIn: number, fadeOut: number, end: number) => {
+        if (scrollProgress < start) return 0;
+        if (scrollProgress < fadeIn) return (scrollProgress - start) / (fadeIn - start);
+        if (scrollProgress < fadeOut) return 1;
+        if (scrollProgress < end) return 1 - (scrollProgress - fadeOut) / (end - fadeOut);
+        return 0;
+    };
+
+    const introOpacity = scrollProgress < 0.1 ? 1 : 1 - (scrollProgress - 0) / 0.1;
+    const valuesOpacity = getOpacity(0.1, 0.2, 0.3, 0.4);
+    const interestsOpacity = getOpacity(0.3, 0.4, 0.5, 0.6);
+    const categoriesOpacity = getOpacity(0.5, 0.6, 0.7, 0.8);
+    const purposeOpacity = scrollProgress > 0.7 ? (scrollProgress - 0.7) / 0.1 : 0;
 
     useEffect(() => {
         const loadLifeFrame = async () => {
@@ -57,9 +128,7 @@ export default function LifeFramePage() {
                     router.push('/login');
                     return;
                 }
-                setUserId(userWithProfile.user.id);
 
-                // Fetch all three worksheets
                 const { data: worksheets, error } = await supabase
                     .from('workbook_entries')
                     .select('category, content')
@@ -68,16 +137,9 @@ export default function LifeFramePage() {
 
                 if (error) throw error;
 
-                // Parse the data
                 const valuesData = worksheets?.find(w => w.category === 'values');
                 const interestsData = worksheets?.find(w => w.category === 'interests');
                 const categoriesData = worksheets?.find(w => w.category === 'life_categories');
-
-                setCompletionStatus({
-                    values: !!valuesData,
-                    interests: !!interestsData,
-                    lifeCategories: !!categoriesData
-                });
 
                 if (valuesData && interestsData && categoriesData) {
                     setLifeFrameData({
@@ -98,624 +160,455 @@ export default function LifeFramePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-800">Loading your LifeFrame...</p>
+                    <div className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-white text-lg">Loading your constellation...</p>
                 </div>
             </div>
         );
     }
 
-    // Check if all three are complete
-    const allComplete = completionStatus.values && completionStatus.interests && completionStatus.lifeCategories;
-
-    if (!allComplete) {
-        return (
-            <>
-                <AuthNavbar />
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4 pt-20">
-                    <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-12">
-                        <div className="text-center">
-                            <div className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-5xl mx-auto mb-6">
-                                📋
-                            </div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                                Complete Your LifeFrame
-                            </h1>
-                            <p className="text-lg text-gray-800 mb-8">
-                                You need to complete all three worksheets before viewing your LifeFrame
-                            </p>
-
-                            <div className="space-y-4 mb-8">
-                                <div className={`flex items-center gap-4 p-4 rounded-xl ${completionStatus.values ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border-2 border-gray-200'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${completionStatus.values ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}>
-                                        {completionStatus.values ? '✓' : '1'}
-                                    </div>
-                                    <div className="flex-1 text-left">
-                                        <h3 className="font-bold text-gray-900">Values</h3>
-                                    </div>
-                                    {!completionStatus.values && (
-                                        <button
-                                            onClick={() => router.push('/workbook/values')}
-                                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
-                                        >
-                                            Start
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className={`flex items-center gap-4 p-4 rounded-xl ${completionStatus.interests ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border-2 border-gray-200'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${completionStatus.interests ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}>
-                                        {completionStatus.interests ? '✓' : '2'}
-                                    </div>
-                                    <div className="flex-1 text-left">
-                                        <h3 className="font-bold text-gray-900">Interests</h3>
-                                    </div>
-                                    {!completionStatus.interests && (
-                                        <button
-                                            onClick={() => router.push('/workbook/interests')}
-                                            disabled={!completionStatus.values}
-                                            className={`px-4 py-2 rounded-lg font-semibold transition ${completionStatus.values
-                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            {completionStatus.values ? 'Start' : 'Locked'}
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className={`flex items-center gap-4 p-4 rounded-xl ${completionStatus.lifeCategories ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-50 border-2 border-gray-200'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${completionStatus.lifeCategories ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'}`}>
-                                        {completionStatus.lifeCategories ? '✓' : '3'}
-                                    </div>
-                                    <div className="flex-1 text-left">
-                                        <h3 className="font-bold text-gray-900">Life Categories</h3>
-                                    </div>
-                                    {!completionStatus.lifeCategories && (
-                                        <button
-                                            onClick={() => router.push('/workbook/life-categories')}
-                                            disabled={!completionStatus.interests}
-                                            className={`px-4 py-2 rounded-lg font-semibold transition ${completionStatus.interests
-                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            {completionStatus.interests ? 'Start' : 'Locked'}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={() => router.push('/dashboard')}
-                                className="text-gray-800 hover:text-gray-900 font-semibold"
-                            >
-                                ← Back to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-    // Helper function for value emojis
-    const getValueEmoji = (valueName: string): string => {
-        const emojiMap: Record<string, string> = {
-            'Authenticity': '🎭',
-            'Compassion': '💝',
-            'Commitment': '🤝',
-            'Continuous Improvement': '📈',
-            'Courage': '🦁',
-            'Creativity': '🎨',
-            'Dependability': '🛡️',
-            'Effort': '💪',
-            'Hard Work': '💪',
-            'Doing Your Best': '💪',
-            'Fairness': '⚖️',
-            'Generosity': '🎁',
-            'Gratitude': '🙏',
-            'Honesty': '💎',
-            'Integrity': '🔐',
-            'Humility': '🧘',
-            'Open Mindedness': '🌈',
-            'Perseverance': '🔥',
-            'Positivity': '☀️',
-            'Optimism': '☀️',
-            'Proactivity': '🚀',
-            'Self-respect': '👑',
-            'Tolerance': '🤲',
-            'Wisdom': '🦉'
-        };
-        return emojiMap[valueName] || '⭐';
-    };
-
-    // Interests emoji mapping
-    const getInterestEmoji = (interestName: string): string => {
-        const emojiMap: Record<string, string> = {
-            // Arts & Crafts
-            'Calligraphy': '✒️',
-            'Candle-making': '🕯️',
-            'Crocheting': '🧶',
-            'Drawing': '✏️',
-            'Painting': '🎨',
-            'Photography': '📸',
-            'Pottery': '🏺',
-            'Writing': '📝',
-            'Reading': '📚',
-            'Movies': '🎬',
-            'Quilting': '🧵',
-            'Knitting': '🧶',
-
-            // Performing
-            'Acting': '🎭',
-            'Comedy': '🎤',
-            'Dancing': '💃',
-            'Playing an instrument': '🎸',
-            'Podcasting': '🎙️',
-            'Karaoke': '🎤',
-
-            // Food & Drink
-            'Baking': '🧁',
-            'Cooking': '🍳',
-            'Brewing': '🍺',
-            'Wine tasting': '🍷',
-
-            // Games
-            'Chess': '♟️',
-            'Video games': '🎮',
-            'Board games': '🎲',
-            'Card games': '🃏',
-            'Billiards': '🎱',
-
-            // Physical Activities
-            'Running': '🏃',
-            'Hiking': '🥾',
-            'Swimming': '🏊',
-            'Yoga': '🧘',
-            'Basketball': '🏀',
-            'Soccer': '⚽',
-            'Tennis': '🎾',
-            'Cycling': '🚴',
-            'Skiing': '⛷️',
-            'Golf': '⛳',
-            'HIIT': '💪',
-            'Martial arts': '🥋',
-
-            // Nature
-            'Gardening': '🌱',
-            'Camping': '⛺',
-            'Fishing': '🎣',
-            'Bird watching': '🦅',
-            'Traveling': '✈️',
-            'Astronomy': '🔭',
-
-            // Technical
-            'Coding': '💻',
-            'Woodworking': '🪚',
-            'Metalworking': '🔧',
-            'Electronics': '⚡',
-
-            // Collecting
-            'Coins': '🪙',
-            'Books': '📚',
-            'Art': '🖼️',
-            'Music': '🎵',
-            'Stamps': '📬'
-        };
-        return emojiMap[interestName] || '🎯';
-    };
-
-    // Life Category emoji mapping
-    const getCategoryEmoji = (categoryName: string): string => {
-        const emojiMap: Record<string, string> = {
-            'Health': '💪',
-            'Relationships': '❤️',
-            'Community': '🤝',
-            'Education': '📚',
-            'Career': '💼',
-            'Financial': '💰',
-            'Spirituality': '🙏',
-            'Creative': '🎨',
-            'Travel': '✈️',
-            'Hobbies': '🎯',
-            'Family': '👨👩👧👦',
-            'Friends': '👥',
-            'Personal Growth': '🌱',
-            'Mental Health': '🧠',
-            'Physical Health': '🏃'
-        };
-        return emojiMap[categoryName] || '🎯';
-    };
-
-    // Purpose emoji mapping
-    const getPurposeEmoji = (purposeName: string): string => {
-        const emojiMap: Record<string, string> = {
-            'Help Others': '🤝',
-            'Help the Environment': '🌍',
-            'Mentor Youth': '👨🏫',
-            'Address Adult Loneliness': '🤗',
-            'Improve Teen Financial Literacy': '💵',
-            'Protect My Family': '🛡️',
-            'Cure Alzheimer\'s': '🧠',
-            'Improve Medical Care': '⚕️',
-            'Address Climate Change': '🌡️',
-            'Address Food Insecurity': '🍽️',
-            'Address Homelessness': '🏠',
-            'Improve Care for the Elderly': '👵',
-            'Develop Community': '🏘️',
-            'Improve Cancer Treatment': '🎗️',
-            'Provide Clean Water': '💧',
-            'Address Racial Inequality': '✊'
-        };
-        return emojiMap[purposeName] || '⭐';
-    };
-
-    // Show the complete LifeFrame
     return (
-        <>
-            <AuthNavbar />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 pt-20 relative">
-                {/* Background Image with Overlay */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-[url('/backgrounds/lifeframe-bg.png')] bg-cover bg-center opacity-[0.12]"></div>
+        <div ref={containerRef} className="relative bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900">
+            {/* Constellation Map - Sticky */}
+            <ConstellationMap activeSection={activeSection} />
+
+            {/* Skip Navigation */}
+            <div className="fixed top-6 left-6 z-40 flex gap-2">
+                <button
+                    onClick={() => router.push('/dashboard')}
+                    className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition"
+                >
+                    ← Dashboard
+                </button>
+                <button
+                    onClick={() => router.push('/roadmap')}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                >
+                    Skip to Roadmap →
+                </button>
+            </div>
+
+            {/* Print & Share Buttons - Top Right */}
+            <div className="fixed top-6 right-6 z-40 flex gap-2">
+                <button
+                    onClick={() => router.push('/lifeframe/print')}
+                    className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2"
+                    title="Print LifeFrame"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    <span className="hidden md:inline">Print</span>
+                </button>
+                <button
+                    onClick={() => {
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'My LifeFrame',
+                                text: 'Check out my LifeFrame - my values, interests, and purpose!',
+                                url: window.location.href
+                            }).catch(() => {
+                                // User cancelled or share failed
+                            });
+                        } else {
+                            // Fallback: Copy link to clipboard
+                            navigator.clipboard.writeText(window.location.href);
+                            alert('Link copied to clipboard!');
+                        }
+                    }}
+                    className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2"
+                    title="Share LifeFrame"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    <span className="hidden md:inline">Share</span>
+                </button>
+            </div>
+
+            {/* Confetti Effect */}
+            {showConfetti && (
+                <div className="fixed inset-0 pointer-events-none z-50">
+                    {[...Array(50)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute w-2 h-2 rounded-full animate-confetti"
+                            style={{
+                                left: `${Math.random() * 100}%`,
+                                top: '-30%',
+                                backgroundColor: ['#fbbf24', '#ec4899', '#8b5cf6', '#06b6d4'][Math.floor(Math.random() * 4)],
+                                animationDelay: `${Math.random() * 0.5}s`,
+                                animationDuration: `${2 + Math.random() * 2}s`
+                            }}
+                        />
+                    ))}
                 </div>
-                <div className="max-w-6xl mx-auto relative z-10">
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            )}
+
+            {/* SECTION 1: INTRO */}
+            <section
+                style={{ opacity: introOpacity }}
+                className="min-h-screen flex items-center justify-center px-4 transition-opacity duration-500"
+            >
+                <div className="text-center">
+                    <div className="w-32 h-32 mx-auto mb-8">
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center animate-scale-in">
+                            <span className="text-6xl">✨</span>
+                        </div>
+                    </div>
+                    <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 animate-fade-up">
+                        Your LifeFrame
+                    </h1>
+                    <p className="text-2xl text-purple-200 mb-12 animate-fade-up-delay">
+                        A constellation of what matters most
+                    </p>
+                    <div className="text-white animate-fade-in-slow">
+                        <p className="mb-2">Scroll to begin your journey</p>
+                        <svg className="w-6 h-6 mx-auto animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
-                        Back to Dashboard
-                    </button>
+                    </div>
+                </div>
+            </section>
 
-                    {/* Header */}
+            {/* SECTION 2: VALUES */}
+            <section
+                style={{ opacity: valuesOpacity }}
+                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+            >
+                <div className="max-w-4xl w-full">
                     <div className="text-center mb-12">
-                        <div className="w-20 h-20 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-5xl mx-auto mb-6">
-                            ✨
-                        </div>
-                        <h1 className="text-5xl font-bold text-gray-900 mb-4">Your LifeFrame</h1>
-                        <p className="text-xl text-gray-800 mb-2">
-                            The foundation for your Roadmap
-                        </p>
-                        <p className="text-gray-600">
-                            Values • Interests • Life Categories
-                        </p>
-                    </div>
-
-                    {/* Values Section */}
-                    <div className="mb-12">
-                        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 transition-all duration-300 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12),0_0_40px_rgb(99,102,241,0.15)] hover:-translate-y-1 hover:border-indigo-200">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl">
-                                        📌
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-bold text-gray-900">Your Values</h2>
-                                        <p className="text-gray-800">Principles that guide your life</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => router.push('/workbook/values')}
-                                    className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
-                                >
-                                    Edit →
-                                </button>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {lifeFrameData?.values.map((value) => (
-                                    <div
-                                        key={value.name}
-                                        className="
-                                            bg-white 
-                                            rounded-3xl 
-                                            p-8 
-                                            shadow-[0_8px_30px_rgb(0,0,0,0.08)] 
-                                            border border-gray-100
-                                            transition-all duration-300 ease-out
-                                            hover:shadow-[0_8px_30px_rgb(0,0,0,0.12),0_0_40px_rgb(99,102,241,0.15)]
-                                            hover:-translate-y-1
-                                            hover:border-indigo-200
-                                            text-center
-                                            relative
-                                        "
-                                    >
-                                        {/* Priority Badge */}
-                                        <div className="absolute top-4 right-4 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
-                                            {value.priority}
-                                        </div>
-
-                                        {/* Icon Circle */}
-                                        <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
-                                            <span className="text-4xl">{getValueEmoji(value.name)}</span>
-                                        </div>
-
-                                        {/* Title - Uppercase */}
-                                        <h3 className="text-2xl font-bold text-gray-800 uppercase tracking-wide mb-4">
-                                            {value.name}
-                                        </h3>
-
-                                        {/* Description */}
-                                        <p className="text-gray-600 leading-relaxed text-base">
-                                            {value.description}
-                                        </p>
-
-                                        {/* Decorative line */}
-                                        <div className="mt-6 w-12 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto rounded-full"></div>
-                                    </div>
-                                ))}
+                        <div className="w-24 h-24 mx-auto mb-6">
+                            <div
+                                className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center transition-shadow duration-300"
+                                style={{
+                                    boxShadow: activeSection === 'values'
+                                        ? '0 0 60px rgba(168, 85, 247, 0.8)'
+                                        : '0 0 20px rgba(168, 85, 247, 0.3)'
+                                }}
+                            >
+                                <ValueIcon className="w-12 h-12 text-white" />
                             </div>
                         </div>
+                        <h2 className="text-5xl font-bold text-white mb-4">Your Values</h2>
+                        <p className="text-xl text-purple-200">Principles that guide your life</p>
                     </div>
 
-                    {/* Interests Section */}
-                    <div className="mb-12">
-                        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 transition-all duration-300 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12),0_0_40px_rgb(236,72,153,0.15)] hover:-translate-y-1 hover:border-pink-200">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl">
-                                        ❤️
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {lifeFrameData?.values.map((value, index) => (
+                            <div
+                                key={value.name}
+                                className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-purple-400 transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] animate-fade-up"
+                                style={{ animationDelay: `${index * 100}ms` }}
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                                        {value.priority}
                                     </div>
                                     <div>
-                                        <h2 className="text-3xl font-bold text-gray-900">Your Interests</h2>
-                                        <p className="text-gray-800">Activities that bring you joy</p>
+                                        <h3 className="text-xl font-bold text-white mb-2">{value.name}</h3>
+                                        <p className="text-purple-200 text-sm">{value.description}</p>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => router.push('/workbook/interests')}
-                                    className="text-pink-600 hover:text-pink-800 font-semibold text-sm"
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <button
+                            onClick={() => router.push('/workbook/values')}
+                            className="text-purple-300 hover:text-white transition"
+                        >
+                            ✏️ Edit Values
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 3: INTERESTS */}
+            <section
+                style={{ opacity: interestsOpacity }}
+                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+            >
+                <div className="max-w-4xl w-full">
+                    <div className="text-center mb-12">
+                        <div className="w-24 h-24 mx-auto mb-6">
+                            <div
+                                className="w-full h-full bg-gradient-to-br from-pink-500 to-orange-500 rounded-full flex items-center justify-center transition-shadow duration-300"
+                                style={{
+                                    boxShadow: activeSection === 'interests'
+                                        ? '0 0 60px rgba(236, 72, 153, 0.8)'
+                                        : '0 0 20px rgba(236, 72, 153, 0.3)'
+                                }}
+                            >
+                                <InterestIcon className="w-12 h-12 text-white" />
+                            </div>
+                        </div>
+                        <h2 className="text-5xl font-bold text-white mb-4">Your Interests</h2>
+                        <p className="text-xl text-pink-200">Activities that bring you joy</p>
+                    </div>
+
+                    <div className="mb-8">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2">
+                            <span>✓</span> Currently Enjoying
+                        </h3>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            {lifeFrameData?.interests.existing.map((interest, index) => (
+                                <div
+                                    key={interest}
+                                    className="px-4 py-2 bg-pink-500/20 backdrop-blur-sm rounded-full border border-pink-400/50 text-white hover:bg-pink-500/30 transition hover:scale-110 animate-pop-in"
+                                    style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                    Edit →
-                                </button>
-                            </div>
-
-                            {/* Existing Interests */}
-                            <div className="mb-8">
-                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <span className="text-2xl">✓</span>
-                                    Existing Interests
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {lifeFrameData?.interests.existing.map((interest) => (
-                                        <div
-                                            key={interest}
-                                            className="
-                                                bg-white
-                                                rounded-2xl
-                                                p-4
-                                                shadow-[0_4px_15px_rgb(0,0,0,0.06)]
-                                                border border-gray-100
-                                                transition-all duration-200 ease-out
-                                                hover:shadow-[0_4px_15px_rgb(0,0,0,0.10),0_0_25px_rgb(236,72,153,0.12)]
-                                                hover:-translate-y-0.5
-                                                hover:border-pink-200
-                                                text-center
-                                                relative
-                                            "
-                                        >
-                                            {/* Checkmark Icon - Top Right */}
-                                            <div className="absolute top-2 right-2 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-xs">
-                                                ✓
-                                            </div>
-
-                                            {/* Interest Icon/Emoji */}
-                                            <div className="text-3xl mb-2">
-                                                {getInterestEmoji(interest)}
-                                            </div>
-
-                                            {/* Interest Name */}
-                                            <p className="text-sm font-semibold text-gray-800">
-                                                {interest}
-                                            </p>
-                                        </div>
-                                    ))}
+                                    {interest}
                                 </div>
-                            </div>
-
-                            {/* Exploring Interests */}
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <span className="text-2xl">⭐</span>
-                                    Exploring
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {lifeFrameData?.interests.exploring.map((interest) => (
-                                        <div
-                                            key={interest}
-                                            className="
-                                                bg-white
-                                                rounded-2xl
-                                                p-4
-                                                shadow-[0_4px_15px_rgb(0,0,0,0.06)]
-                                                border border-gray-100
-                                                transition-all duration-200 ease-out
-                                                hover:shadow-[0_4px_15px_rgb(0,0,0,0.10),0_0_25px_rgb(168,85,247,0.12)]
-                                                hover:-translate-y-0.5
-                                                hover:border-purple-200
-                                                text-center
-                                                relative
-                                            "
-                                        >
-                                            {/* Star Icon - Top Right */}
-                                            <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs">
-                                                ⭐
-                                            </div>
-
-                                            {/* Interest Icon/Emoji */}
-                                            <div className="text-3xl mb-2 opacity-70">
-                                                {getInterestEmoji(interest)}
-                                            </div>
-
-                                            {/* Interest Name */}
-                                            <p className="text-sm font-semibold text-gray-800">
-                                                {interest}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Life Categories Section */}
-                    <div className="mb-12">
-                        <div className="bg-white rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 transition-all duration-300 ease-out hover:shadow-[0_8px_30px_rgb(0,0,0,0.12),0_0_40px_rgb(99,102,241,0.15)] hover:-translate-y-1 hover:border-indigo-200">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl">
-                                        🎯
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-bold text-gray-900">Your Life Categories</h2>
-                                        <p className="text-gray-800">Areas where you'll set goals</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => router.push('/workbook/life-categories')}
-                                    className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
+                    <div>
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2">
+                            <span>⭐</span> Want to Explore
+                        </h3>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                            {lifeFrameData?.interests.exploring.map((interest, index) => (
+                                <div
+                                    key={interest}
+                                    className="px-4 py-2 bg-purple-500/20 backdrop-blur-sm rounded-full border border-purple-400/50 text-white hover:bg-purple-500/30 transition hover:scale-110 animate-pop-in"
+                                    style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                    Edit →
-                                </button>
+                                    {interest}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="text-center mt-8">
+                        <button
+                            onClick={() => router.push('/workbook/interests')}
+                            className="text-pink-300 hover:text-white transition"
+                        >
+                            ✏️ Edit Interests
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 4: CATEGORIES */}
+            <section
+                style={{ opacity: categoriesOpacity }}
+                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+            >
+                <div className="max-w-4xl w-full">
+                    <div className="text-center mb-12">
+                        <div className="w-24 h-24 mx-auto mb-6">
+                            <div
+                                className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center transition-shadow duration-300"
+                                style={{
+                                    boxShadow: activeSection === 'categories'
+                                        ? '0 0 60px rgba(99, 102, 241, 0.8)'
+                                        : '0 0 20px rgba(99, 102, 241, 0.3)'
+                                }}
+                            >
+                                <CategoryIcon className="w-12 h-12 text-white" />
                             </div>
+                        </div>
+                        <h2 className="text-5xl font-bold text-white mb-4">Life Categories</h2>
+                        <p className="text-xl text-indigo-200">Areas where you'll set goals</p>
+                    </div>
 
-                            <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                {lifeFrameData?.lifeCategories.categories.map((category) => (
-                                    <div
-                                        key={category.name}
-                                        className="
-                                            bg-white
-                                            rounded-3xl
-                                            p-6
-                                            shadow-[0_8px_30px_rgb(0,0,0,0.08)]
-                                            border border-gray-100
-                                            transition-all duration-300 ease-out
-                                            hover:shadow-[0_8px_30px_rgb(0,0,0,0.12),0_0_40px_rgb(99,102,241,0.15)]
-                                            hover:-translate-y-1
-                                            hover:border-indigo-200
-                                            relative
-                                        "
-                                    >
-                                        {/* Category Icon - Top */}
-                                        <div className="flex items-start gap-4 mb-4">
-                                            <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                <span className="text-3xl">{getCategoryEmoji(category.name)}</span>
-                                            </div>
-                                            <div className="flex-1">
-                                                {/* Category Name */}
-                                                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                                                    {category.name}
-                                                </h3>
-
-                                                {/* Sub-categories */}
-                                                {category.subCategories.length > 0 && (
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {category.subCategories.map((sub) => (
-                                                            <span
-                                                                key={sub}
-                                                                className="
-                                                                    px-3 py-1 
-                                                                    bg-indigo-50 
-                                                                    text-indigo-700 
-                                                                    text-xs 
-                                                                    font-medium 
-                                                                    rounded-full
-                                                                    border border-indigo-100
-                                                                "
-                                                            >
-                                                                {sub}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Decorative Bottom Border */}
-                                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-b-3xl"></div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Purpose Section - Special Treatment */}
-                            {lifeFrameData?.lifeCategories.purpose_elements && lifeFrameData.lifeCategories.purpose_elements.length > 0 && (
-                                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl border-2 border-yellow-200 p-8 shadow-lg">
-                                    <div className="flex items-center gap-4 mb-6">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                                            <span className="text-3xl">⭐</span>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-3xl font-bold text-gray-900">Your Purpose</h3>
-                                            <p className="text-gray-700">How you'll make a positive impact</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid md:grid-cols-2 gap-4">
-                                        {lifeFrameData.lifeCategories.purpose_elements.map((element, index) => (
-                                            <div
-                                                key={index}
-                                                className="
-                                                    bg-white
-                                                   rounded-2xl
-                                                    p-6
-                                                    shadow-[0_4px_15px_rgb(0,0,0,0.06)]
-                                                    border border-yellow-200
-                                                    transition-all duration-200 ease-out
-                                                    hover:shadow-[0_4px_15px_rgb(0,0,0,0.10),0_0_25px_rgb(251,191,36,0.12)]
-                                                    hover:-translate-y-0.5
-                                                    hover:border-yellow-300
-                                                    relative
-                                                "
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {lifeFrameData?.lifeCategories.categories.map((category, index) => (
+                            <div
+                                key={category.name}
+                                className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:border-indigo-400 transition-all animate-slide-in"
+                                style={{
+                                    animationDelay: `${index * 100}ms`,
+                                    animationDirection: index % 2 === 0 ? 'normal' : 'reverse'
+                                }}
+                            >
+                                <h3 className="text-lg font-bold text-white mb-2">{category.name}</h3>
+                                {category.subCategories.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {category.subCategories.map((sub) => (
+                                            <span
+                                                key={sub}
+                                                className="text-xs px-2 py-1 bg-indigo-500/30 rounded-full text-indigo-200"
                                             >
-                                                {/* Purpose Icon */}
-                                                <div className="flex items-start gap-3 mb-3">
-                                                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                        <span className="text-2xl">{getPurposeEmoji(element.name)}</span>
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <h4 className="text-xl font-bold text-gray-900">
-                                                            {element.name}
-                                                        </h4>
-                                                    </div>
-                                                </div>
-
-                                                {/* Description if exists */}
-                                                {element.description && (
-                                                    <p className="text-gray-700 text-sm leading-relaxed">
-                                                        {element.description}
-                                                    </p>
-                                                )}
-
-                                                {/* Decorative corner accent */}
-                                                <div className="absolute top-3 right-3 w-8 h-8 bg-yellow-200 rounded-full opacity-20"></div>
-                                            </div>
+                                                {sub}
+                                            </span>
                                         ))}
                                     </div>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Next Step CTA */}
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-3xl shadow-2xl p-12 text-center text-white">
-                        <h2 className="text-4xl font-bold mb-4">LifeFrame Complete! 🎉</h2>
-                        <p className="text-xl mb-8">
-                            You've built the foundation. Now it's time to create your Roadmap with goals and activities.
+                    <div className="text-center mt-8">
+                        <button
+                            onClick={() => router.push('/workbook/life-categories')}
+                            className="text-indigo-300 hover:text-white transition"
+                        >
+                            ✏️ Edit Categories
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 5: PURPOSE */}
+            <section
+                style={{ opacity: purposeOpacity }}
+                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+            >
+                <div className="max-w-4xl w-full text-center">
+                    <div className="mb-12">
+                        <div className="w-40 h-40 mx-auto mb-8 relative">
+                            <div
+                                className="w-full h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 rounded-full flex items-center justify-center transition-shadow duration-300"
+                                style={{
+                                    boxShadow: activeSection === 'purpose'
+                                        ? '0 0 100px rgba(251, 191, 36, 1), 0 0 200px rgba(251, 191, 36, 0.5)'
+                                        : '0 0 40px rgba(251, 191, 36, 0.3)'
+                                }}
+                            >
+                                <PurposeIcon className="w-20 h-20 text-white" />
+                            </div>
+                            <div className="absolute inset-0 border-2 border-yellow-400/30 rounded-full animate-spin-slow" style={{ transform: 'scale(1.3)' }} />
+                            <div className="absolute inset-0 border-2 border-orange-400/30 rounded-full animate-spin-slower" style={{ transform: 'scale(1.5)' }} />
+                        </div>
+                        <h2 className="text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 mb-6">
+                            Your Purpose
+                        </h2>
+                        <p className="text-2xl text-yellow-200 mb-12">
+                            How you'll make a positive impact
+                        </p>
+                    </div>
+
+                    <div className="space-y-6 mb-12">
+                        {lifeFrameData?.lifeCategories.purpose_elements.map((element, index) => (
+                            <div
+                                key={element.name}
+                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-2xl p-8 border border-yellow-400/50 animate-fade-up"
+                                style={{ animationDelay: `${index * 200}ms` }}
+                            >
+                                <h3 className="text-3xl font-bold text-white mb-3">{element.name}</h3>
+                                {element.description && (
+                                    <p className="text-xl text-yellow-100">{element.description}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 animate-fade-in-slow">
+                        <p className="text-2xl text-white mb-6">
+                            Your LifeFrame is complete! 🎉
+                        </p>
+                        <p className="text-lg text-purple-200 mb-8">
+                            Now build your Roadmap with goals and activities aligned with these values and purpose.
                         </p>
                         <button
                             onClick={() => router.push('/roadmap')}
-                            className="bg-white text-green-600 px-10 py-4 rounded-full font-bold text-xl hover:shadow-2xl transition-all transform hover:scale-105"
+                            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold text-xl hover:shadow-[0_0_40px_rgba(168,85,247,0.6)] transition-all transform hover:scale-105"
                         >
                             Build Your Roadmap →
                         </button>
                     </div>
                 </div>
-            </div>
-        </>
+            </section>
+
+            {/* Spacer */}
+            <div className="h-screen" />
+
+            <style jsx global>{`
+                @keyframes confetti {
+                    to {
+                        transform: translateY(100vh) rotate(360deg);
+                        opacity: 0;
+                    }
+                }
+                @keyframes scale-in {
+                    from {
+                        transform: scale(0);
+                    }
+                    to {
+                        transform: scale(1);
+                    }
+                }
+                @keyframes fade-up {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                @keyframes pop-in {
+                    from {
+                        opacity: 0;
+                        transform: scale(0);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                @keyframes slide-in {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+                @keyframes spin-slow {
+                    from {
+                        transform: scale(1.3) rotate(0deg);
+                    }
+                    to {
+                        transform: scale(1.3) rotate(360deg);
+                    }
+                }
+                @keyframes spin-slower {
+                    from {
+                        transform: scale(1.5) rotate(0deg);
+                    }
+                    to {
+                        transform: scale(1.5) rotate(-360deg);
+                    }
+                }
+                .animate-confetti {
+                    animation: confetti forwards;
+                }
+                .animate-scale-in {
+                    animation: scale-in 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+                }
+                .animate-fade-up {
+                    animation: fade-up 0.6s ease-out;
+                }
+                .animate-fade-up-delay {
+                    animation: fade-up 0.6s ease-out 0.2s backwards;
+                }
+                .animate-fade-in-slow {
+                    animation: fade-up 0.6s ease-out 0.5s backwards;
+                }
+                .animate-pop-in {
+                    animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+                }
+                .animate-slide-in {
+                    animation: slide-in 0.5s ease-out backwards;
+                }
+                .animate-spin-slow {
+                    animation: spin-slow 20s linear infinite;
+                }
+                .animate-spin-slower {
+                    animation: spin-slower 15s linear infinite;
+                }
+            `}</style>
+        </div>
     );
 }
