@@ -2,6 +2,116 @@
 
 import { useState } from 'react';
 
+// ============================================================================
+// INLINE SVG ICONS
+// ============================================================================
+
+const ValuesIcon = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="valuesIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#667eea" />
+                <stop offset="100%" stopColor="#764ba2" />
+            </linearGradient>
+        </defs>
+        {/* Compass/values representation */}
+        <circle cx="100" cy="100" r="60" fill="url(#valuesIconGradient)" opacity="0.1" />
+        <line x1="100" y1="50" x2="100" y2="70" stroke="url(#valuesIconGradient)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="100" y1="130" x2="100" y2="150" stroke="url(#valuesIconGradient)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="50" y1="100" x2="70" y2="100" stroke="url(#valuesIconGradient)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="130" y1="100" x2="150" y2="100" stroke="url(#valuesIconGradient)" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="100" cy="100" r="25" fill="url(#valuesIconGradient)" opacity="0.8" />
+        <circle cx="100" cy="100" r="15" fill="white" />
+        <circle cx="100" cy="60" r="8" fill="#667eea" />
+        <circle cx="140" cy="100" r="8" fill="#764ba2" />
+        <circle cx="100" cy="140" r="8" fill="#f093fb" />
+        <circle cx="60" cy="100" r="8" fill="#667eea" />
+    </svg>
+);
+
+const InterestsIcon = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="interestsIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f093fb" />
+                <stop offset="100%" stopColor="#f5576c" />
+            </linearGradient>
+        </defs>
+        {/* Heart/passion representation */}
+        <path
+            d="M100,170 C100,170 40,130 40,90 C40,70 50,50 70,50 C85,50 95,60 100,70 C105,60 115,50 130,50 C150,50 160,70 160,90 C160,130 100,170 100,170 Z"
+            fill="url(#interestsIconGradient)"
+            opacity="0.8"
+        />
+        <circle cx="100" cy="100" r="70" fill="url(#interestsIconGradient)" opacity="0.1" />
+        <circle cx="100" cy="100" r="20" fill="url(#interestsIconGradient)" opacity="0.6" />
+    </svg>
+);
+
+const CategoriesIcon = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="categoriesIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#667eea" />
+                <stop offset="50%" stopColor="#764ba2" />
+                <stop offset="100%" stopColor="#f093fb" />
+            </linearGradient>
+        </defs>
+        {/* Target/bullseye representation */}
+        <circle cx="100" cy="100" r="70" fill="url(#categoriesIconGradient)" opacity="0.1" />
+        <circle cx="100" cy="100" r="50" fill="url(#categoriesIconGradient)" opacity="0.2" />
+        <circle cx="100" cy="100" r="30" fill="url(#categoriesIconGradient)" opacity="0.6" />
+        <circle cx="100" cy="100" r="15" fill="url(#categoriesIconGradient)" />
+        <circle cx="100" cy="100" r="8" fill="white" />
+    </svg>
+);
+
+const GoalsIcon = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="goalsIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ffd700" />
+                <stop offset="100%" stopColor="#ff6b6b" />
+            </linearGradient>
+        </defs>
+        {/* Star/achievement representation */}
+        <circle cx="100" cy="100" r="70" fill="url(#goalsIconGradient)" opacity="0.1" />
+        <path
+            d="M 100,40 L 115,80 L 160,85 L 127,115 L 135,160 L 100,137 L 65,160 L 73,115 L 40,85 L 85,80 Z"
+            fill="url(#goalsIconGradient)"
+            stroke="#ff6b6b"
+            strokeWidth="2"
+        />
+        <circle cx="100" cy="100" r="20" fill="white" opacity="0.8" />
+    </svg>
+);
+
+const ActivitiesIcon = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="activitiesIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#34d399" />
+                <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+        </defs>
+        {/* Checkmark/completion representation */}
+        <circle cx="100" cy="100" r="70" fill="url(#activitiesIconGradient)" opacity="0.2" />
+        <circle cx="100" cy="100" r="50" fill="url(#activitiesIconGradient)" opacity="0.6" />
+        <path
+            d="M 60,100 L 85,125 L 140,70"
+            stroke="white"
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+        />
+    </svg>
+);
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export function Interactive5StepJourney() {
     const [activeStep, setActiveStep] = useState(1);
 
@@ -11,7 +121,7 @@ export function Interactive5StepJourney() {
             title: 'Values',
             category: 'LifeFrame',
             color: 'teal',
-            icon: '📌',
+            IconComponent: ValuesIcon,
             description: 'Identify the principles that guide your life',
             example: 'Circle values like "Integrity," "Growth," "Family" and prioritize your top 10-15',
             time: '15-20 min',
@@ -21,7 +131,7 @@ export function Interactive5StepJourney() {
             title: 'Interests',
             category: 'LifeFrame',
             color: 'teal',
-            icon: '❤️',
+            IconComponent: InterestsIcon,
             description: 'Discover activities that bring you joy and energy',
             example: 'Mark interests you currently enjoy and underline ones you want to explore',
             time: '10-15 min',
@@ -31,7 +141,7 @@ export function Interactive5StepJourney() {
             title: 'Life Categories',
             category: 'LifeFrame',
             color: 'teal',
-            icon: '🎯',
+            IconComponent: CategoriesIcon,
             description: 'Define the key areas of your life, including your Purpose',
             example: 'Select categories like Health, Career, Relationships and define your Purpose',
             time: '20-30 min',
@@ -41,7 +151,7 @@ export function Interactive5StepJourney() {
             title: 'Goals & Changes',
             category: 'Roadmap',
             color: 'blue',
-            icon: '⭐',
+            IconComponent: GoalsIcon,
             description: 'Set specific goals for each Life Category',
             example: 'Health: "Exercise 5x/week" | Career: "Get promoted within 1 year"',
             time: '30-45 min',
@@ -51,7 +161,7 @@ export function Interactive5StepJourney() {
             title: 'Activities',
             category: 'Roadmap',
             color: 'blue',
-            icon: '✅',
+            IconComponent: ActivitiesIcon,
             description: 'Break down goals into actionable activities',
             example: 'Exercise goal → "Join gym Monday," "HIIT class Tue/Thu," "Run Sat mornings"',
             time: '45-60 min',
@@ -105,9 +215,12 @@ export function Interactive5StepJourney() {
 
             {/* Active Step Details */}
             <div className="bg-white rounded-2xl p-8 shadow-lg">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
                     <div className="flex items-center gap-4">
-                        <span className="text-5xl">{currentStep.icon}</span>
+                        {/* SVG Icon */}
+                        <div className="w-16 h-16 flex-shrink-0">
+                            <currentStep.IconComponent />
+                        </div>
                         <div>
                             <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
                                 Step {currentStep.num} - {currentStep.category}

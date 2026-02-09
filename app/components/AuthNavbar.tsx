@@ -100,6 +100,15 @@ export default function AuthNavbar() {
                                 🗺️ Roadmap
                             </Link>
                             <Link
+                                href="/todo"
+                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/todo')
+                                    ? 'bg-indigo-50 text-indigo-600'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
+                            >
+                                ✅ To-Do
+                            </Link>
+                            <Link
                                 href="/resources"
                                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/resources')
                                     ? 'bg-indigo-50 text-indigo-600'
@@ -159,6 +168,10 @@ export default function AuthNavbar() {
                                                 <span className="text-xl">🗺️</span>
                                                 <span className="text-sm font-medium text-gray-700">My Roadmap</span>
                                             </Link>
+                                            <Link href="/todo" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                                                <span className="text-xl">✅</span>
+                                                <span className="text-sm font-medium text-gray-700">To-Do List</span>
+                                            </Link>
                                             <Link href="/resources" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
                                                 <span className="text-xl">📚</span>
                                                 <span className="text-sm font-medium text-gray-700">Resources</span>
@@ -202,6 +215,9 @@ export default function AuthNavbar() {
                             </Link>
                             <Link href="/roadmap" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/roadmap') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 🗺️ Roadmap
+                            </Link>
+                            <Link href="/todo" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/todo') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+                                ✅ To-Do
                             </Link>
                             <Link href="/resources" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/resources') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 📚 Resources

@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import WelcomeAnimation from '@/app/components/WelcomeAnimation';
+import { OnboardingModal } from '@/app/components/OnboardingModal';
+import { DashboardTodoWidget } from '@/app/components/DashboardTodoWidget';
 import { SkeletonCard } from '@/app/components/Skeleton';
 
 // ============================================================================
@@ -632,6 +634,7 @@ export default function DashboardPage() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showWelcome, setShowWelcome] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
     const [status, setStatus] = useState<WorksheetStatus>({
         values: false,
         interests: false,
@@ -740,7 +743,10 @@ export default function DashboardPage() {
     if (showWelcome) {
         return (
             <WelcomeAnimation
-                onComplete={() => setShowWelcome(false)}
+                onComplete={() => {
+                    setShowWelcome(false);
+                    setShowOnboarding(true);
+                }}
                 userName={user?.profile?.full_name}
             />
         );
@@ -749,6 +755,15 @@ export default function DashboardPage() {
     return (
         <>
             <AuthNavbar />
+
+            {/* Onboarding Modal - shows after WelcomeAnimation for new users */}
+            {user?.user?.id && showOnboarding && (
+                <OnboardingModal
+                    userId={user.user.id}
+                    onComplete={() => setShowOnboarding(false)}
+                />
+            )}
+
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16">
                 <div className="max-w-7xl mx-auto px-4 py-8">
 
@@ -1034,6 +1049,14 @@ export default function DashboardPage() {
                         <div className="grid md:grid-cols-2 gap-6 mb-12">
                             <IntegratedDailyCheckIn />
                             <IntegratedNextActions />
+                        </div>
+                    )}
+
+
+                    {/* TO-DO LIST WIDGET */}
+                    {user?.user?.id && (
+                        <div className="mb-12 md:mb-16">
+                            <DashboardTodoWidget userId={user.user.id} />
                         </div>
                     )}
 

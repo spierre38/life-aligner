@@ -395,7 +395,7 @@ export default function Home() {
               href="/signup"
               className="bg-white text-purple-600 px-10 py-5 rounded-full font-bold text-xl hover:shadow-2xl transition transform hover:scale-105"
             >
-              Get Started Free
+              Get Started
             </Link>
             <Link
               href="#preview"
@@ -414,6 +414,14 @@ export default function Home() {
             LifeAligner
           </div>
           <p className="text-gray-400 mb-6">Your path to contentment.</p>
+
+          {/* Copyright Notice */}
+          <div className="mb-6 px-4">
+            <p className="text-sm text-gray-400 max-w-4xl mx-auto leading-relaxed">
+              © 2025 Timothy Collins. All materials are owned by Timothy Collins and are protected by United States and International copyright, trademark and other laws. All rights reserved.
+            </p>
+          </div>
+
           <div className="flex justify-center gap-8 text-sm text-gray-400">
             <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
             <Link href="/terms" className="hover:text-white transition">Terms</Link>

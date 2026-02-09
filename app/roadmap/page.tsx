@@ -1,14 +1,124 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import QuickLogModal from '@/app/components/QuickLogModal';
 import LifeFrameConnection from '@/app/components/LifeFrameConnection';
+import { AddToTodoButton } from '@/app/components/AddToTodoButton';
 import { useToast } from '@/app/components/Toast';
 import { SkeletonGoalCard } from '@/app/components/Skeleton';
+
+// ============================================================================
+// SVG ICONS - Professional replacements for emojis
+// ============================================================================
+
+const RoadmapIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+    </svg>
+);
+
+const GoalIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+const BehaviorIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+);
+
+const ReflectionIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+);
+
+const ArchiveIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+    </svg>
+);
+
+const DocumentIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
+
+// Category Icons
+const CategoryIcons: Record<string, React.FC<{ className?: string }>> = {
+    'Health': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+    ),
+    'Relationships': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+    ),
+    'Career': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+    ),
+    'Social': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+    ),
+    'Learning': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+    ),
+    'Finance': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    ),
+    'Spiritual': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+    ),
+    'Creative': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+    ),
+    'Purpose': ({ className = "w-6 h-6" }) => (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+    ),
+};
+
+const getCategoryIconComponent = (categoryName: string) => {
+    return CategoryIcons[categoryName] || CategoryIcons['Purpose'];
+};
+
 
 type ActivityLog = {
     date: string; // ISO format "2026-02-03"
@@ -649,22 +759,42 @@ export default function RoadmapPage() {
             )}
 
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-16">
-                {/* Header */}
-                <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-                    <div className="max-w-7xl mx-auto px-4 py-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl">
-                                    🗺️
+                {/* COMPACT STICKY HEADER */}
+                <div className="bg-white border-b border-gray-200 sticky top-16 z-40 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        {/* Top Row - Title & Stats */}
+                        <div className="flex items-center justify-between py-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-md">
+                                    <RoadmapIcon className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">Your Roadmap</h1>
-                                    <p className="text-gray-800">{currentQuarter} • Continuous Improvement</p>
+                                    <h1 className="text-2xl font-bold text-gray-900">Roadmap</h1>
+                                    <p className="text-sm text-gray-600">{currentQuarter}</p>
                                 </div>
                             </div>
+
+                            {/* Quick Stats - Compact */}
+                            <div className="hidden md:flex items-center gap-4">
+                                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
+                                    <div className="text-xl font-bold text-blue-600">{activeItems.length}</div>
+                                    <div className="text-xs text-gray-600">Active</div>
+                                </div>
+                                <div className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-lg">
+                                    <div className="text-xl font-bold text-purple-600">
+                                        {activeItems.reduce((sum, item) => sum + item.reflections.length, 0)}
+                                    </div>
+                                    <div className="text-xs text-gray-600">Reflections</div>
+                                </div>
+                                <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-lg">
+                                    <div className="text-xl font-bold text-green-600">{archivedItems.length}</div>
+                                    <div className="text-xs text-gray-600">Archived</div>
+                                </div>
+                            </div>
+
                             <button
                                 onClick={() => router.push('/dashboard')}
-                                className="text-gray-800 hover:text-gray-900"
+                                className="text-gray-400 hover:text-gray-600 transition"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -672,54 +802,25 @@ export default function RoadmapPage() {
                             </button>
                         </div>
 
-                        {/* Philosophy Reminder */}
-                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl p-4 mb-4">
-                            <div className="flex items-start gap-3">
-                                <div className="text-2xl">💡</div>
-                                <div className="text-sm text-gray-800">
-                                    <strong>Remember:</strong> Your Roadmap is about <strong>learning and growing</strong>, not checking boxes.
-                                    Success = effort + learning, whether you "achieve" the goal or not. Update activities every 3 months based on what you learn.
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4">
-                                <div className="text-2xl font-bold text-indigo-600">{activeItems.length}</div>
-                                <div className="text-sm text-gray-800">Active {currentQuarter}</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4">
-                                <div className="text-2xl font-bold text-purple-600">
-                                    {activeItems.reduce((sum, item) => sum + item.reflections.length, 0)}
-                                </div>
-                                <div className="text-sm text-gray-800">Reflections</div>
-                            </div>
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4">
-                                <div className="text-2xl font-bold text-green-600">{archivedItems.length}</div>
-                                <div className="text-sm text-gray-800">Archived</div>
-                            </div>
-                        </div>
-
-                        {/* Tabs */}
-                        <div className="flex gap-2 mt-4 border-b border-gray-200">
+                        {/* Tabs - Compact */}
+                        <div className="flex gap-1 border-b border-gray-200 -mb-px">
                             {[
-                                { id: 'current', label: `${currentQuarter}`, icon: '🎯' },
-                                { id: 'reflect', label: 'Reflect & Learn', icon: '💭' },
-                                { id: 'archive', label: 'Archive', icon: '📦' }
+                                { id: 'current', label: 'Current', icon: GoalIcon },
+                                { id: 'reflect', label: 'Reflect', icon: ReflectionIcon },
+                                { id: 'archive', label: 'Archive', icon: ArchiveIcon }
                             ].map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`
-                    px-6 py-3 font-semibold transition-all
-                    ${activeTab === tab.id
-                                            ? 'border-b-4 border-indigo-600 text-indigo-600'
-                                            : 'text-gray-800 hover:text-gray-900'
+                                        flex items-center gap-2 px-4 py-2.5 font-semibold text-sm transition-all
+                                        ${activeTab === tab.id
+                                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                                            : 'text-gray-600 hover:text-gray-900'
                                         }
-                  `}
+                                    `}
                                 >
-                                    <span className="mr-2">{tab.icon}</span>
+                                    <tab.icon className="w-4 h-4" />
                                     {tab.label}
                                 </button>
                             ))}
@@ -732,6 +833,17 @@ export default function RoadmapPage() {
                     {/* Current Quarter Tab */}
                     {activeTab === 'current' && (
                         <div className="space-y-6">
+                            {/* Philosophy Reminder - More compact */}
+                            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 rounded-r-lg p-3 mb-6">
+                                <div className="flex items-start gap-2">
+                                    <ReflectionIcon className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                                    <p className="text-sm text-gray-700">
+                                        <strong className="text-gray-900">Remember:</strong> Success = <strong>effort + learning</strong>.
+                                        Update every 3 months based on what you learn.
+                                    </p>
+                                </div>
+                            </div>
+
                             {categories.length === 0 ? (
                                 <div className="text-center py-20">
                                     <div className="text-6xl mb-4">🎯</div>
@@ -753,19 +865,19 @@ export default function RoadmapPage() {
                                             {/* Category Header */}
                                             <button
                                                 onClick={() => setExpandedCategory(isExpanded ? null : category.name)}
-                                                className="w-full p-6 flex items-center justify-between hover:bg-gray-50 transition"
+                                                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition group"
                                             >
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white text-2xl">
-                                                        {getCategoryIcon(category.name)}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
+                                                        {React.createElement(getCategoryIconComponent(category.name), { className: "w-5 h-5" })}
                                                     </div>
                                                     <div className="text-left">
-                                                        <h3 className="text-xl font-bold text-gray-900">{category.name}</h3>
-                                                        <p className="text-sm text-gray-800">{categoryItems.length} active items</p>
+                                                        <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
+                                                        <p className="text-xs text-gray-600">{categoryItems.length} items</p>
                                                     </div>
                                                 </div>
                                                 <svg
-                                                    className={`w-6 h-6 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                                    className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                                     fill="none"
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
@@ -785,10 +897,14 @@ export default function RoadmapPage() {
                                                                     <div className="flex items-center gap-2 mb-2">
                                                                         <h4 className="font-bold text-xl text-gray-900">{item.title}</h4>
                                                                         <span className={`
-                                      px-3 py-1 rounded-full text-xs font-bold
-                                      ${item.type === 'goal' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'}
+                                      flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold
+                                      ${item.type === 'goal' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-purple-100 text-purple-700 border border-purple-300'}
                                     `}>
-                                                                            {item.type === 'goal' ? '🎯 Goal' : '🔄 Behavior Change'}
+                                                                            {item.type === 'goal' ? (
+                                                                                <><GoalIcon className="w-3.5 h-3.5" /> Goal</>
+                                                                            ) : (
+                                                                                <><BehaviorIcon className="w-3.5 h-3.5" /> Behavior</>
+                                                                            )}
                                                                         </span>
                                                                     </div>
                                                                     {item.why && (
@@ -831,11 +947,11 @@ export default function RoadmapPage() {
                                                                     return (
                                                                         <div key={activity.id} className="bg-white rounded-lg p-4 border-2 border-gray-200">
                                                                             <div className="flex items-center gap-3 mb-2">
-                                                                                {/* Activity logging button with 📝 emoji */}
+                                                                                {/* Activity logging button with SVG icon */}
                                                                                 <button
                                                                                     onClick={() => startLogActivity(item.id, activity.id, activity.text, doneCount)}
                                                                                     className={`
-                                                                                        w-10 h-10 rounded-lg flex items-center justify-center font-bold transition-all text-xl
+                                                                                        w-10 h-10 rounded-lg flex items-center justify-center font-bold transition-all
                                                                                         ${doneToday
                                                                                             ? 'bg-green-500 text-white hover:bg-green-600 shadow-md hover:scale-110'
                                                                                             : 'bg-white hover:bg-indigo-50 border-2 border-indigo-300 text-indigo-600 hover:border-indigo-400 hover:scale-105'
@@ -843,7 +959,7 @@ export default function RoadmapPage() {
                                                                                     `}
                                                                                     title={doneToday ? "Done today! Click to log again" : "Click to log this activity"}
                                                                                 >
-                                                                                    📝
+                                                                                    <DocumentIcon className="w-5 h-5" />
                                                                                 </button>
                                                                                 <div className="flex-1">
                                                                                     <span className="text-gray-900 font-medium">{activity.text}</span>
@@ -860,6 +976,20 @@ export default function RoadmapPage() {
                                                                                         )}
                                                                                     </div>
                                                                                 </div>
+
+                                                                                {/* Add to To-Do Button */}
+                                                                                {userId && (
+                                                                                    <AddToTodoButton
+                                                                                        userId={userId}
+                                                                                        activity={activity.text}
+                                                                                        context={{
+                                                                                            life_category: category.name,
+                                                                                            goal: item.title, // Changed from item.goal to item.title as goal is not a direct property
+                                                                                            activity: activity.text
+                                                                                        }}
+                                                                                        variant="compact"
+                                                                                    />
+                                                                                )}
                                                                             </div>
 
                                                                             {/* NEW: Show recent logs with feelings */}
@@ -1240,9 +1370,13 @@ export default function RoadmapPage() {
                                                                 <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
                                                                     {item.category}
                                                                 </span>
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.type === 'goal' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'
+                                                                <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${item.type === 'goal' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-purple-100 text-purple-700 border border-purple-300'
                                                                     }`}>
-                                                                    {item.type === 'goal' ? '🎯 Goal' : '🔄 Behavior Change'}
+                                                                    {item.type === 'goal' ? (
+                                                                        <><GoalIcon className="w-3.5 h-3.5" /> Goal</>
+                                                                    ) : (
+                                                                        <><BehaviorIcon className="w-3.5 h-3.5" /> Behavior</>
+                                                                    )}
                                                                 </span>
                                                             </div>
                                                             <h4 className="font-bold text-gray-900">{item.title}</h4>
