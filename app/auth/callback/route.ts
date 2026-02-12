@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
     const requestUrl = new URL(request.url);
     const code = requestUrl.searchParams.get('code');
     const next = requestUrl.searchParams.get('next') ?? '/dashboard';
+    const type = requestUrl.searchParams.get('type');
 
     if (code) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -20,7 +21,12 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
-            // Authentication successful - redirect to dashboard or specified next page
+            // If this is a password recovery flow, redirect to the confirm page
+            if (type === 'recovery') {
+                return NextResponse.redirect(new URL('/reset-password/confirm', requestUrl.origin));
+            }
+
+            // Otherwise redirect to dashboard or specified next page
             return NextResponse.redirect(new URL(next, requestUrl.origin));
         } else {
             console.error('Error exchanging code for session:', error);

@@ -38,6 +38,200 @@ type LifeFrameData = {
     lifeCategories: LifeCategoriesData;
 };
 
+// Star Field Component
+const StarField = () => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Set canvas size
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = document.documentElement.scrollHeight;
+        };
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Create stars
+        const stars: Array<{
+            x: number;
+            y: number;
+            radius: number;
+            opacity: number;
+            twinkleSpeed: number;
+            layer: number;
+        }> = [];
+
+        for (let i = 0; i < 300; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2,
+                opacity: Math.random(),
+                twinkleSpeed: Math.random() * 0.02,
+                layer: Math.random() > 0.5 ? 1 : 2
+            });
+        }
+
+        // Shooting stars
+        let shootingStars: Array<{
+            x: number;
+            y: number;
+            length: number;
+            speed: number;
+            opacity: number;
+        }> = [];
+
+        const createShootingStar = () => {
+            if (Math.random() > 0.96) {
+                shootingStars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.5,
+                    length: Math.random() * 80 + 20,
+                    speed: Math.random() * 5 + 5,
+                    opacity: 1
+                });
+            }
+        };
+
+        // Animation loop
+        let animationFrame: number;
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Parallax effect based on scroll
+            const scrollY = window.scrollY;
+            const scrollProgress = scrollY / (canvas.height - window.innerHeight);
+
+            // Draw stars
+            stars.forEach(star => {
+                const parallaxOffset = (scrollY * star.layer) * 0.3;
+                star.opacity += star.twinkleSpeed;
+                if (star.opacity > 1 || star.opacity < 0.3) {
+                    star.twinkleSpeed *= -1;
+                }
+
+                ctx.beginPath();
+                ctx.arc(star.x, star.y - parallaxOffset, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.fill();
+            });
+
+            // Draw shooting stars
+            createShootingStar();
+            shootingStars = shootingStars.filter(star => {
+                star.x += star.speed;
+                star.y += star.speed;
+                star.opacity -= 0.01;
+
+                if (star.opacity > 0) {
+                    const gradient = ctx.createLinearGradient(
+                        star.x, star.y,
+                        star.x - star.length, star.y - star.length
+                    );
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${star.opacity})`);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                    ctx.beginPath();
+                    ctx.moveTo(star.x, star.y);
+                    ctx.lineTo(star.x - star.length, star.y - star.length);
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    return true;
+                }
+                return false;
+            });
+
+            animationFrame = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        return () => {
+            cancelAnimationFrame(animationFrame);
+            window.removeEventListener('resize', resizeCanvas);
+        };
+    }, []);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="fixed inset-0 pointer-events-none z-0"
+            style={{ opacity: 0.6 }}
+        />
+    );
+};
+
+// Constellation Connection Lines Component
+const ConstellationLines = ({ activeSection }: { activeSection: string }) => {
+    return (
+        <svg
+            className="fixed inset-0 pointer-events-none z-10"
+            style={{ width: '100%', height: '100%' }}
+        >
+            <defs>
+                <linearGradient id="line-gradient-purple" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(168, 85, 247, 0)" />
+                    <stop offset="50%" stopColor="rgba(168, 85, 247, 0.6)" />
+                    <stop offset="100%" stopColor="rgba(168, 85, 247, 0)" />
+                </linearGradient>
+                <linearGradient id="line-gradient-pink" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(236, 72, 153, 0)" />
+                    <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
+                    <stop offset="100%" stopColor="rgba(236, 72, 153, 0)" />
+                </linearGradient>
+                <linearGradient id="line-gradient-gold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(251, 191, 36, 0)" />
+                    <stop offset="50%" stopColor="rgba(251, 191, 36, 0.8)" />
+                    <stop offset="100%" stopColor="rgba(251, 191, 36, 0)" />
+                </linearGradient>
+            </defs>
+
+            {/* Values to Interests line */}
+            <line
+                x1="50%" y1="20%"
+                x2="50%" y2="40%"
+                stroke="url(#line-gradient-purple)"
+                strokeWidth="2"
+                className="transition-opacity duration-500"
+                style={{
+                    opacity: ['values', 'interests', 'categories', 'purpose'].includes(activeSection) ? 1 : 0.2
+                }}
+            />
+
+            {/* Interests to Categories line */}
+            <line
+                x1="50%" y1="40%"
+                x2="50%" y2="60%"
+                stroke="url(#line-gradient-pink)"
+                strokeWidth="2"
+                className="transition-opacity duration-500"
+                style={{
+                    opacity: ['interests', 'categories', 'purpose'].includes(activeSection) ? 1 : 0.2
+                }}
+            />
+
+            {/* Categories to Purpose line */}
+            <line
+                x1="50%" y1="60%"
+                x2="50%" y2="80%"
+                stroke="url(#line-gradient-gold)"
+                strokeWidth="2"
+                className="transition-opacity duration-500"
+                style={{
+                    opacity: ['categories', 'purpose'].includes(activeSection) ? 1 : 0.2
+                }}
+            />
+        </svg>
+    );
+};
+
 // SVG Icons
 const ValueIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -74,7 +268,7 @@ export default function LifeFrameConstellation() {
 
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Manual scroll tracking (no Framer Motion scroll hook)
+    // Manual scroll tracking
     useEffect(() => {
         const handleScroll = () => {
             if (!containerRef.current) return;
@@ -93,7 +287,6 @@ export default function LifeFrameConstellation() {
             else if (progress < 0.8) setActiveSection('categories');
             else {
                 setActiveSection('purpose');
-                // Trigger confetti as soon as Purpose section is active (at 80% scroll)
                 if (progress >= 0.8 && !showConfetti) {
                     setShowConfetti(true);
                     setTimeout(() => setShowConfetti(false), 3000);
@@ -105,7 +298,7 @@ export default function LifeFrameConstellation() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [showConfetti]);
 
-    // Calculate section opacities based on scroll progress
+    // Calculate section opacities
     const getOpacity = (start: number, fadeIn: number, fadeOut: number, end: number) => {
         if (scrollProgress < start) return 0;
         if (scrollProgress < fadeIn) return (scrollProgress - start) / (fadeIn - start);
@@ -171,10 +364,16 @@ export default function LifeFrameConstellation() {
 
     return (
         <div ref={containerRef} className="relative bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900">
+            {/* Star Field Background */}
+            <StarField />
+
+            {/* Constellation Connection Lines */}
+            <ConstellationLines activeSection={activeSection} />
+
             {/* Constellation Map - Sticky */}
             <ConstellationMap activeSection={activeSection} />
 
-            {/* Skip Navigation */}
+            {/* Navigation */}
             <div className="fixed top-6 left-6 z-40 flex gap-2">
                 <button
                     onClick={() => router.push('/dashboard')}
@@ -190,7 +389,7 @@ export default function LifeFrameConstellation() {
                 </button>
             </div>
 
-            {/* Print & Share Buttons - Top Right */}
+            {/* Print & Share Buttons */}
             <div className="fixed top-6 right-6 z-40 flex gap-2">
                 <button
                     onClick={() => router.push('/lifeframe/print')}
@@ -209,11 +408,8 @@ export default function LifeFrameConstellation() {
                                 title: 'My LifeFrame',
                                 text: 'Check out my LifeFrame - my values, interests, and purpose!',
                                 url: window.location.href
-                            }).catch(() => {
-                                // User cancelled or share failed
-                            });
+                            }).catch(() => { });
                         } else {
-                            // Fallback: Copy link to clipboard
                             navigator.clipboard.writeText(window.location.href);
                             alert('Link copied to clipboard!');
                         }
@@ -250,18 +446,18 @@ export default function LifeFrameConstellation() {
             {/* SECTION 1: INTRO */}
             <section
                 style={{ opacity: introOpacity }}
-                className="min-h-screen flex items-center justify-center px-4 transition-opacity duration-500"
+                className="min-h-screen flex items-center justify-center px-4 relative z-20"
             >
-                <div className="text-center">
+                <div className="text-center intro-wave">
                     <div className="w-32 h-32 mx-auto mb-8">
                         <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center animate-scale-in">
                             <span className="text-6xl">✨</span>
                         </div>
                     </div>
-                    <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 animate-fade-up">
+                    <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 scroll-pop">
                         Your LifeFrame
                     </h1>
-                    <p className="text-2xl text-purple-200 mb-12 animate-fade-up-delay">
+                    <p className="text-2xl text-purple-200 mb-12 scroll-pop" style={{ animationDelay: '0.2s' }}>
                         A constellation of what matters most
                     </p>
                     <div className="text-white animate-fade-in-slow">
@@ -276,10 +472,10 @@ export default function LifeFrameConstellation() {
             {/* SECTION 2: VALUES */}
             <section
                 style={{ opacity: valuesOpacity }}
-                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+                className="min-h-screen flex items-center justify-center px-4 py-20 relative z-20"
             >
-                <div className="max-w-4xl w-full">
-                    <div className="text-center mb-12">
+                <div className="max-w-4xl w-full scroll-container">
+                    <div className="text-center mb-12 scroll-pop">
                         <div className="w-24 h-24 mx-auto mb-6">
                             <div
                                 className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center transition-shadow duration-300"
@@ -292,7 +488,7 @@ export default function LifeFrameConstellation() {
                                 <ValueIcon className="w-12 h-12 text-white" />
                             </div>
                         </div>
-                        <h2 className="text-5xl font-bold text-white mb-4">Your Values</h2>
+                        <h2 className="text-5xl font-bold text-white mb-4 scroll-text-gradient">Your Values</h2>
                         <p className="text-xl text-purple-200">Principles that guide your life</p>
                     </div>
 
@@ -300,7 +496,7 @@ export default function LifeFrameConstellation() {
                         {lifeFrameData?.values.map((value, index) => (
                             <div
                                 key={value.name}
-                                className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-purple-400 transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] animate-fade-up"
+                                className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-purple-400 transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] scroll-pop"
                                 style={{ animationDelay: `${index * 100}ms` }}
                             >
                                 <div className="flex items-start gap-4">
@@ -316,7 +512,7 @@ export default function LifeFrameConstellation() {
                         ))}
                     </div>
 
-                    <div className="text-center mt-8">
+                    <div className="text-center mt-8 scroll-pop">
                         <button
                             onClick={() => router.push('/workbook/values')}
                             className="text-purple-300 hover:text-white transition"
@@ -330,10 +526,10 @@ export default function LifeFrameConstellation() {
             {/* SECTION 3: INTERESTS */}
             <section
                 style={{ opacity: interestsOpacity }}
-                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+                className="min-h-screen flex items-center justify-center px-4 py-20 relative z-20"
             >
-                <div className="max-w-4xl w-full">
-                    <div className="text-center mb-12">
+                <div className="max-w-4xl w-full scroll-container">
+                    <div className="text-center mb-12 scroll-pop">
                         <div className="w-24 h-24 mx-auto mb-6">
                             <div
                                 className="w-full h-full bg-gradient-to-br from-pink-500 to-orange-500 rounded-full flex items-center justify-center transition-shadow duration-300"
@@ -346,19 +542,19 @@ export default function LifeFrameConstellation() {
                                 <InterestIcon className="w-12 h-12 text-white" />
                             </div>
                         </div>
-                        <h2 className="text-5xl font-bold text-white mb-4">Your Interests</h2>
+                        <h2 className="text-5xl font-bold text-white mb-4 scroll-text-gradient">Your Interests</h2>
                         <p className="text-xl text-pink-200">Activities that bring you joy</p>
                     </div>
 
                     <div className="mb-8">
-                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2 scroll-pop">
                             <span>✓</span> Currently Enjoying
                         </h3>
                         <div className="flex flex-wrap gap-3 justify-center">
                             {lifeFrameData?.interests.existing.map((interest, index) => (
                                 <div
                                     key={interest}
-                                    className="px-4 py-2 bg-pink-500/20 backdrop-blur-sm rounded-full border border-pink-400/50 text-white hover:bg-pink-500/30 transition hover:scale-110 animate-pop-in"
+                                    className="px-4 py-2 bg-pink-500/20 backdrop-blur-sm rounded-full border border-pink-400/50 text-white hover:bg-pink-500/30 transition hover:scale-110 scroll-pop"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >
                                     {interest}
@@ -368,14 +564,14 @@ export default function LifeFrameConstellation() {
                     </div>
 
                     <div>
-                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2">
+                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2 scroll-pop">
                             <span>⭐</span> Want to Explore
                         </h3>
                         <div className="flex flex-wrap gap-3 justify-center">
                             {lifeFrameData?.interests.exploring.map((interest, index) => (
                                 <div
                                     key={interest}
-                                    className="px-4 py-2 bg-purple-500/20 backdrop-blur-sm rounded-full border border-purple-400/50 text-white hover:bg-purple-500/30 transition hover:scale-110 animate-pop-in"
+                                    className="px-4 py-2 bg-purple-500/20 backdrop-blur-sm rounded-full border border-purple-400/50 text-white hover:bg-purple-500/30 transition hover:scale-110 scroll-pop"
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >
                                     {interest}
@@ -384,7 +580,7 @@ export default function LifeFrameConstellation() {
                         </div>
                     </div>
 
-                    <div className="text-center mt-8">
+                    <div className="text-center mt-8 scroll-pop">
                         <button
                             onClick={() => router.push('/workbook/interests')}
                             className="text-pink-300 hover:text-white transition"
@@ -398,10 +594,10 @@ export default function LifeFrameConstellation() {
             {/* SECTION 4: CATEGORIES */}
             <section
                 style={{ opacity: categoriesOpacity }}
-                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+                className="min-h-screen flex items-center justify-center px-4 py-20 relative z-20"
             >
-                <div className="max-w-4xl w-full">
-                    <div className="text-center mb-12">
+                <div className="max-w-4xl w-full scroll-container">
+                    <div className="text-center mb-12 scroll-pop">
                         <div className="w-24 h-24 mx-auto mb-6">
                             <div
                                 className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center transition-shadow duration-300"
@@ -414,7 +610,7 @@ export default function LifeFrameConstellation() {
                                 <CategoryIcon className="w-12 h-12 text-white" />
                             </div>
                         </div>
-                        <h2 className="text-5xl font-bold text-white mb-4">Life Categories</h2>
+                        <h2 className="text-5xl font-bold text-white mb-4 scroll-text-gradient">Life Categories</h2>
                         <p className="text-xl text-indigo-200">Areas where you'll set goals</p>
                     </div>
 
@@ -422,11 +618,8 @@ export default function LifeFrameConstellation() {
                         {lifeFrameData?.lifeCategories.categories.map((category, index) => (
                             <div
                                 key={category.name}
-                                className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:border-indigo-400 transition-all animate-slide-in"
-                                style={{
-                                    animationDelay: `${index * 100}ms`,
-                                    animationDirection: index % 2 === 0 ? 'normal' : 'reverse'
-                                }}
+                                className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:border-indigo-400 transition-all scroll-pop"
+                                style={{ animationDelay: `${index * 100}ms` }}
                             >
                                 <h3 className="text-lg font-bold text-white mb-2">{category.name}</h3>
                                 {category.subCategories.length > 0 && (
@@ -445,7 +638,7 @@ export default function LifeFrameConstellation() {
                         ))}
                     </div>
 
-                    <div className="text-center mt-8">
+                    <div className="text-center mt-8 scroll-pop">
                         <button
                             onClick={() => router.push('/workbook/life-categories')}
                             className="text-indigo-300 hover:text-white transition"
@@ -459,10 +652,10 @@ export default function LifeFrameConstellation() {
             {/* SECTION 5: PURPOSE */}
             <section
                 style={{ opacity: purposeOpacity }}
-                className="min-h-screen flex items-center justify-center px-4 py-20 transition-opacity duration-500"
+                className="min-h-screen flex items-center justify-center px-4 py-20 relative z-20"
             >
-                <div className="max-w-4xl w-full text-center">
-                    <div className="mb-12">
+                <div className="max-w-4xl w-full text-center scroll-container">
+                    <div className="mb-12 scroll-pop">
                         <div className="w-40 h-40 mx-auto mb-8 relative">
                             <div
                                 className="w-full h-full bg-gradient-to-br from-yellow-400 via-orange-500 to-pink-500 rounded-full flex items-center justify-center transition-shadow duration-300"
@@ -477,7 +670,13 @@ export default function LifeFrameConstellation() {
                             <div className="absolute inset-0 border-2 border-yellow-400/30 rounded-full animate-spin-slow" style={{ transform: 'scale(1.3)' }} />
                             <div className="absolute inset-0 border-2 border-orange-400/30 rounded-full animate-spin-slower" style={{ transform: 'scale(1.5)' }} />
                         </div>
-                        <h2 className="text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 mb-6">
+                        <h2 className="text-6xl md:text-7xl font-bold scroll-text-gradient mb-6" style={{
+                            background: 'linear-gradient(60deg, #2563eb, #ff5acd, #fbda61, #ff5acd, #2563eb)',
+                            backgroundSize: '400%',
+                            backgroundClip: 'text',
+                            WebkitBackgroundClip: 'text',
+                            color: 'transparent'
+                        }}>
                             Your Purpose
                         </h2>
                         <p className="text-2xl text-yellow-200 mb-12">
@@ -489,7 +688,7 @@ export default function LifeFrameConstellation() {
                         {lifeFrameData?.lifeCategories.purpose_elements.map((element, index) => (
                             <div
                                 key={element.name}
-                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-2xl p-8 border border-yellow-400/50 animate-fade-up"
+                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-2xl p-8 border border-yellow-400/50 scroll-pop"
                                 style={{ animationDelay: `${index * 200}ms` }}
                             >
                                 <h3 className="text-3xl font-bold text-white mb-3">{element.name}</h3>
@@ -500,7 +699,7 @@ export default function LifeFrameConstellation() {
                         ))}
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 animate-fade-in-slow">
+                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 scroll-pop">
                         <p className="text-2xl text-white mb-6">
                             Your LifeFrame is complete! 🎉
                         </p>
@@ -521,6 +720,62 @@ export default function LifeFrameConstellation() {
             <div className="h-screen" />
 
             <style jsx global>{`
+                /* Elastic bounce scroll animations */
+                :root {
+                    --ease-elastic: linear(
+                        0, 0.186 2.1%, 0.778 7.2%, 1.027 9.7%, 1.133, 1.212, 1.264, 1.292 15.4%,
+                        1.296, 1.294, 1.285, 1.269 18.9%, 1.219 20.9%, 1.062 25.8%, 0.995 28.3%,
+                        0.944 31.1%, 0.93, 0.921, 0.92 35.7%, 0.926, 0.94 39.7%, 1.001 47%, 1.014,
+                        1.021 52.4%, 1.02 56.4%, 1 65.5%, 0.994 70.7%, 1.001 88.4%, 1
+                    );
+                    --ease-bounce-out: cubic-bezier(0.34, 1.56, 0.64, 1);
+                    --gradient: linear-gradient(60deg, #2563eb, #ff5acd, #fbda61, #ff5acd, #2563eb);
+                }
+
+                @supports (animation-timeline: view()) {
+                    .scroll-container {
+                        view-timeline-name: --section;
+                    }
+                    
+                    .scroll-pop {
+                        animation: scroll-pop 600ms var(--ease-elastic) both;
+                        animation-timeline: view();
+                        animation-range: entry 0% entry 40%;
+                    }
+
+                    .scroll-text-gradient {
+                        background: var(--gradient);
+                        background-size: 400%;
+                        background-clip: text;
+                        -webkit-background-clip: text;
+                        color: transparent;
+                        animation: scroll-pop 600ms var(--ease-elastic) both,
+                                   text-gradient-slide 1s ease both;
+                        animation-timeline: view();
+                        animation-range: entry 0% entry 40%;
+                    }
+                }
+
+                @keyframes scroll-pop {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.5);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+
+                @keyframes text-gradient-slide {
+                    from {
+                        background-position: 0% center;
+                    }
+                    to {
+                        background-position: 150% center;
+                    }
+                }
+
                 @keyframes confetti {
                     to {
                         transform: translateY(100vh) rotate(360deg);
@@ -533,36 +788,6 @@ export default function LifeFrameConstellation() {
                     }
                     to {
                         transform: scale(1);
-                    }
-                }
-                @keyframes fade-up {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                @keyframes pop-in {
-                    from {
-                        opacity: 0;
-                        transform: scale(0);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                @keyframes slide-in {
-                    from {
-                        opacity: 0;
-                        transform: translateX(-20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateX(0);
                     }
                 }
                 @keyframes spin-slow {
@@ -587,26 +812,28 @@ export default function LifeFrameConstellation() {
                 .animate-scale-in {
                     animation: scale-in 1s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
-                .animate-fade-up {
-                    animation: fade-up 0.6s ease-out;
-                }
-                .animate-fade-up-delay {
-                    animation: fade-up 0.6s ease-out 0.2s backwards;
-                }
                 .animate-fade-in-slow {
-                    animation: fade-up 0.6s ease-out 0.5s backwards;
-                }
-                .animate-pop-in {
-                    animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
-                }
-                .animate-slide-in {
-                    animation: slide-in 0.5s ease-out backwards;
+                    animation: scroll-pop 0.6s ease-out 0.5s backwards;
                 }
                 .animate-spin-slow {
                     animation: spin-slow 20s linear infinite;
                 }
                 .animate-spin-slower {
                     animation: spin-slower 15s linear infinite;
+                }
+
+                /* Fallback for browsers without scroll-timeline support */
+                @supports not (animation-timeline: view()) {
+                    .scroll-pop {
+                        animation: scroll-pop 600ms var(--ease-bounce-out) forwards;
+                    }
+                    .scroll-text-gradient {
+                        background: var(--gradient);
+                        background-size: 400%;
+                        background-clip: text;
+                        -webkit-background-clip: text;
+                        color: transparent;
+                    }
                 }
             `}</style>
         </div>

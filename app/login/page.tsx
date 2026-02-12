@@ -131,6 +131,13 @@ function LoginFormWithParams() {
                     </div>
                 </div>
 
+                {/* Forgot Password Link */}
+                <div className="text-right">
+                    <Link href="/reset-password" className="text-sm text-purple-600 hover:text-purple-500 transition">
+                        Forgot your password?
+                    </Link>
+                </div>
+
                 {/* Submit Button */}
                 <button
                     type="submit"

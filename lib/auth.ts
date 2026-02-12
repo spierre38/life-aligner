@@ -230,3 +230,165 @@ export async function getUserWithProfile() {
         return null;
     }
 }
+
+/**
+ * Request password reset email
+ * @param email - User's email address
+ * @returns { success: boolean, error?: string }
+ */
+export async function requestPasswordReset(email: string) {
+    try {
+        // Validate email format
+        if (!email || !email.includes('@')) {
+            return {
+                success: false,
+                error: 'Please enter a valid email address'
+            };
+        }
+
+        // Request password reset from Supabase
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password/confirm`
+        });
+
+        if (error) {
+            console.error('Password reset error:', error);
+
+            // Handle specific error cases
+            if (error.message.includes('rate limit')) {
+                return {
+                    success: false,
+                    error: 'Too many reset requests. Please wait a few minutes and try again.'
+                };
+            }
+
+            return {
+                success: false,
+                error: 'Unable to send reset email. Please try again.'
+            };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Unexpected error in requestPasswordReset:', error);
+        return {
+            success: false,
+            error: 'An unexpected error occurred. Please try again.'
+        };
+    }
+}
+
+/**
+ * Update user's password
+ * @param newPassword - The new password
+ * @returns { success: boolean, error?: string }
+ */
+export async function updatePassword(newPassword: string) {
+    try {
+        // Validate password strength
+        if (!newPassword || newPassword.length < 8) {
+            return {
+                success: false,
+                error: 'Password must be at least 8 characters long'
+            };
+        }
+
+        // Update password in Supabase
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) {
+            console.error('Password update error:', error);
+
+            if (error.message.includes('same password')) {
+                return {
+                    success: false,
+                    error: 'New password must be different from your current password'
+                };
+            }
+
+            if (error.message.includes('weak')) {
+                return {
+                    success: false,
+                    error: 'Password is too weak. Please use a stronger password.'
+                };
+            }
+
+            return {
+                success: false,
+                error: 'Unable to update password. Please try again.'
+            };
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Unexpected error in updatePassword:', error);
+        return {
+            success: false,
+            error: 'An unexpected error occurred. Please try again.'
+        };
+    }
+}
+
+/**
+ * Check password strength
+ * @param password - Password to check
+ * @returns { score: number, feedback: string, color: string }
+ * score: 0 (weak) to 5 (very strong)
+ */
+export function checkPasswordStrength(password: string): {
+    score: number;
+    feedback: string;
+    color: string;
+} {
+    let score = 0;
+
+    if (!password) {
+        return { score: 0, feedback: 'Enter a password', color: 'text-gray-400' };
+    }
+
+    // Length check
+    if (password.length >= 8) score++;
+
+    // Has uppercase letters
+    if (/[A-Z]/.test(password)) score++;
+
+    // Has lowercase letters
+    if (/[a-z]/.test(password)) score++;
+
+    // Has numbers
+    if (/\d/.test(password)) score++;
+
+    // Has special characters
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+
+    // Generate feedback
+    switch (score) {
+        case 0:
+        case 1:
+            return { score, feedback: 'Weak password', color: 'text-red-500' };
+        case 2:
+            return { score, feedback: 'Fair password', color: 'text-orange-500' };
+        case 3:
+            return { score, feedback: 'Good password', color: 'text-yellow-500' };
+        case 4:
+            return { score, feedback: 'Strong password', color: 'text-green-500' };
+        case 5:
+            return { score, feedback: 'Very strong password', color: 'text-green-600' };
+        default:
+            return { score: 0, feedback: 'Enter a password', color: 'text-gray-400' };
+    }
+}
+
+/**
+ * Check if user is authenticated
+ */
+export async function isAuthenticated(): Promise<boolean> {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        return !!user;
+    } catch (error) {
+        return false;
+    }
+}
