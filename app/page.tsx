@@ -1,24 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
-import { InteractiveToolsSection } from './components/InteractiveToolsSection';
-import { Interactive5StepJourney } from './components/Interactive5StepJourney';
-import { RealSocialProof } from './components/RealSocialProof';
-import { WorkingTestimonialCarousel } from './components/WorkingTestimonialCarousel';
-import { TimCollinsStory } from './components/TimCollinsStory';
+import dynamic from 'next/dynamic';
+
+// Heavy below-the-fold components — loaded as separate chunks
+const InteractiveToolsSection = dynamic(() => import('./components/InteractiveToolsSection').then(m => ({ default: m.InteractiveToolsSection })));
+const Interactive5StepJourney = dynamic(() => import('./components/Interactive5StepJourney').then(m => ({ default: m.Interactive5StepJourney })));
+const RealSocialProof = dynamic(() => import('./components/RealSocialProof').then(m => ({ default: m.RealSocialProof })));
+const WorkingTestimonialCarousel = dynamic(() => import('./components/WorkingTestimonialCarousel').then(m => ({ default: m.WorkingTestimonialCarousel })));
+const TimCollinsStory = dynamic(() => import('./components/TimCollinsStory').then(m => ({ default: m.TimCollinsStory })));
 
 function OrbitingSteps() {
-  const [rotation, setRotation] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRotation((prev) => (prev + 0.5) % 360);
-    }, 50);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   const steps = [
@@ -29,6 +35,36 @@ function OrbitingSteps() {
     { num: 5, title: 'Learn', desc: 'Learn & revise', color: 'from-teal-500 to-teal-600', angle: 288 },
   ];
 
+  // Mobile: Vertical Stack
+  if (isMobile) {
+    return (
+      <div className="relative max-w-md mx-auto mb-8">
+        <div className="space-y-3">
+          {steps.map((step) => (
+            <div
+              key={step.num}
+              className="bg-white rounded-xl p-4 shadow-md border border-gray-100"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 bg-gradient-to-br ${step.color} text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0`}>
+                  {step.num}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">{step.title}</h3>
+                  <p className="text-sm text-gray-600">{step.desc}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center mt-4">
+          <p className="text-sm text-white/80 font-medium">Continuous Improvement Cycle</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: Orbiting Animation
   return (
     <div className="relative max-w-3xl mx-auto mb-16">
       <div className="relative h-[600px] w-full flex items-center justify-center">
@@ -65,38 +101,45 @@ function OrbitingSteps() {
           </div>
         </div>
 
-        {/* Orbiting step cards */}
-        {steps.map((step) => {
-          const currentAngle = (step.angle + rotation) * (Math.PI / 180);
-          const radius = 240;
-          const x = Math.cos(currentAngle) * radius;
-          const y = Math.sin(currentAngle) * radius;
+        {/* Orbiting step cards — CSS animated, centered container */}
+        <div className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-orbit" style={{ transformOrigin: '50% 50%' }}>
+          {steps.map((step) => {
+            const angleRad = step.angle * (Math.PI / 180);
+            const radius = 240;
+            const x = 300 + Math.cos(angleRad) * radius;
+            const y = 300 + Math.sin(angleRad) * radius;
 
-          return (
-            <div
-              key={step.num}
-              className="absolute top-1/2 left-1/2 transition-transform duration-100"
-              style={{
-                transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-              }}
-            >
+            return (
               <div
-                className="bg-white rounded-2xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer group border border-gray-100"
-                style={{ width: '140px' }}
+                key={step.num}
+                className="absolute"
+                style={{
+                  left: `${x}px`,
+                  top: `${y}px`,
+                  transform: 'translate(-50%, -50%)',
+                }}
               >
-                <div className={`w-12 h-12 bg-gradient-to-br ${step.color} text-white rounded-full flex items-center justify-center text-xl font-bold mb-2 mx-auto group-hover:scale-110 transition-transform`}>
-                  {step.num}
+                {/* Counter-rotate so cards stay upright */}
+                <div className="animate-orbit-reverse">
+                  <div
+                    className="bg-white rounded-2xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer group border border-gray-100"
+                    style={{ width: '140px' }}
+                  >
+                    <div className={`w-12 h-12 bg-gradient-to-br ${step.color} text-white rounded-full flex items-center justify-center text-xl font-bold mb-2 mx-auto group-hover:scale-110 transition-transform`}>
+                      {step.num}
+                    </div>
+                    <h3 className="text-sm font-bold text-gray-900 text-center">{step.title}</h3>
+                    <p className="text-xs text-gray-800 text-center mt-1">{step.desc}</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 text-center">{step.title}</h3>
-                <p className="text-xs text-gray-800 text-center mt-1">{step.desc}</p>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <div className="text-center">
-        <p className="text-sm text-gray-500 font-medium">Continuous Improvement Cycle</p>
+        <p className="text-sm text-white/80 font-medium">Continuous Improvement Cycle</p>
       </div>
     </div>
   );
@@ -105,6 +148,7 @@ function OrbitingSteps() {
 export default function Home() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('hero');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -146,30 +190,62 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      <div
+        className={`fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+      >
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="absolute top-4 right-4 p-2 text-gray-600 hover:text-gray-900"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="p-6 border-b border-gray-200">
+          <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            LifeAligner
+          </div>
+        </div>
+        <nav className="p-6 space-y-4">
+          <Link href="#preview" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-purple-600 transition py-2">Preview</Link>
+          <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-purple-600 transition py-2">Pricing</Link>
+          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-purple-600 transition py-2">Sign In</Link>
+          <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center px-6 py-3 rounded-full font-bold hover:shadow-lg transition">Get Started</Link>
+        </nav>
+      </div>
+
       {/* Sticky Navigation */}
       <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               LifeAligner
             </div>
-            <div className="flex gap-6 items-center">
-              <Link href="#preview" className="text-gray-800 hover:text-gray-900 transition">
-                Preview
-              </Link>
-              <Link href="#pricing" className="text-gray-800 hover:text-gray-900 transition">
-                Pricing
-              </Link>
-              <Link href="/login" className="text-gray-800 hover:text-gray-900 transition">
-                Sign In
-              </Link>
-              <Link
-                href="/signup"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition"
-              >
-                Get Started
-              </Link>
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex gap-6 items-center">
+              <Link href="#preview" className="text-gray-800 hover:text-gray-900 transition">Preview</Link>
+              <Link href="#pricing" className="text-gray-800 hover:text-gray-900 transition">Pricing</Link>
+              <Link href="/login" className="text-gray-800 hover:text-gray-900 transition">Sign In</Link>
+              <Link href="/signup" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition transform hover:scale-105">Get Started</Link>
             </div>
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden p-2 text-gray-600 hover:text-gray-900 transition"
+              aria-label="Open menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
       </nav>
@@ -186,29 +262,29 @@ export default function Home() {
           <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 w-full relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full relative z-10">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Left column - Text content */}
             <div className="text-center lg:text-left animate-fade-in">
-              <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Your Path to Contentment
               </h1>
-              <p className="text-2xl md:text-3xl text-gray-700 mb-8">
+              <p className="text-xl sm:text-2xl md:text-3xl text-gray-700 mb-6 sm:mb-8">
                 Define what contentment means for <em>you</em> and create a roadmap to live it.
               </p>
-              <p className="text-xl text-gray-800 mb-12 max-w-2xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-xl text-gray-800 mb-8 sm:mb-12 max-w-2xl mx-auto lg:mx-0">
                 A personal growth platform for <em>all ages</em>, built around the tools and frameworks that helped create billion-dollar success.
               </p>
-              <div className="flex gap-4 justify-center lg:justify-start flex-wrap">
+              <div className="flex gap-3 sm:gap-4 justify-center lg:justify-start flex-wrap">
                 <Link
                   href="/signup"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-xl transition transform hover:scale-105"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:shadow-xl transition transform hover:scale-105 min-h-[48px] flex items-center justify-center"
                 >
                   Start Your Journey
                 </Link>
                 <button
                   onClick={() => document.getElementById('contentment')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-full font-semibold text-lg hover:border-purple-600 hover:text-purple-600 transition"
+                  className="border-2 border-gray-300 text-gray-700 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:border-purple-600 hover:text-purple-600 transition min-h-[48px] flex items-center justify-center"
                 >
                   Learn More
                 </button>
@@ -218,10 +294,14 @@ export default function Home() {
             {/* Right column - Visual mockup */}
             <div className="relative animate-fade-in animation-delay-500">
               <div className="bg-white rounded-3xl shadow-2xl p-4 transform hover:scale-105 transition-transform duration-300">
-                <img
+                <Image
                   src="/lifeAligner-mockup.png"
                   alt="LifeAligner Framework Mockup"
+                  width={800}
+                  height={600}
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="w-full h-auto rounded-2xl"
+                  priority
                 />
               </div>
 
@@ -246,22 +326,24 @@ export default function Home() {
       {/* What is Contentment Section */}
       <section id="contentment" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#0a1f44] via-[#1e4d7b] to-[#3b8b9f] relative overflow-hidden">
         {/* Decorative illustration - peaceful meditation */}
-        <img
+        <Image
           src="/illustrations/peaceful-reflection.png"
           alt=""
+          width={128}
+          height={128}
           className="absolute top-8 right-8 w-32 h-32 opacity-80 pointer-events-none hidden md:block"
         />
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <h2 className="text-5xl font-bold text-white">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
                 What is Contentment?
               </h2>
-              <blockquote className="text-2xl text-blue-100 italic border-l-4 border-blue-400 pl-6">
+              <blockquote className="text-lg sm:text-xl md:text-2xl text-blue-100 italic border-l-4 border-blue-400 pl-4 sm:pl-6">
                 "Feeling good about yourself and your life because you are engaging in activities
                 that you enjoy, that cause you to experience Happiness and Fulfillment."
               </blockquote>
-              <p className="text-lg text-blue-200 leading-relaxed">
+              <p className="text-base sm:text-lg text-blue-200 leading-relaxed">
                 <strong className="text-white">Happiness</strong> comes from activities that
                 rejuvenate you. But contentment also requires <strong className="text-white">sustained
                   fulfillment</strong> from pursuing goals aligned with your values and purpose.
@@ -269,24 +351,24 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              <div className="bg-gradient-to-br from-blue-700 to-blue-800 p-8 rounded-2xl animate-fade-in border border-blue-600">
-                <h3 className="text-2xl font-bold text-blue-100 mb-4">Your Values</h3>
+              <div className="bg-gradient-to-br from-blue-700 to-blue-800 p-5 sm:p-8 rounded-2xl animate-fade-in border border-blue-600">
+                <h3 className="text-xl sm:text-2xl font-bold text-blue-100 mb-3 sm:mb-4">Your Values</h3>
                 <p className="text-blue-200">
                   The principles and standards of behavior that guide your life decisions
                   and bring you deep satisfaction.
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-pink-700 to-pink-800 p-8 rounded-2xl animate-fade-in border border-pink-600">
-                <h3 className="text-2xl font-bold text-pink-100 mb-4">Your Interests</h3>
+              <div className="bg-gradient-to-br from-pink-700 to-pink-800 p-5 sm:p-8 rounded-2xl animate-fade-in border border-pink-600">
+                <h3 className="text-xl sm:text-2xl font-bold text-pink-100 mb-3 sm:mb-4">Your Interests</h3>
                 <p className="text-pink-200">
                   Activities that bring you joy, rejuvenation, and allow you to deploy
                   your creativity to benefit others.
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-700 to-purple-800 p-8 rounded-2xl animate-fade-in border border-purple-600">
-                <h3 className="text-2xl font-bold text-purple-100 mb-4">Your Purpose</h3>
+              <div className="bg-gradient-to-br from-purple-700 to-purple-800 p-5 sm:p-8 rounded-2xl animate-fade-in border border-purple-600">
+                <h3 className="text-xl sm:text-2xl font-bold text-purple-100 mb-3 sm:mb-4">Your Purpose</h3>
                 <p className="text-purple-200">
                   Long-term goals that are both meaningful to you and beneficial to others,
                   driven by your deeply held beliefs.
@@ -318,18 +400,20 @@ export default function Home() {
       {/* The Process Section */}
       <section id="process" className="min-h-screen flex items-center py-20 bg-gradient-to-r from-[#a78bca] via-[#8b5fbf] to-[#5d2a8f] relative overflow-hidden">
         {/* Decorative illustration - journey path */}
-        <img
+        <Image
           src="/illustrations/journey-path.png"
           alt=""
+          width={128}
+          height={128}
           className="absolute bottom-256 left-8 w-32 h-32 opacity-100 pointer-events-none hidden md:block"
         />
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-white mb-6">
+          <div className="text-center mb-10 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
               Contentment is a Process
             </h2>
-            <p className="text-xl text-purple-100 max-w-3xl mx-auto">
-              Not a destination. Not about crossing finish lines. It's about enjoying the journey
+            <p className="text-base sm:text-xl text-purple-100 max-w-3xl mx-auto px-4">
+              Not a destination. Not about crossing finish lines. It&apos;s about enjoying the journey
               of continuous growth and making an impact in areas important to you.
             </p>
           </div>
@@ -337,17 +421,19 @@ export default function Home() {
           {/* Animated Circular Flow Diagram */}
           <OrbitingSteps />
 
-          <div className="mt-16 bg-white/10 backdrop-blur-sm rounded-2xl p-8 shadow-lg max-w-2xl mx-auto text-center border border-white/20">
-            <p className="text-xl text-white italic">
+          <div className="mt-10 sm:mt-16 bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-8 shadow-lg max-w-2xl mx-auto text-center border border-white/20">
+            <p className="text-base sm:text-lg md:text-xl text-white italic">
               "You define what contentment means for you. You define your Interests, Values,
               and Purpose. The challenge—and the opportunity—is coming up with the right
               definitions for <em>you</em>."
             </p>
           </div>
           {/* Decorative illustration - values thinking */}
-          <img
+          <Image
             src="/illustrations/values-person.png"
             alt=""
+            width={128}
+            height={128}
             className="absolute top-8 right-8 w-32 h-32 opacity-80 pointer-events-none hidden md:block"
           />
           {/* Interactive 5-Step Journey */}
@@ -373,33 +459,33 @@ export default function Home() {
       < WorkingTestimonialCarousel />
 
       {/* CTA Section - FIXED: Changed text color from white to dark */}
-      < section id="cta" className="min-h-screen flex items-center py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden" >
+      <section id="cta" className="min-h-screen flex items-center py-12 sm:py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden" >
         <div className="max-w-4xl mx-auto px-4 text-center text-white">
-          <h2 className="text-5xl md:text-6xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
             Ready to Start Your Journey?
           </h2>
-          <p className="text-2xl mb-12 opacity-90">
+          <p className="text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 opacity-90">
             Join thousands discovering their path to contentment
           </p>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-12 mb-12 animate-fade-in border border-white/20">
-            <blockquote className="text-xl md:text-2xl italic mb-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 mb-8 sm:mb-12 animate-fade-in border border-white/20">
+            <blockquote className="text-base sm:text-lg md:text-xl lg:text-2xl italic mb-3 sm:mb-4">
               "When I created my first Roadmap at age 19, I had no idea I would be using it
               for the next 40 years or that doing so would enable me to find contentment."
             </blockquote>
-            <p className="text-lg font-semibold">— Tim Collins, Founder</p>
+            <p className="text-sm sm:text-base md:text-lg font-semibold">&mdash; Tim Collins, Founder</p>
           </div>
 
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <Link
               href="/signup"
-              className="bg-white text-purple-600 px-10 py-5 rounded-full font-bold text-xl hover:shadow-2xl transition transform hover:scale-105"
+              className="bg-white text-purple-600 px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl hover:shadow-2xl transition transform hover:scale-105 min-h-[56px] flex items-center justify-center"
             >
               Get Started
             </Link>
             <Link
               href="#preview"
-              className="border-2 border-white text-white px-10 py-5 rounded-full font-bold text-xl hover:bg-white/10 transition"
+              className="border-2 border-white text-white px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl hover:bg-white/10 transition min-h-[56px] flex items-center justify-center"
             >
               See a Preview
             </Link>
@@ -408,21 +494,21 @@ export default function Home() {
       </section >
 
       {/* Footer */}
-      < footer className="bg-gray-900 text-white py-12" >
+      <footer className="bg-gray-900 text-white py-8 sm:py-12" >
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <div className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             LifeAligner
           </div>
-          <p className="text-gray-400 mb-6">Your path to contentment.</p>
+          <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">Your path to contentment.</p>
 
           {/* Copyright Notice */}
-          <div className="mb-6 px-4">
-            <p className="text-sm text-gray-400 max-w-4xl mx-auto leading-relaxed">
-              © 2025 Timothy Collins. All materials are owned by Timothy Collins and are protected by United States and International copyright, trademark and other laws. All rights reserved.
+          <div className="mb-4 sm:mb-6 px-4">
+            <p className="text-xs sm:text-sm text-gray-400 max-w-4xl mx-auto leading-relaxed">
+              &copy; 2025 Timothy Collins. All materials are owned by Timothy Collins and are protected by United States and International copyright, trademark and other laws. All rights reserved.
             </p>
           </div>
 
-          <div className="flex justify-center gap-8 text-sm text-gray-400">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-gray-400">
             <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
             <Link href="/terms" className="hover:text-white transition">Terms</Link>
             <Link href="/contact" className="hover:text-white transition">Contact</Link>

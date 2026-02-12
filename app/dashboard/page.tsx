@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
-import WelcomeAnimation from '@/app/components/WelcomeAnimation';
-import { OnboardingModal } from '@/app/components/OnboardingModal';
-import { DashboardTodoWidget } from '@/app/components/DashboardTodoWidget';
 import { SkeletonCard } from '@/app/components/Skeleton';
+import dynamic from 'next/dynamic';
+
+// Heavy conditional components — loaded as separate chunks
+const WelcomeAnimation = dynamic(() => import('@/app/components/WelcomeAnimation'));
+const OnboardingModal = dynamic(() => import('@/app/components/OnboardingModal').then(m => ({ default: m.OnboardingModal })));
+const DashboardTodoWidget = dynamic(() => import('@/app/components/DashboardTodoWidget').then(m => ({ default: m.DashboardTodoWidget })));
 
 // ============================================================================
 // INLINE SVG ILLUSTRATIONS

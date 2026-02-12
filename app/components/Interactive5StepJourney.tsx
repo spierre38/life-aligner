@@ -171,40 +171,40 @@ export function Interactive5StepJourney() {
     const currentStep = steps[activeStep - 1];
 
     return (
-        <div className="mt-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-8 md:p-12 shadow-xl">
-            <h3 className="text-3xl font-bold text-center text-gray-900 mb-8">
+        <div className="mt-10 sm:mt-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 shadow-xl">
+            <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
                 Your 5-Step Journey
             </h3>
 
             {/* Step Navigation */}
-            <div className="flex justify-center items-center gap-3 mb-12 flex-wrap">
+            <div className="flex justify-center items-center gap-1 sm:gap-3 mb-8 sm:mb-12 flex-wrap">
                 {steps.map((step) => (
                     <button
                         key={step.num}
                         onClick={() => setActiveStep(step.num)}
                         className={`relative flex items-center justify-center transition-all ${activeStep === step.num
-                                ? 'scale-110'
-                                : 'scale-90 opacity-60 hover:opacity-100'
+                            ? 'scale-105 sm:scale-110'
+                            : 'scale-90 opacity-60 hover:opacity-100'
                             }`}
                     >
                         {/* Connection line */}
                         {step.num < 5 && (
                             <div
-                                className={`absolute left-full w-8 h-1 ${activeStep > step.num
-                                        ? 'bg-gradient-to-r from-teal-500 to-blue-500'
-                                        : 'bg-gray-300'
+                                className={`absolute left-full w-3 sm:w-8 h-1 ${activeStep > step.num
+                                    ? 'bg-gradient-to-r from-teal-500 to-blue-500'
+                                    : 'bg-gray-300'
                                     }`}
                             />
                         )}
 
                         <div
-                            className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold transition-all ${activeStep === step.num
-                                    ? step.color === 'teal'
-                                        ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg'
-                                        : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg'
-                                    : activeStep > step.num
-                                        ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-                                        : 'bg-white text-gray-400 border-2 border-gray-300'
+                            className={`w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-base sm:text-xl font-bold transition-all ${activeStep === step.num
+                                ? step.color === 'teal'
+                                    ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg'
+                                    : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg'
+                                : activeStep > step.num
+                                    ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
+                                    : 'bg-white text-gray-400 border-2 border-gray-300'
                                 }`}
                         >
                             {activeStep > step.num ? '✓' : step.num}
@@ -214,23 +214,23 @@ export function Interactive5StepJourney() {
             </div>
 
             {/* Active Step Details */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                    <div className="flex items-center gap-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-lg">
+                <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3 sm:gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                         {/* SVG Icon */}
-                        <div className="w-16 h-16 flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
                             <currentStep.IconComponent />
                         </div>
                         <div>
-                            <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            <div className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
                                 Step {currentStep.num} - {currentStep.category}
                             </div>
-                            <h4 className="text-3xl font-bold text-gray-900">{currentStep.title}</h4>
+                            <h4 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{currentStep.title}</h4>
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="text-sm text-gray-500">Estimated Time</div>
-                        <div className="text-lg font-semibold text-purple-600">{currentStep.time}</div>
+                        <div className="text-xs sm:text-sm text-gray-500">Estimated Time</div>
+                        <div className="text-base sm:text-lg font-semibold text-purple-600">{currentStep.time}</div>
                     </div>
                 </div>
 
@@ -247,39 +247,41 @@ export function Interactive5StepJourney() {
                 </div>
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                <div className="flex justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
                     <button
                         onClick={() => setActiveStep(Math.max(1, activeStep - 1))}
                         disabled={activeStep === 1}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition ${activeStep === 1
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition min-h-[44px] ${activeStep === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
-                        Previous
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
                     </button>
 
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs sm:text-sm text-gray-500">
                         {activeStep} of {steps.length}
                     </div>
 
                     {activeStep < 5 ? (
                         <button
                             onClick={() => setActiveStep(Math.min(5, activeStep + 1))}
-                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition"
+                            className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:shadow-lg transition min-h-[44px]"
                         >
-                            Next Step
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            Next
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
                     ) : (
-                        <button className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition">
-                            Start Your Journey
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-green-600 to-teal-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:shadow-lg transition min-h-[44px]">
+                            <span className="hidden sm:inline">Start Your Journey</span>
+                            <span className="sm:hidden">Start</span>
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
                         </button>

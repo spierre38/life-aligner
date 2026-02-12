@@ -186,6 +186,20 @@ section {
   animation: orbit 30s linear infinite;
 }
 
+@keyframes orbit-reverse {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-orbit-reverse {
+  animation: orbit-reverse 30s linear infinite;
+}
+
 @keyframes blob {
 
   0%,
@@ -216,4 +230,26 @@ section {
 
 .animation-delay-500 {
   animation-delay: 0.5s;
+}
+
+/* Accessibility: disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .animate-blob,
+  .animate-spin-slow,
+  .animate-orbit,
+  .animate-orbit-reverse,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-in-right {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

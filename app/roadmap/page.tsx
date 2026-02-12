@@ -396,73 +396,63 @@ export default function RoadmapPage() {
                     return;
                 }
 
-                // Load life categories
-                const { data: categoriesData } = await supabase
-                    .from('workbook_entries')
-                    .select('content')
-                    .eq('user_id', userWithProfile.user.id)
-                    .eq('category', 'life_categories')
-                    .single();
+                // Load all data in parallel instead of sequentially
+                const [categoriesResult, valuesResult, roadmapResult] = await Promise.all([
+                    supabase
+                        .from('workbook_entries')
+                        .select('content')
+                        .eq('user_id', userWithProfile.user.id)
+                        .eq('category', 'life_categories')
+                        .single(),
+                    supabase
+                        .from('workbook_entries')
+                        .select('content')
+                        .eq('user_id', userWithProfile.user.id)
+                        .eq('category', 'values')
+                        .single(),
+                    supabase
+                        .from('workbook_entries')
+                        .select('content')
+                        .eq('user_id', userWithProfile.user.id)
+                        .eq('category', 'roadmap')
+                        .single(),
+                ]);
 
-                if (categoriesData && mounted) {
-                    setCategories(categoriesData.content.categories || []);
+                if (!mounted) return;
+
+                // Extract categories
+                if (categoriesResult.data) {
+                    setCategories(categoriesResult.data.content.categories || []);
+
+                    // Extract purpose from the same categories data (eliminates duplicate query)
+                    const allCategories = categoriesResult.data.content.categories || [];
+                    const purposeCategory = allCategories.find((cat: any) =>
+                        cat.name === 'Purpose' && cat.subCategories?.length > 0
+                    );
+                    if (purposeCategory?.subCategories) {
+                        setUserPurpose(purposeCategory.subCategories);
+                    }
                 }
 
-                // Load LifeFrame data (values and purpose)
-                const { data: valuesData } = await supabase
-                    .from('workbook_entries')
-                    .select('content')
-                    .eq('user_id', userWithProfile.user.id)
-                    .eq('category', 'values')
-                    .single();
-
-                if (valuesData && mounted) {
-                    // Extract selected values from the values workbook
-                    if (valuesData.content.selected_values) {
-                        const valueNames = valuesData.content.selected_values.map((v: any) =>
+                // Extract values
+                if (valuesResult.data) {
+                    if (valuesResult.data.content.selected_values) {
+                        const valueNames = valuesResult.data.content.selected_values.map((v: any) =>
                             typeof v === 'string' ? v : v.name
                         );
                         setUserValues(valueNames);
                     }
                 }
 
-                // Load purpose from life_categories (Purpose subcategories)
-                const { data: purposeData } = await supabase
-                    .from('workbook_entries')
-                    .select('content')
-                    .eq('user_id', userWithProfile.user.id)
-                    .eq('category', 'life_categories')
-                    .single();
-
-                if (purposeData && mounted) {
-                    const categories = purposeData.content.categories || [];
-                    const purposeCategory = categories.find((cat: any) =>
-                        cat.name === 'Purpose' && cat.subCategories?.length > 0
-                    );
-
-                    if (purposeCategory?.subCategories) {
-                        setUserPurpose(purposeCategory.subCategories);
-                    }
-                }
-
-                // Load roadmap
-                const { data: roadmapData } = await supabase
-                    .from('workbook_entries')
-                    .select('content')
-                    .eq('user_id', userWithProfile.user.id)
-                    .eq('category', 'roadmap')
-                    .single();
-
-                if (!mounted) return;
-
-                if (!roadmapData) {
+                // Extract roadmap
+                if (!roadmapResult.data) {
                     setShowWelcome(true);
                     setTimeout(() => {
                         if (mounted) setShowWelcome(false);
                     }, 3000);
                 } else {
                     // MIGRATION: Ensure activities have logs array
-                    const migratedItems = (roadmapData.content.items || []).map((item: RoadmapItem) => ({
+                    const migratedItems = (roadmapResult.data.content.items || []).map((item: RoadmapItem) => ({
                         ...item,
                         activities: item.activities.map((activity: any) => ({
                             ...activity,
