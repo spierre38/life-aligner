@@ -1,5 +1,7 @@
 'use client';
 
+import { trackValuesSaved } from '@/lib/analytics';
+
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -352,6 +354,7 @@ export default function ValuesWorksheet() {
 
             if (error) throw error;
 
+            trackValuesSaved(prioritizedValues.length);
             setShowSuccess(true);
             setTimeout(() => {
                 router.push('/dashboard');
@@ -867,8 +870,8 @@ export default function ValuesWorksheet() {
                                                             onBlur={() => handlePriorityInputBlur(value.name)}
                                                             onKeyDown={(e) => handlePriorityKeyDown(e, value.name)}
                                                             className={`w-16 px-3 py-2 text-center font-bold text-lg text-gray-900 border-2 rounded-lg focus:outline-none focus:ring-2 transition-colors ${editingPriority?.name === value.name
-                                                                    ? 'border-blue-500 focus:ring-blue-600'
-                                                                    : 'border-purple-300 focus:ring-purple-600'
+                                                                ? 'border-blue-500 focus:ring-blue-600'
+                                                                : 'border-purple-300 focus:ring-purple-600'
                                                                 }`}
                                                             onClick={(e) => e.stopPropagation()}
                                                         />

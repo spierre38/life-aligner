@@ -1,5 +1,7 @@
 'use client';
 
+import { trackCategoriesSaved } from '@/lib/analytics';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -257,6 +259,7 @@ export default function LifeCategoriesWorksheet() {
 
             if (error) throw error;
 
+            trackCategoriesSaved(categoryDetails.length);
             setShowSuccess(true);
             setTimeout(() => {
                 router.push('/dashboard');

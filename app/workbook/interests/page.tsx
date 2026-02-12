@@ -1,5 +1,7 @@
 'use client';
 
+import { trackInterestsSaved } from '@/lib/analytics';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -192,6 +194,7 @@ export default function InterestsWorksheet() {
 
             if (error) throw error;
 
+            trackInterestsSaved(selectedExisting.size, selectedExploring.size);
             setShowSuccess(true);
             setTimeout(() => {
                 router.push('/dashboard');

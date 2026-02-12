@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from '@/lib/auth';
+import { trackLogin } from '@/lib/analytics';
 
 // Separate component for search params logic
 function LoginFormWithParams() {
@@ -46,6 +47,7 @@ function LoginFormWithParams() {
             const result = await signIn(formData.email, formData.password);
 
             if (result.success) {
+                trackLogin('email');
                 router.push('/dashboard');
             } else {
                 setError(result.error?.message || 'Failed to sign in');

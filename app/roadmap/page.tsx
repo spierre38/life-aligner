@@ -1,5 +1,7 @@
 'use client';
 
+import { trackRoadmapSaved, trackActivityLogged } from '@/lib/analytics';
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -491,6 +493,7 @@ export default function RoadmapPage() {
                 });
 
             if (error) throw error;
+            trackRoadmapSaved(roadmapItems.length);
         } catch (error) {
             console.error('Error saving roadmap:', error);
         }

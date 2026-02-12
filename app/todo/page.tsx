@@ -1,5 +1,7 @@
 'use client';
 
+import { trackTodoCreated, trackTodoCompleted } from '@/lib/analytics';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -86,6 +88,7 @@ export default function TodoListPage() {
 
             if (error) throw error;
 
+            trackTodoCreated('manual');
             setNewTodoText('');
             await loadTodos(userId);
         } catch (error) {
@@ -109,6 +112,7 @@ export default function TodoListPage() {
                 .eq('id', todo.id);
 
             if (error) throw error;
+            if (!todo.completed) trackTodoCompleted();
             await loadTodos(userId);
         } catch (error) {
             console.error('Error toggling todo:', error);

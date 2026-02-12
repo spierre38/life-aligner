@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { trackSignup } from '@/lib/analytics';
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -81,11 +82,13 @@ export default function SignUpPage() {
             // Check if email confirmation is required
             if (authData.user && !authData.user.confirmed_at) {
                 // Email confirmation required - show success screen
+                trackSignup('email');
                 setUserEmail(formData.email);
                 setEmailPending(true);
                 setLoading(false);
             } else if (authData.user && authData.user.confirmed_at) {
                 // User is confirmed (e.g., email confirmation disabled) - redirect to dashboard
+                trackSignup('email');
                 router.push('/dashboard');
             } else {
                 setError('Failed to create account');
