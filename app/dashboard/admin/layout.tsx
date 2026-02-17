@@ -171,13 +171,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
                     <Link
                         href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm"
+                        className="flex items-center gap-3 px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all text-sm mb-1"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                         </svg>
                         Back to Dashboard
                     </Link>
+                    <button
+                        onClick={async () => {
+                            await supabase.auth.signOut();
+                            router.push('/');
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all text-sm"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign Out
+                    </button>
                 </div>
             </aside>
 

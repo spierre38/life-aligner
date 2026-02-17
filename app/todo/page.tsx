@@ -10,6 +10,9 @@ import { clearCompletedTodos } from '@/lib/todoHelpers';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import { EmptyState } from '@/app/components/EmptyState';
 
+import { useToast } from '@/app/components/Toast';
+import { SkeletonCard } from '@/app/components/Skeleton';
+
 type TodoItem = {
     id: string;
     text: string;
@@ -26,6 +29,7 @@ type TodoItem = {
 
 export default function TodoListPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [todos, setTodos] = useState<TodoItem[]>([]);
@@ -91,9 +95,10 @@ export default function TodoListPage() {
             trackTodoCreated('manual');
             setNewTodoText('');
             await loadTodos(userId);
+            showToast('Task added successfully!', 'success');
         } catch (error) {
             console.error('Error adding todo:', error);
-            alert('Failed to add todo. Please try again.');
+            showToast('Failed to add todo. Please try again.', 'error');
         } finally {
             setAddingTodo(false);
         }
@@ -112,10 +117,14 @@ export default function TodoListPage() {
                 .eq('id', todo.id);
 
             if (error) throw error;
-            if (!todo.completed) trackTodoCompleted();
+            if (!todo.completed) {
+                trackTodoCompleted();
+                showToast('Task completed! 🎉', 'success');
+            }
             await loadTodos(userId);
         } catch (error) {
             console.error('Error toggling todo:', error);
+            showToast('Failed to update task.', 'error');
         }
     };
 
@@ -130,8 +139,10 @@ export default function TodoListPage() {
 
             if (error) throw error;
             await loadTodos(userId);
+            showToast('Task deleted.', 'success');
         } catch (error) {
             console.error('Error deleting todo:', error);
+            showToast('Failed to delete task.', 'error');
         }
     };
 
@@ -144,9 +155,11 @@ export default function TodoListPage() {
             if (result.success) {
                 await loadTodos(userId);
                 setShowClearConfirm(false);
+                showToast('Cleared all completed tasks.', 'success');
             }
         } catch (error) {
             console.error('Error clearing completed:', error);
+            showToast('Failed to clear completed tasks.', 'error');
         } finally {
             setClearingCompleted(false);
         }
@@ -163,10 +176,13 @@ export default function TodoListPage() {
         return (
             <>
                 <AuthNavbar />
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-16 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading your to-do list...</p>
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-24">
+                    <div className="max-w-4xl mx-auto px-4">
+                        <div className="space-y-6">
+                            <SkeletonCard />
+                            <SkeletonCard />
+                            <SkeletonCard />
+                        </div>
                     </div>
                 </div>
             </>

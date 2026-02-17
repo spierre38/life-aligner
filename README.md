@@ -23,6 +23,10 @@ LifeAligner helps professionals align their career goals with their core values 
 - **Navigation Cards** - Clickable cards for Values, Interests, and upcoming worksheets
 - **AuthNavbar** - Fixed navigation with workbook dropdown menu and sign out
 
+### Admin Access
+- **Admin Dashboard** - Exclusive panel for administrators to manage users and view system-wide stats
+- **Restricted View** - Administrators are restricted to the admin dashboard and cannot access regular user dashboard features to ensure separation of concerns and data integrity. This is enforced via middleware and authentication checks.
+
 ### Interactive Worksheets
 
 #### Values Worksheet (Step 1/5)

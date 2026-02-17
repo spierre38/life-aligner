@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getIncompleteTodoCount } from '@/lib/todoHelpers';
 
+import { useToast } from '@/app/components/Toast';
+
 type DashboardTodoWidgetProps = {
     userId: string;
 };
 
 export function DashboardTodoWidget({ userId }: DashboardTodoWidgetProps) {
     const router = useRouter();
+    const { showToast } = useToast();
     const [todoCount, setTodoCount] = useState<number>(0);
     const [loading, setLoading] = useState(true);
     const [newTask, setNewTask] = useState('');
@@ -56,7 +59,7 @@ export function DashboardTodoWidget({ userId }: DashboardTodoWidgetProps) {
             setTimeout(() => setJustAdded(false), 2000);
         } catch (error) {
             console.error('Error adding task:', error);
-            alert('Failed to add task. Please try again.');
+            showToast('Failed to add task. Please try again.', 'error');
         } finally {
             setAdding(false);
         }

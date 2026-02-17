@@ -1,6 +1,6 @@
 'use client';
 
-import { trackRoadmapSaved, trackActivityLogged } from '@/lib/analytics';
+import { trackRoadmapSaved, trackActivityLogged, trackGoalAdded, trackRoadmapComplete } from '@/lib/analytics';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -611,6 +611,15 @@ export default function RoadmapPage() {
 
         // Save with the updated items
         saveRoadmapImmediate(updatedItems);
+
+        // Track analytics
+        trackGoalAdded(category, newType);
+
+        // If this is the user's 3rd goal, consider the roadmap "complete" (initial milestone reached)
+        const activeCount = updatedItems.filter(item => !item.archived).length;
+        if (activeCount === 3) {
+            trackRoadmapComplete(activeCount);
+        }
 
         // Show success message
         const itemType = newType === 'goal' ? 'Goal' : 'Behavior Change';

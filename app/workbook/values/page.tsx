@@ -1,6 +1,7 @@
 'use client';
 
 import { trackValuesSaved } from '@/lib/analytics';
+import { useToast } from '@/app/components/Toast';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -100,6 +101,7 @@ type SelectedValue = {
 
 export default function ValuesWorksheet() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [userId, setUserId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -356,12 +358,13 @@ export default function ValuesWorksheet() {
 
             trackValuesSaved(prioritizedValues.length);
             setShowSuccess(true);
+            showToast('Values saved successfully!', 'success');
             setTimeout(() => {
                 router.push('/dashboard');
             }, 2000);
         } catch (error) {
             console.error('Error saving values:', error);
-            alert('Failed to save values. Please try again.');
+            showToast('Failed to save values. Please try again.', 'error');
         } finally {
             setSaving(false);
         }
@@ -369,12 +372,15 @@ export default function ValuesWorksheet() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-800">Loading worksheet...</p>
+            <>
+                <AuthNavbar />
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-24">
+                    <div className="max-w-4xl mx-auto px-4">
+                        <div className="space-y-6">
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </>
         );
     }
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
+import { trackLifeFrameComplete } from '@/lib/analytics';
 import ConstellationMap from './ConstellationMap';
 
 type SelectedValue = {
@@ -265,6 +266,7 @@ export default function LifeFrameConstellation() {
     const [activeSection, setActiveSection] = useState<'intro' | 'values' | 'interests' | 'categories' | 'purpose'>('intro');
     const [showConfetti, setShowConfetti] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
+    const hasTrackedComplete = useRef(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -287,9 +289,15 @@ export default function LifeFrameConstellation() {
             else if (progress < 0.8) setActiveSection('categories');
             else {
                 setActiveSection('purpose');
-                if (progress >= 0.8 && !showConfetti) {
-                    setShowConfetti(true);
-                    setTimeout(() => setShowConfetti(false), 3000);
+                if (progress >= 0.8) {
+                    if (!showConfetti) {
+                        setShowConfetti(true);
+                        setTimeout(() => setShowConfetti(false), 3000);
+                    }
+                    if (!hasTrackedComplete.current) {
+                        trackLifeFrameComplete();
+                        hasTrackedComplete.current = true;
+                    }
                 }
             }
         };
