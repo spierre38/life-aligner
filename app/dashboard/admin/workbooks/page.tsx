@@ -4,7 +4,7 @@
 // Workbook completion stats and breakdown
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 interface WorkbookStats {
     totalUsers: number;
@@ -57,7 +57,6 @@ function ProgressRing({ percentage, color }: { percentage: number; color: string
 }
 
 export default function AdminWorkbooksPage() {
-    const supabase = createClient();
     const [stats, setStats] = useState<WorkbookStats | null>(null);
     const [recentCompletions, setRecentCompletions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);

@@ -4,7 +4,7 @@
 // Admin overview dashboard with key stats from Supabase
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,6 @@ function StatCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminOverviewPage() {
-    const supabase = createClient();
     const [stats, setStats] = useState<Stats | null>(null);
     const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
     const [loading, setLoading] = useState(true);

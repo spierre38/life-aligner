@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Nav items for admin sidebar
 const NAV_ITEMS = [
@@ -53,7 +53,6 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const supabase = createClient();
     const [adminName, setAdminName] = useState('Admin');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(true);

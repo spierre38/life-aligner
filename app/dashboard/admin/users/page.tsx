@@ -4,7 +4,7 @@
 // User management - search, view, deactivate users
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -161,7 +161,6 @@ function UserRow({
 // ─── User Detail Modal ────────────────────────────────────────────────────────
 
 function UserDetailModal({ user, onClose }: { user: User; onClose: () => void }) {
-    const supabase = createClient();
     const [workbookEntries, setWorkbookEntries] = useState<{ category: string; updated_at: string }[]>([]);
 
     useEffect(() => {
@@ -259,7 +258,6 @@ function UserDetailModal({ user, onClose }: { user: User; onClose: () => void })
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminUsersPage() {
-    const supabase = createClient();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

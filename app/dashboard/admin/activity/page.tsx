@@ -4,7 +4,7 @@
 // Recent user activity feed
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 interface ActivityItem {
     id: string;
@@ -89,7 +89,6 @@ function timeAgo(dateString: string): string {
 }
 
 export default function AdminActivityPage() {
-    const supabase = createClient();
     const [activities, setActivities] = useState<ActivityItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | ActivityItem['type']>('all');
