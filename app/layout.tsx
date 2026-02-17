@@ -31,7 +31,7 @@ export default function RootLayout({
         <ToastProvider>
           {children}
         </ToastProvider>
-        <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
+        <GoogleAnalytics measurementId="G-DHFVLL796L" />
         <Analytics />
       </body>
     </html>
