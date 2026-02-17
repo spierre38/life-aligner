@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-0 left-0 h-full w-64 bg-gray-900 border-r border-gray-800 z-30 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed top-0 left-0 h-full w-64 bg-gray-900 border-r border-gray-800 z-30 transform transition-transform duration-300 lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* Logo */}
@@ -136,7 +136,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-1 flex-1">
+                <nav className="p-4 space-y-1 flex-1 overflow-y-auto">
                     {NAV_ITEMS.map((item) => (
                         <Link
                             key={item.href}
@@ -159,7 +159,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
 
                 {/* Bottom section */}
-                <div className="p-4 border-t border-gray-800 mt-auto absolute bottom-0 left-0 right-0">
+                <div className="p-4 border-t border-gray-800 mt-auto flex-shrink-0">
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-800/50 mb-2">
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
                             {adminName.charAt(0).toUpperCase()}
