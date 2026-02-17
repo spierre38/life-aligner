@@ -8,6 +8,7 @@ export type AuthError = {
 export type AuthResult = {
     success: boolean;
     error?: AuthError;
+    profile?: any;
 };
 
 /**
@@ -112,7 +113,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
         // Verify profile exists (it should always exist due to trigger)
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('*')
             .eq('id', data.user.id)
             .single();
 
@@ -139,7 +140,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
             console.log('Created missing profile for user:', data.user.id);
         }
 
-        return { success: true };
+        return { success: true, profile };
     } catch (error) {
         console.error('Login error:', error);
         return {

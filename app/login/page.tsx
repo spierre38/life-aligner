@@ -48,7 +48,12 @@ function LoginFormWithParams() {
 
             if (result.success) {
                 trackLogin('email');
-                router.push('/dashboard');
+                // Redirect to admin dashboard if user is an admin
+                if (result.profile?.role === 'admin') {
+                    router.push('/dashboard/admin');
+                } else {
+                    router.push('/dashboard');
+                }
             } else {
                 setError(result.error?.message || 'Failed to sign in');
             }
