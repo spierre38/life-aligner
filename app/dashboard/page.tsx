@@ -658,6 +658,10 @@ export default function DashboardPage() {
                     router.push('/login');
                     return;
                 }
+                if (userWithProfile.profile?.role === 'admin') {
+                    router.push('/dashboard/admin');
+                    return;
+                }
                 setUser(userWithProfile);
 
                 if (!userWithProfile.profile?.welcome_seen) {
