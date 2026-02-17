@@ -325,8 +325,7 @@ export default function InterestsWorksheet() {
                                             Joy, Rejuvenation, and Creativity
                                         </h2>
                                         <p className="text-gray-800 mb-6">
-                                            Learn how to identify activities that bring you happiness and energy. Tim explains
-                                            the difference between existing interests and interests worth exploring.
+                                            Learn how to identify activities that bring you happiness and energy. While allowing you to deploy your creativity to help others.
                                         </p>
 
                                         <div className="flex gap-4">
@@ -401,7 +400,7 @@ export default function InterestsWorksheet() {
                                                         <strong>Joy:</strong> ✓ Yes, finds it exciting<br />
                                                         <strong>Rejuvenation:</strong> ✓ Gets energy from it<br />
                                                         <strong>Creativity:</strong> ✓ Uses creative thinking<br />
-                                                        <strong>Helping Others:</strong> ✓ Created jobs, helped millions
+                                                        <strong>Helping Others:</strong> ✓ Created jobs, helped millions, now assisting multiple non-profit orgranizations
                                                     </p>
                                                     <p className="text-green-800 font-semibold mt-2">🎯 The Sweet Spot!</p>
                                                 </div>
@@ -413,7 +412,7 @@ export default function InterestsWorksheet() {
                                             <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
                                                 <h4 className="text-xl font-bold text-gray-900 mb-3">Jess - Art School Owner</h4>
                                                 <p className="text-gray-800 mb-2">
-                                                    <strong>Interest:</strong> Painting & Teaching
+                                                    <strong>Interests:</strong> Painting & Teaching
                                                 </p>
                                                 <p className="text-gray-700">
                                                     Turned her love of art into a business that addresses adult loneliness.
@@ -422,9 +421,9 @@ export default function InterestsWorksheet() {
                                             </div>
 
                                             <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200">
-                                                <h4 className="text-xl font-bold text-gray-900 mb-3">Laura - Fitness Coach</h4>
+                                                <h4 className="text-xl font-bold text-gray-900 mb-3">Laura - Fitness Trainer, Group Class Instructor</h4>
                                                 <p className="text-gray-800 mb-2">
-                                                    <strong>Interest:</strong> Working Out
+                                                    <strong>Interests:</strong> Fitness, Nutrition
                                                 </p>
                                                 <p className="text-gray-700">
                                                     Loved HIIT classes so much she became an instructor. Now she gets rejuvenated

@@ -14,6 +14,9 @@ function GoogleAnalyticsTracker({ measurementId }: { measurementId: string }) {
 
         const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
 
+        // DEBUG: Log to console
+        console.log('📊 GA4 Page View:', url);
+
         // Send page_view event to GA4
         window.gtag?.('config', measurementId, {
             page_path: url,
@@ -24,13 +27,20 @@ function GoogleAnalyticsTracker({ measurementId }: { measurementId: string }) {
 }
 
 export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
-    if (!measurementId) return null;
+    // DEBUG: Log measurement ID
+    console.log('🔍 GA4 Measurement ID:', measurementId);
+
+    if (!measurementId) {
+        console.warn('⚠️ GA4 Measurement ID is missing!');
+        return null;
+    }
 
     return (
         <>
             <Script
                 strategy="afterInteractive"
                 src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
+                onLoad={() => console.log('✅ GA4 Script Loaded!')}
             />
             <Script
                 id="google-analytics"
@@ -44,6 +54,7 @@ export function GoogleAnalytics({ measurementId }: { measurementId: string }) {
               page_auto_event: true,
               send_page_view: false,
             });
+            console.log('✅ GA4 Initialized!');
           `,
                 }}
             />

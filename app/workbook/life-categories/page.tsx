@@ -93,9 +93,7 @@ export default function LifeCategoriesWorksheet() {
     const [showSuccess, setShowSuccess] = useState(false);
 
     // Worksheet data
-    const [selectedCategories, setSelectedCategories] = useState<Set<string>>(
-        new Set(['Health', 'Relationships', 'Community', 'Education', 'Career', 'Financial', 'Spirituality'])
-    );
+    const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
     const [categoryDetails, setCategoryDetails] = useState<LifeCategory[]>([]);
     const [purposeElements, setPurposeElements] = useState<PurposeElement[]>([]);
     const [customCategory, setCustomCategory] = useState('');
@@ -158,6 +156,7 @@ export default function LifeCategoriesWorksheet() {
                     const saved = data.content;
                     if (saved.categories) {
                         setCategoryDetails(saved.categories);
+                        setSelectedCategories(new Set(saved.categories.map((c: any) => c.name)));
                     }
                     if (saved.purpose_elements) {
                         setPurposeElements(saved.purpose_elements);
@@ -346,7 +345,7 @@ export default function LifeCategoriesWorksheet() {
                                             Life Categories
                                         </h1>
                                         <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
-                                            Define the key areas of your life you want to focus on. These categories will structure your Roadmap and ensure balanced progress.
+                                            Life Categories are the areas of your life that you want to focus on and set goals within. They provide structure to your Roadmap and help ensure you're making progress across all asepects of your life that matter to you.
                                         </p>
                                         <div className="inline-flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full text-sm font-semibold text-indigo-700 mb-8">
                                             <span>📚</span>
@@ -414,11 +413,15 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
                                         <div className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-100">
                                             <h4 className="font-bold text-gray-900 mb-1">Relationships</h4>
-                                            <p className="text-xs text-gray-600">Family • Friends • Partnership</p>
+                                            <p className="text-xs text-gray-600">Family • Friends • Partnership • Community</p>
                                         </div>
                                         <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
                                             <h4 className="font-bold text-gray-900 mb-1">Purpose</h4>
                                             <p className="text-xs text-gray-600">Help Others • Environment</p>
+                                        </div>
+                                        <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-100">
+                                            <h4 className="font-bold text-gray-900 mb-1">Career</h4>
+                                            <p className="text-xs text-gray-600">Business Growth • Leadership Development • Impacting Academic Growth</p>
                                         </div>
                                     </div>
                                     <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">

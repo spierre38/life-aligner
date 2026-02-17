@@ -561,9 +561,8 @@ export default function ValuesWorksheet() {
                                                 <div>
                                                     <h3 className="text-xl font-bold text-gray-900 mb-2">Jess - Creativity & Generosity</h3>
                                                     <p className="text-gray-800">
-                                                        Jess opened an art school for adults to address loneliness in her community. Her values of
-                                                        <strong> creativity</strong> and <strong>generosity</strong> shaped her business model—making
-                                                        art accessible to everyone, not just those who can afford expensive classes.
+                                                        After a sucessful career in admissions in education. Jess opened an art school for adults to address loneliness in her community. Her values of
+                                                        <strong> creativity</strong> and <strong>generosity</strong> shaped her business model— building community while proividng a place for people to express their creativity.
                                                     </p>
                                                 </div>
                                             </div>
