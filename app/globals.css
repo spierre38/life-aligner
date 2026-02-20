@@ -109,17 +109,15 @@ section {
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.6s ease-out forwards;
+  animation: fade-in 0.4s ease-out forwards;
 }
 
 /* NEW: Toast and UI Polish Animations */
@@ -161,8 +159,111 @@ section {
   animation: slideInRight 0.3s ease-out;
 }
 
+/* Scale in animation for logos/images */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
+  animation: scale-in 0.6s ease-out forwards;
+}
+
+/* Fade in up animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up-delay {
+  animation: fade-in-up 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+/* Bounce in animation for trait icons */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(-30px);
+  }
+
+  50% {
+    transform: scale(1.05) translateY(0);
+  }
+
+  70% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Progress bar animations */
+@keyframes progress-3s {
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.animate-progress-3s {
+  animation: progress-3s 3s linear forwards;
+}
+
+@keyframes progress-4s {
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.animate-progress-4s {
+  animation: progress-4s 4s linear forwards;
+}
+
+@keyframes progress-2-5s {
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.animate-progress-2-5s {
+  animation: progress-2-5s 2.5s linear forwards;
 }
 
 /* Focus visible for accessibility */
@@ -241,7 +342,13 @@ section {
   .animate-orbit-reverse,
   .animate-fade-in,
   .animate-scale-in,
-  .animate-slide-in-right {
+  .animate-slide-in-right,
+  .animate-fade-in-up,
+  .animate-fade-in-up-delay,
+  .animate-bounce-in,
+  .animate-progress-3s,
+  .animate-progress-4s,
+  .animate-progress-2-5s {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
