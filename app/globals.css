@@ -159,14 +159,18 @@ section {
   animation: slideInRight 0.3s ease-out;
 }
 
-/* Car entering from left */
+/* Car entrance */
 @keyframes car-enter {
-  from {
-    transform: translateX(-200px);
+  0% {
+    transform: translateX(-300px);
     opacity: 0;
   }
 
-  to {
+  60% {
+    transform: translateX(120px);
+  }
+
+  100% {
     transform: translateX(100px);
     opacity: 1;
   }
@@ -176,7 +180,7 @@ section {
   animation: car-enter 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* Car bounce (driving effect) */
+/* Car bounce while driving */
 @keyframes car-bounce {
 
   0%,
@@ -185,117 +189,110 @@ section {
   }
 
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
 
 .animate-car-bounce {
-  animation: car-bounce 0.6s ease-in-out infinite;
+  animation: car-bounce 0.5s ease-in-out infinite;
 }
 
-/* Road lines scrolling */
+/* Road scrolling */
 @keyframes road-scroll {
   from {
     transform: translateX(0);
   }
 
   to {
-    transform: translateX(-100px);
+    transform: translateX(-150px);
   }
 }
 
 .animate-road-scroll {
-  animation: road-scroll 1.5s linear infinite;
+  animation: road-scroll 2s linear infinite;
 }
 
-/* Road line dashes */
-@keyframes road-line {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.3;
-  }
+.animate-road-scroll-slow {
+  animation: road-scroll 8s linear infinite;
 }
 
-.animate-road-line {
-  animation: road-line 2s ease-in-out infinite;
-}
-
-/* Clouds floating slow */
-@keyframes float-slow {
-
-  0%,
-  100% {
-    transform: translateY(0px) translateX(0px);
-  }
-
-  50% {
-    transform: translateY(-15px) translateX(20px);
-  }
-}
-
-.animate-float-slow {
-  animation: float-slow 8s ease-in-out infinite;
-}
-
-/* Clouds floating slower */
-@keyframes float-slower {
-
-  0%,
-  100% {
-    transform: translateY(0px) translateX(0px);
-  }
-
-  50% {
-    transform: translateY(-10px) translateX(-15px);
-  }
-}
-
-.animate-float-slower {
-  animation: float-slower 12s ease-in-out infinite;
-}
-
-/* Float animation */
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Trees sliding */
-@keyframes slide-left-slow {
+/* Trees sliding by */
+@keyframes slide-trees {
   from {
     transform: translateX(0);
   }
 
   to {
-    transform: translateX(-50px);
+    transform: translateX(-200px);
   }
 }
 
-.animate-slide-left-slow {
-  animation: slide-left-slow 20s linear infinite;
+.animate-slide-trees {
+  animation: slide-trees 6s linear infinite;
+}
+
+/* Clouds floating */
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(10px, -8px);
+  }
+
+  75% {
+    transform: translate(-10px, 8px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 12s ease-in-out infinite;
+}
+
+@keyframes float-slower {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  33% {
+    transform: translate(-12px, 6px);
+  }
+
+  66% {
+    transform: translate(12px, -6px);
+  }
+}
+
+.animate-float-slower {
+  animation: float-slower 18s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
 }
 
 /* Scale in */
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.92);
   }
 
   to {
@@ -312,7 +309,7 @@ section {
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
 
   to {
@@ -333,11 +330,11 @@ section {
   }
 
   50% {
-    transform: scale(1.1);
+    transform: scale(1.08);
   }
 
   70% {
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
 
   100% {
@@ -355,17 +352,18 @@ section {
 
   0%,
   100% {
-    opacity: 0.8;
+    opacity: 0.9;
+    transform: scale(1);
   }
 
   50% {
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 4s ease-in-out infinite;
+  animation: pulse-slow 5s ease-in-out infinite;
 }
 
 /* Focus visible for accessibility */
@@ -454,8 +452,8 @@ section {
   .animate-car-enter,
   .animate-car-bounce,
   .animate-road-scroll,
-  .animate-road-line,
-  .animate-slide-left-slow {
+  .animate-road-scroll-slow,
+  .animate-slide-trees {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
