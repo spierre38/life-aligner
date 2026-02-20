@@ -159,7 +159,107 @@ section {
   animation: slideInRight 0.3s ease-out;
 }
 
-/* Float animation for particles and icons */
+/* Car entering from left */
+@keyframes car-enter {
+  from {
+    transform: translateX(-200px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(100px);
+    opacity: 1;
+  }
+}
+
+.animate-car-enter {
+  animation: car-enter 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Car bounce (driving effect) */
+@keyframes car-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-car-bounce {
+  animation: car-bounce 0.6s ease-in-out infinite;
+}
+
+/* Road lines scrolling */
+@keyframes road-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100px);
+  }
+}
+
+.animate-road-scroll {
+  animation: road-scroll 1.5s linear infinite;
+}
+
+/* Road line dashes */
+@keyframes road-line {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-road-line {
+  animation: road-line 2s ease-in-out infinite;
+}
+
+/* Clouds floating slow */
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+
+  50% {
+    transform: translateY(-15px) translateX(20px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+/* Clouds floating slower */
+@keyframes float-slower {
+
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+
+  50% {
+    transform: translateY(-10px) translateX(-15px);
+  }
+}
+
+.animate-float-slower {
+  animation: float-slower 12s ease-in-out infinite;
+}
+
+/* Float animation */
 @keyframes float {
 
   0%,
@@ -173,31 +273,29 @@ section {
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite;
 }
 
-/* Scale in slow for dramatic entrance */
-@keyframes scale-in-slow {
+/* Trees sliding */
+@keyframes slide-left-slow {
   from {
-    opacity: 0;
-    transform: scale(0.9);
+    transform: translateX(0);
   }
 
   to {
-    opacity: 1;
-    transform: scale(1);
+    transform: translateX(-50px);
   }
 }
 
-.animate-scale-in-slow {
-  animation: scale-in-slow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.animate-slide-left-slow {
+  animation: slide-left-slow 20s linear infinite;
 }
 
-/* Scale in regular */
+/* Scale in */
 @keyframes scale-in {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.9);
   }
 
   to {
@@ -224,37 +322,10 @@ section {
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.6s ease-out forwards;
+  animation: fade-in-up 0.8s ease-out forwards;
 }
 
-.animate-fade-in-up-delay-1 {
-  animation: fade-in-up 0.6s ease-out 0.3s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-up-delay-2 {
-  animation: fade-in-up 0.6s ease-out 0.6s forwards;
-  opacity: 0;
-}
-
-/* Slide in from left */
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-/* Bounce in for trait icons */
+/* Bounce in */
 @keyframes bounce-in {
   0% {
     opacity: 0;
@@ -276,16 +347,15 @@ section {
 }
 
 .animate-bounce-in {
-  animation: bounce-in 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
-/* Pulse slow for icon circle */
+/* Pulse slow */
 @keyframes pulse-slow {
 
   0%,
   100% {
-    opacity: 0.6;
-    transform: scale(1);
+    opacity: 0.8;
   }
 
   50% {
@@ -295,67 +365,7 @@ section {
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 3s ease-in-out infinite;
-}
-
-/* Confetti animation */
-@keyframes confetti {
-  0% {
-    transform: translateY(-10vh) rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateY(110vh) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-.animate-confetti {
-  animation: confetti 4s ease-in forwards;
-}
-
-/* Progress bar animations */
-@keyframes progress-2s {
-  from {
-    width: 0%;
-  }
-
-  to {
-    width: 100%;
-  }
-}
-
-.animate-progress-2s {
-  animation: progress-2s 2s linear forwards;
-}
-
-@keyframes progress-3s {
-  from {
-    width: 0%;
-  }
-
-  to {
-    width: 100%;
-  }
-}
-
-.animate-progress-3s {
-  animation: progress-3s 3s linear forwards;
-}
-
-@keyframes progress-4s {
-  from {
-    width: 0%;
-  }
-
-  to {
-    width: 100%;
-  }
-}
-
-.animate-progress-4s {
-  animation: progress-4s 4s linear forwards;
+  animation: pulse-slow 4s ease-in-out infinite;
 }
 
 /* Focus visible for accessibility */
@@ -434,19 +444,18 @@ section {
   .animate-orbit-reverse,
   .animate-fade-in,
   .animate-scale-in,
-  .animate-scale-in-slow,
   .animate-slide-in-right,
-  .animate-slide-in-left,
   .animate-fade-in-up,
-  .animate-fade-in-up-delay-1,
-  .animate-fade-in-up-delay-2,
   .animate-bounce-in,
   .animate-pulse-slow,
   .animate-float,
-  .animate-confetti,
-  .animate-progress-2s,
-  .animate-progress-3s,
-  .animate-progress-4s {
+  .animate-float-slow,
+  .animate-float-slower,
+  .animate-car-enter,
+  .animate-car-bounce,
+  .animate-road-scroll,
+  .animate-road-line,
+  .animate-slide-left-slow {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
