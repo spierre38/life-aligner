@@ -159,80 +159,112 @@ section {
   animation: slideInRight 0.3s ease-out;
 }
 
-/* Car entrance */
-@keyframes car-enter {
+/* Particle/snow falling */
+@keyframes fall {
+  to {
+    transform: translateY(110vh);
+  }
+}
+
+/* Car driving in from left */
+@keyframes car-drive-in {
   0% {
-    transform: translateX(-300px);
+    transform: translateX(-250px);
     opacity: 0;
   }
 
-  60% {
-    transform: translateX(120px);
+  70% {
+    transform: translateX(150px);
   }
 
   100% {
-    transform: translateX(100px);
+    transform: translateX(120px);
     opacity: 1;
   }
 }
 
-.animate-car-enter {
-  animation: car-enter 2.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.animate-car-drive-in {
+  animation: car-drive-in 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Car bounce while driving */
+/* Car bounce (driving effect) */
 @keyframes car-bounce {
 
   0%,
   100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
 
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-5px);
   }
 }
 
 .animate-car-bounce {
-  animation: car-bounce 0.5s ease-in-out infinite;
+  animation: car-bounce 0.6s ease-in-out infinite;
 }
 
-/* Road scrolling */
-@keyframes road-scroll {
+/* Trees scrolling */
+@keyframes trees-scroll {
   from {
     transform: translateX(0);
   }
 
   to {
-    transform: translateX(-150px);
+    transform: translateX(-50%);
   }
 }
 
-.animate-road-scroll {
-  animation: road-scroll 2s linear infinite;
+.animate-trees-scroll {
+  animation: trees-scroll 20s linear infinite;
 }
 
-.animate-road-scroll-slow {
-  animation: road-scroll 8s linear infinite;
-}
-
-/* Trees sliding by */
-@keyframes slide-trees {
+/* Road center lines */
+@keyframes road-lines {
   from {
     transform: translateX(0);
   }
 
   to {
-    transform: translateX(-200px);
+    transform: translateX(-100px);
   }
 }
 
-.animate-slide-trees {
-  animation: slide-trees 6s linear infinite;
+.animate-road-lines {
+  animation: road-lines 1.5s linear infinite;
+}
+
+/* Parallax layers */
+@keyframes parallax-slow {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-3%);
+  }
+}
+
+.animate-parallax-slow {
+  animation: parallax-slow 30s linear infinite;
+}
+
+@keyframes parallax-slower {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-2%);
+  }
+}
+
+.animate-parallax-slower {
+  animation: parallax-slower 40s linear infinite;
 }
 
 /* Clouds floating */
-@keyframes float-slow {
+@keyframes float-cloud {
 
   0%,
   100% {
@@ -240,39 +272,54 @@ section {
   }
 
   25% {
-    transform: translate(10px, -8px);
+    transform: translate(15px, -10px);
   }
 
   75% {
-    transform: translate(-10px, 8px);
+    transform: translate(-15px, 10px);
   }
 }
 
-.animate-float-slow {
-  animation: float-slow 12s ease-in-out infinite;
+.animate-float-cloud {
+  animation: float-cloud 15s ease-in-out infinite;
 }
 
-@keyframes float-slower {
-
-  0%,
-  100% {
-    transform: translate(0, 0);
+/* Smooth fade in */
+@keyframes fade-in-smooth {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
 
-  33% {
-    transform: translate(-12px, 6px);
-  }
-
-  66% {
-    transform: translate(12px, -6px);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-float-slower {
-  animation: float-slower 18s ease-in-out infinite;
+.animate-fade-in-smooth {
+  animation: fade-in-smooth 1s ease-out forwards;
 }
 
-@keyframes float {
+/* Slide up smooth */
+@keyframes slide-up-smooth {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-smooth {
+  animation: slide-up-smooth 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Gentle bounce */
+@keyframes bounce-gentle {
 
   0%,
   100% {
@@ -284,86 +331,27 @@ section {
   }
 }
 
-.animate-float {
-  animation: float 8s ease-in-out infinite;
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
 }
 
-/* Scale in */
-@keyframes scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-scale-in {
-  animation: scale-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-/* Fade in up */
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
-}
-
-/* Bounce in */
-@keyframes bounce-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-
-  50% {
-    transform: scale(1.08);
-  }
-
-  70% {
-    transform: scale(0.95);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-bounce-in {
-  animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-}
-
-/* Pulse slow */
-@keyframes pulse-slow {
+/* Pulse glow for sun */
+@keyframes pulse-glow {
 
   0%,
   100% {
-    opacity: 0.9;
+    opacity: 0.8;
     transform: scale(1);
   }
 
   50% {
     opacity: 1;
-    transform: scale(1.03);
+    transform: scale(1.05);
   }
 }
 
-.animate-pulse-slow {
-  animation: pulse-slow 5s ease-in-out infinite;
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
 }
 
 /* Focus visible for accessibility */
@@ -441,19 +429,18 @@ section {
   .animate-orbit,
   .animate-orbit-reverse,
   .animate-fade-in,
-  .animate-scale-in,
   .animate-slide-in-right,
-  .animate-fade-in-up,
-  .animate-bounce-in,
-  .animate-pulse-slow,
-  .animate-float,
-  .animate-float-slow,
-  .animate-float-slower,
-  .animate-car-enter,
+  .animate-car-drive-in,
   .animate-car-bounce,
-  .animate-road-scroll,
-  .animate-road-scroll-slow,
-  .animate-slide-trees {
+  .animate-trees-scroll,
+  .animate-road-lines,
+  .animate-parallax-slow,
+  .animate-parallax-slower,
+  .animate-float-cloud,
+  .animate-fade-in-smooth,
+  .animate-slide-up-smooth,
+  .animate-bounce-gentle,
+  .animate-pulse-glow {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
