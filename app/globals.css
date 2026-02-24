@@ -354,6 +354,91 @@ section {
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
+/* Fade in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+/* Scale in */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Monument rise */
+@keyframes monument-rise {
+  from {
+    opacity: 0;
+    transform: translateY(80px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-monument-rise {
+  animation: monument-rise 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Slide down */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-60px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Bounce slow */
+@keyframes bounce-slow {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
 /* Focus visible for accessibility */
 *:focus-visible {
   outline: 2px solid #6366f1;
@@ -429,6 +514,7 @@ section {
   .animate-orbit,
   .animate-orbit-reverse,
   .animate-fade-in,
+  .animate-scale-in,
   .animate-slide-in-right,
   .animate-car-drive-in,
   .animate-car-bounce,
@@ -440,7 +526,10 @@ section {
   .animate-fade-in-smooth,
   .animate-slide-up-smooth,
   .animate-bounce-gentle,
-  .animate-pulse-glow {
+  .animate-pulse-glow,
+  .animate-monument-rise,
+  .animate-slide-down,
+  .animate-bounce-slow {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
