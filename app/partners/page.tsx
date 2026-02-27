@@ -240,7 +240,7 @@ export default function PartnersPage() {
                                     value={inviteEmail}
                                     onChange={(e) => setInviteEmail(e.target.value)}
                                     placeholder="partner@example.com"
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder:text-gray-400"
                                     required
                                 />
                             </div>

@@ -73,8 +73,8 @@ export default function CreatePostModal({ onClose, onPostCreated }: CreatePostMo
                                     type="button"
                                     onClick={() => setPostType(type.value)}
                                     className={`p-4 rounded-xl border-2 transition-all text-left ${postType === type.value
-                                            ? 'border-purple-500 bg-purple-50 shadow-md'
-                                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                                        ? 'border-purple-500 bg-purple-50 shadow-md'
+                                        : 'border-gray-200 hover:border-gray-300 bg-white'
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-1">
@@ -95,7 +95,7 @@ export default function CreatePostModal({ onClose, onPostCreated }: CreatePostMo
                             onChange={(e) => setContent(e.target.value)}
                             placeholder="What's on your mind?"
                             rows={6}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
                             required
                         />
                         <div className="flex justify-between items-center mt-2">
@@ -118,8 +118,8 @@ export default function CreatePostModal({ onClose, onPostCreated }: CreatePostMo
                                     type="button"
                                     onClick={() => setVisibility(option.value)}
                                     className={`w-full p-4 rounded-xl border-2 transition-all text-left ${visibility === option.value
-                                            ? 'border-purple-500 bg-purple-50'
-                                            : 'border-gray-200 hover:border-gray-300 bg-white'
+                                        ? 'border-purple-500 bg-purple-50'
+                                        : 'border-gray-200 hover:border-gray-300 bg-white'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">

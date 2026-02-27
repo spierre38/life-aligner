@@ -174,7 +174,7 @@ export default function CommentsModal({ postId, onClose }: CommentsModalProps) {
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Write a comment..."
                             rows={2}
-                            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-gray-900 placeholder:text-gray-400"
                         />
                         <button
                             type="submit"
