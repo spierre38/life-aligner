@@ -117,6 +117,24 @@ export default function AuthNavbar() {
                             >
                                 📚 Resources
                             </Link>
+                            <Link
+                                href="/community"
+                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/community')
+                                    ? 'bg-indigo-50 text-indigo-600'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
+                            >
+                                🌐 Community
+                            </Link>
+                            <Link
+                                href="/partners"
+                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/partners')
+                                    ? 'bg-indigo-50 text-indigo-600'
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
+                            >
+                                🤝 Partners
+                            </Link>
                         </div>
                     </div>
 
@@ -176,6 +194,14 @@ export default function AuthNavbar() {
                                                 <span className="text-xl">📚</span>
                                                 <span className="text-sm font-medium text-gray-700">Resources</span>
                                             </Link>
+                                            <Link href="/community" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                                                <span className="text-xl">🌐</span>
+                                                <span className="text-sm font-medium text-gray-700">Community</span>
+                                            </Link>
+                                            <Link href="/partners" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                                                <span className="text-xl">🤝</span>
+                                                <span className="text-sm font-medium text-gray-700">Partners</span>
+                                            </Link>
                                         </div>
                                         <div className="border-t border-gray-100 py-2">
                                             <Link href="/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
@@ -221,6 +247,12 @@ export default function AuthNavbar() {
                             </Link>
                             <Link href="/resources" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/resources') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 📚 Resources
+                            </Link>
+                            <Link href="/community" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/community') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+                                🌐 Community
+                            </Link>
+                            <Link href="/partners" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/partners') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+                                🤝 Partners
                             </Link>
                         </div>
                         <div className="border-t border-gray-200 mt-4 pt-4 space-y-1">
