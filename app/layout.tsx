@@ -4,6 +4,7 @@ import "./globals.css";
 import { ToastProvider } from "@/app/components/Toast";
 import { GoogleAnalytics } from "@/app/components/GoogleAnalytics";
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
         <ToastProvider>
           {children}
         </ToastProvider>
+        <Toaster />
         <GoogleAnalytics measurementId="G-DHFVLL796L" />
         <Analytics />
       </body>
