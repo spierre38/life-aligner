@@ -86,26 +86,41 @@ export default function CommunityPage() {
 
             <div className="max-w-3xl mx-auto px-4 py-8">
                 {/* Create Post Button */}
-                <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="w-full bg-white border-2 border-dashed border-gray-300 rounded-2xl p-6 mb-6 hover:border-purple-400 hover:bg-purple-50/50 transition-all group"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
+                {currentUserId ? (
+                    <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="w-full bg-white border-2 border-dashed border-gray-300 rounded-2xl p-6 mb-6 hover:border-purple-400 hover:bg-purple-50/50 transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            </div>
+                            <div className="text-left">
+                                <p className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                                    Share an update
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                    Milestone, goal, win, or just checking in
+                                </p>
+                            </div>
                         </div>
-                        <div className="text-left">
-                            <p className="font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
-                                Share an update
-                            </p>
-                            <p className="text-sm text-gray-500">
-                                Milestone, goal, win, or just checking in
-                            </p>
+                    </button>
+                ) : (
+                    <div className="w-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 mb-6 text-white">
+                        <div className="text-center">
+                            <h3 className="text-xl font-bold mb-2">Join the Community</h3>
+                            <p className="mb-4 text-white/90">Sign in to share your journey and connect with others</p>
+                            <a
+                                href="/login"
+                                className="inline-block px-6 py-3 bg-white text-purple-600 rounded-xl font-semibold hover:shadow-lg transition-all"
+                            >
+                                Sign In
+                            </a>
                         </div>
                     </div>
-                </button>
+                )}
 
                 {/* Filters */}
                 <div className="flex gap-2 mb-6 overflow-x-auto pb-2">

@@ -41,10 +41,10 @@ export default function PostCard({ post, currentUserId, initialLiked = false, on
     const [liking, setLiking] = useState(false);
 
     const typeConfig = POST_TYPE_CONFIG[post.post_type];
-    const isOwnPost = currentUserId === post.author.id;
+    const isOwnPost = currentUserId ? currentUserId === post.author.id : false;
 
     const handleLike = async () => {
-        if (liking) return;
+        if (liking || !currentUserId) return; // Don't allow likes if not logged in
 
         setLiking(true);
         const previousLiked = liked;
@@ -115,11 +115,12 @@ export default function PostCard({ post, currentUserId, initialLiked = false, on
                     {/* Like button */}
                     <button
                         onClick={handleLike}
-                        disabled={liking}
+                        disabled={liking || !currentUserId}
+                        title={!currentUserId ? 'Sign in to like posts' : ''}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${liked
                                 ? 'bg-red-50 text-red-600 hover:bg-red-100'
                                 : 'text-gray-600 hover:bg-gray-50'
-                            }`}
+                            } ${!currentUserId ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <svg
                             className={`w-5 h-5 transition-transform ${liked ? 'scale-110' : ''}`}
@@ -140,7 +141,9 @@ export default function PostCard({ post, currentUserId, initialLiked = false, on
                     {/* Comment button */}
                     <button
                         onClick={onCommentClick}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-50 transition-all"
+                        disabled={!currentUserId}
+                        title={!currentUserId ? 'Sign in to comment' : ''}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-50 transition-all ${!currentUserId ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
