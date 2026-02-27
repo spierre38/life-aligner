@@ -11,6 +11,7 @@ export default function AuthNavbar() {
     const [user, setUser] = useState<any>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [showSocialMenu, setShowSocialMenu] = useState(false);
     const [worksheetStatus, setWorksheetStatus] = useState({
         values: false,
         interests: false,
@@ -117,24 +118,41 @@ export default function AuthNavbar() {
                             >
                                 📚 Resources
                             </Link>
-                            <Link
-                                href="/community"
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/community')
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                    }`}
-                            >
-                                🌐 Community
-                            </Link>
-                            <Link
-                                href="/partners"
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/partners')
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                    }`}
-                            >
-                                🤝 Partners
-                            </Link>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowSocialMenu(!showSocialMenu)}
+                                    className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center gap-1 ${isActive('/community') || isActive('/partners')
+                                        ? 'bg-indigo-50 text-indigo-600'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        }`}
+                                >
+                                    🌐 Social
+                                    <svg className={`w-4 h-4 transition-transform ${showSocialMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                {showSocialMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setShowSocialMenu(false)}></div>
+                                        <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                                            <Link href="/community" onClick={() => setShowSocialMenu(false)} className={`flex items-center gap-3 px-4 py-3 transition ${isActive('/community') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'}`}>
+                                                <span className="text-xl">💬</span>
+                                                <div>
+                                                    <p className="font-semibold text-sm">Community Feed</p>
+                                                    <p className="text-xs text-gray-500">Share & get inspired</p>
+                                                </div>
+                                            </Link>
+                                            <Link href="/partners" onClick={() => setShowSocialMenu(false)} className={`flex items-center gap-3 px-4 py-3 transition ${isActive('/partners') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'}`}>
+                                                <span className="text-xl">🤝</span>
+                                                <div>
+                                                    <p className="font-semibold text-sm">Partners</p>
+                                                    <p className="text-xs text-gray-500">Accountability buddies</p>
+                                                </div>
+                                            </Link>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
