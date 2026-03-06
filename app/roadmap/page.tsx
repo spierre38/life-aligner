@@ -979,19 +979,8 @@ export default function RoadmapPage() {
                                                                                     </div>
                                                                                 </div>
 
-                                                                                {/* Add to To-Do Button */}
-                                                                                {userId && (
-                                                                                    <AddToTodoButton
-                                                                                        userId={userId}
-                                                                                        activity={activity.text}
-                                                                                        context={{
-                                                                                            life_category: category.name,
-                                                                                            goal: item.title, // Changed from item.goal to item.title as goal is not a direct property
-                                                                                            activity: activity.text
-                                                                                        }}
-                                                                                        variant="compact"
-                                                                                    />
-                                                                                )}
+                                                                                {/* View in To-Do List */}
+                                                                                <AddToTodoButton variant="compact" />
                                                                             </div>
 
                                                                             {/* NEW: Show recent logs with feelings */}

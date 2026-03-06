@@ -348,6 +348,10 @@ export default function LifeFrameConstellation() {
                         interests: interestsData.content || { existing: [], exploring: [] },
                         lifeCategories: categoriesData.content || { categories: [], purpose_elements: [] }
                     });
+                } else {
+                    // Redirect back if they haven't completed the prerequisites
+                    router.push('/dashboard');
+                    return;
                 }
             } catch (error) {
                 console.error('Error loading LifeFrame:', error);

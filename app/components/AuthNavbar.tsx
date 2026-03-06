@@ -83,22 +83,36 @@ export default function AuthNavbar() {
                                 Dashboard
                             </Link>
                             <Link
-                                href="/workbook/lifeframe"
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/workbook/lifeframe') || pathname.startsWith('/workbook')
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                href={worksheetStatus.lifeCategories ? "/workbook/lifeframe" : "#"}
+                                onClick={(e) => {
+                                    if (!worksheetStatus.lifeCategories) {
+                                        e.preventDefault();
+                                        alert('Please complete Values, Interests, and Categories first.');
+                                    }
+                                }}
+                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${!worksheetStatus.lifeCategories ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
+                                    (isActive('/workbook/lifeframe') || pathname.startsWith('/workbook'))
+                                        ? 'bg-indigo-50 text-indigo-600'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
-                                📋 LifeFrame
+                                {worksheetStatus.lifeCategories ? '📋 LifeFrame' : '🔒 LifeFrame'}
                             </Link>
                             <Link
-                                href="/roadmap"
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/roadmap')
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                href={worksheetStatus.lifeCategories ? "/roadmap" : "#"}
+                                onClick={(e) => {
+                                    if (!worksheetStatus.lifeCategories) {
+                                        e.preventDefault();
+                                        alert('Complete your LifeFrame first to unlock the Roadmap');
+                                    }
+                                }}
+                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${!worksheetStatus.lifeCategories ? 'bg-gray-100 text-gray-400 cursor-not-allowed' :
+                                        isActive('/roadmap')
+                                            ? 'bg-indigo-50 text-indigo-600'
+                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
-                                🗺️ Roadmap
+                                {worksheetStatus.lifeCategories ? '🗺️ Roadmap' : '🔒 Roadmap'}
                             </Link>
                             <Link
                                 href="/todo"
@@ -126,7 +140,8 @@ export default function AuthNavbar() {
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                                         }`}
                                 >
-                                    🌐 Social
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
+                                    Social
                                     <svg className={`w-4 h-4 transition-transform ${showSocialMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                     </svg>
@@ -136,14 +151,18 @@ export default function AuthNavbar() {
                                         <div className="fixed inset-0 z-40" onClick={() => setShowSocialMenu(false)}></div>
                                         <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
                                             <Link href="/community" onClick={() => setShowSocialMenu(false)} className={`flex items-center gap-3 px-4 py-3 transition ${isActive('/community') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'}`}>
-                                                <span className="text-xl">💬</span>
+                                                <span className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                                                </span>
                                                 <div>
                                                     <p className="font-semibold text-sm">Community Feed</p>
-                                                    <p className="text-xs text-gray-500">Share & get inspired</p>
+                                                    <p className="text-xs text-gray-500">Share &amp; get inspired</p>
                                                 </div>
                                             </Link>
-                                            <Link href="/partners" onClick={() => setShowSocialMenu(false)} className={`flex items-center gap-3 px-4 py-3 transition ${isActive('/partners') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'}`}>
-                                                <span className="text-xl">🤝</span>
+                                            <Link href="/community?tab=partners" onClick={() => setShowSocialMenu(false)} className={`flex items-center gap-3 px-4 py-3 transition ${isActive('/partners') ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50'}`}>
+                                                <span className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                                                </span>
                                                 <div>
                                                     <p className="font-semibold text-sm">Partners</p>
                                                     <p className="text-xs text-gray-500">Accountability buddies</p>
@@ -196,12 +215,34 @@ export default function AuthNavbar() {
                                             </div>
                                         </div>
                                         <div className="py-2">
-                                            <Link href="/workbook/lifeframe" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                                                <span className="text-xl">📋</span>
+                                            <Link
+                                                href={worksheetStatus.lifeCategories ? "/workbook/lifeframe" : "#"}
+                                                onClick={(e) => {
+                                                    if (!worksheetStatus.lifeCategories) {
+                                                        e.preventDefault();
+                                                        alert('Please complete Values, Interests, and Categories first.');
+                                                    } else {
+                                                        setShowUserMenu(false);
+                                                    }
+                                                }}
+                                                className={`flex items-center gap-3 px-4 py-2 transition ${worksheetStatus.lifeCategories ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'}`}
+                                            >
+                                                <span className="text-xl">{worksheetStatus.lifeCategories ? '📋' : '🔒'}</span>
                                                 <span className="text-sm font-medium text-gray-700">View LifeFrame</span>
                                             </Link>
-                                            <Link href="/roadmap" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                                                <span className="text-xl">🗺️</span>
+                                            <Link
+                                                href={worksheetStatus.lifeCategories ? "/roadmap" : "#"}
+                                                onClick={(e) => {
+                                                    if (!worksheetStatus.lifeCategories) {
+                                                        e.preventDefault();
+                                                        alert('Complete your LifeFrame first to unlock the Roadmap');
+                                                    } else {
+                                                        setShowUserMenu(false);
+                                                    }
+                                                }}
+                                                className={`flex items-center gap-3 px-4 py-2 transition ${worksheetStatus.lifeCategories ? 'hover:bg-gray-50' : 'opacity-50 cursor-not-allowed'}`}
+                                            >
+                                                <span className="text-xl">{worksheetStatus.lifeCategories ? '🗺️' : '🔒'}</span>
                                                 <span className="text-sm font-medium text-gray-700">My Roadmap</span>
                                             </Link>
                                             <Link href="/todo" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
@@ -216,8 +257,8 @@ export default function AuthNavbar() {
                                                 <span className="text-xl">🌐</span>
                                                 <span className="text-sm font-medium text-gray-700">Community</span>
                                             </Link>
-                                            <Link href="/partners" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                                                <span className="text-xl">🤝</span>
+                                            <Link href="/community?tab=partners" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
+                                                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
                                                 <span className="text-sm font-medium text-gray-700">Partners</span>
                                             </Link>
                                         </div>
@@ -254,11 +295,33 @@ export default function AuthNavbar() {
                             <Link href="/dashboard" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/dashboard') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 Dashboard
                             </Link>
-                            <Link href="/workbook/lifeframe" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${pathname.startsWith('/workbook') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                                📋 LifeFrame
+                            <Link
+                                href={worksheetStatus.lifeCategories ? "/workbook/lifeframe" : "#"}
+                                onClick={(e) => {
+                                    if (!worksheetStatus.lifeCategories) {
+                                        e.preventDefault();
+                                        alert('Please complete Values, Interests, and Categories first.');
+                                    } else {
+                                        setShowMobileMenu(false);
+                                    }
+                                }}
+                                className={`block px-4 py-3 rounded-lg font-semibold transition ${pathname.startsWith('/workbook') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                {worksheetStatus.lifeCategories ? '📋 LifeFrame' : '🔒 LifeFrame (Locked)'}
                             </Link>
-                            <Link href="/roadmap" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/roadmap') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                                🗺️ Roadmap
+                            <Link
+                                href={worksheetStatus.lifeCategories ? "/roadmap" : "#"}
+                                onClick={(e) => {
+                                    if (!worksheetStatus.lifeCategories) {
+                                        e.preventDefault();
+                                        alert('Complete your LifeFrame first to unlock the Roadmap');
+                                    } else {
+                                        setShowMobileMenu(false);
+                                    }
+                                }}
+                                className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/roadmap') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                {worksheetStatus.lifeCategories ? '🗺️ Roadmap' : '🔒 Roadmap (Locked)'}
                             </Link>
                             <Link href="/todo" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/todo') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 ✅ To-Do
@@ -269,8 +332,8 @@ export default function AuthNavbar() {
                             <Link href="/community" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/community') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 🌐 Community
                             </Link>
-                            <Link href="/partners" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/partners') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                                🤝 Partners
+                            <Link href="/community?tab=partners" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/partners') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+                                Partners
                             </Link>
                         </div>
                         <div className="border-t border-gray-200 mt-4 pt-4 space-y-1">
