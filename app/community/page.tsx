@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -139,7 +139,7 @@ function getActivityIcon(type: string) {
 }
 
 // ─── Component ──────────────────────────────────────────
-export default function SocialHubPage() {
+function CommunityContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -691,5 +691,23 @@ export default function SocialHubPage() {
             {selectedPartner && <PartnerProgressModal partner={selectedPartner.partner} onClose={() => setSelectedPartner(null)} />}
             {checkInPartnership && <CheckInModal partnership={checkInPartnership} onClose={() => setCheckInPartnership(null)} onSent={() => { setCheckInPartnership(null); loadAll(); }} />}
         </div>
+    );
+}
+
+export default function SocialHubPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-pink-50/20 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="relative w-14 h-14 mx-auto mb-4">
+                        <div className="absolute inset-0 rounded-full border-4 border-purple-200"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-600 animate-spin"></div>
+                    </div>
+                    <p className="text-gray-400 font-medium text-sm tracking-wider uppercase">Loading social hub...</p>
+                </div>
+            </div>
+        }>
+            <CommunityContent />
+        </Suspense>
     );
 }
