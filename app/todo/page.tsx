@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, TodoItem } from '@/lib/todos';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
-import { Toaster } from 'react-hot-toast';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Link from 'next/link';
 
@@ -381,8 +380,6 @@ export default function YellowPadPage() {
 
     return (
         <>
-            <Toaster />
-
             {/* FULL PAGE YELLOW PAD */}
             <div
                 className="min-h-screen relative"
