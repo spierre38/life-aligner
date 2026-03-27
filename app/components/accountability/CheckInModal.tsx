@@ -82,7 +82,7 @@ export default function CheckInModal({ partnership, onClose, onSent }: CheckInMo
                                     key={i}
                                     type="button"
                                     onClick={() => setMessage(template)}
-                                    className="px-4 py-3 text-left text-sm bg-gray-50 hover:bg-purple-50 hover:border-purple-300 border border-gray-200 rounded-xl transition-colors"
+                                    className="px-4 py-3 text-left text-sm text-gray-700 bg-gray-50 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 border border-gray-200 rounded-xl transition-colors"
                                 >
                                     {template}
                                 </button>

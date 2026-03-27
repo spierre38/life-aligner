@@ -51,8 +51,8 @@ export default function YellowPadPage() {
             showToast.error('Failed to load todos');
         } else {
             const sorted = (data || []).sort((a, b) => {
-                const aPriority = a.priority || 999;
-                const bPriority = b.priority || 999;
+                const aPriority = a.priority || 9999;
+                const bPriority = b.priority || 9999;
                 return aPriority - bPriority;
             });
             setTodos(sorted);
@@ -489,7 +489,7 @@ export default function YellowPadPage() {
                                                                     backgroundColor: (todo.priority || index + 1) <= 3 ? '#ef4444' : (todo.priority || index + 1) <= 6 ? '#f97316' : '#6b7280'
                                                                 }}
                                                             >
-                                                                {todo.priority || index + 1}
+                                                                {todo.priority && todo.priority < 9999 ? todo.priority : index + 1}
                                                             </div>
 
                                                             {/* Checkbox */}

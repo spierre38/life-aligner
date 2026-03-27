@@ -70,7 +70,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
                                 source: 'roadmap',
                                 goal_title: goalTitle,
                                 category: item.category,
-                                priority: 999,
+                                priority: itemIndex * 100 + actIndex + 1,
                                 sub_goals: []
                             });
                         } else {
@@ -82,7 +82,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
                                 source: 'roadmap',
                                 goal_title: goalTitle,
                                 category: item.category,
-                                priority: activity.priority || 999,
+                                priority: activity.priority || (itemIndex * 100 + actIndex + 1),
                                 due_date: activity.due_date,
                                 notes: activity.notes,
                                 sub_goals: activity.sub_goals || []
@@ -103,7 +103,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
                     completed_at: todo.completed_at || null,
                     source: 'manual',
                     category: todo.category,
-                    priority: todo.priority || 999,
+                    priority: todo.priority || (todos.length + 1),
                     due_date: todo.due_date,
                     notes: todo.notes,
                     sub_goals: todo.sub_goals || []
@@ -112,7 +112,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
         }
 
         // Sort by priority
-        todos.sort((a, b) => (a.priority || 999) - (b.priority || 999));
+        todos.sort((a, b) => (a.priority || 9999) - (b.priority || 9999));
 
         return { data: todos, error: null };
 
@@ -402,7 +402,7 @@ export async function addManualTodo(text: string, options?: {
             text,
             completed: false,
             completed_at: null,
-            priority: options?.priority || 999,
+            priority: options?.priority || (content.manual_todos.length + 1),
             due_date: options?.due_date || null,
             category: options?.category || null,
             notes: options?.notes || null,
