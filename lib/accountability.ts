@@ -244,6 +244,34 @@ export async function logActivity(
 
 
 // ===================================
+// REACTIONS / CONGRATS
+// ===================================
+
+/**
+ * Send a congrats reaction to a partner for a specific activity
+ */
+export async function sendCongrats(partnerId: string, activityData: { activity_type: string; activity_data?: any }) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null, error: { message: 'Not authenticated' } };
+
+    const { data, error } = await supabase
+        .from('partner_notifications')
+        .insert({
+            user_id: partnerId,
+            activity_type: 'congrats',
+            activity_data: {
+                from_user_id: user.id,
+                original_activity: activityData.activity_type,
+                ...activityData.activity_data,
+            },
+        })
+        .select()
+        .single();
+
+    return { data, error };
+}
+
+// ===================================
 // PARTNER FEED (posts visible only to partners)
 // ===================================
 

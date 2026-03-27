@@ -19,6 +19,7 @@ import UserSearchModal from '@/app/components/accountability/UserSearchModal';
 import PartnerProgressModal from '@/app/components/accountability/PartnerProgressModal';
 import CheckInModal from '@/app/components/accountability/CheckInModal';
 import CheckInCard from '@/app/components/accountability/CheckInCard';
+import { PartnerPulseCard } from '@/app/components/accountability/PartnerPulseCard';
 import { formatDistanceToNow } from 'date-fns';
 
 // ─── Types ──────────────────────────────────────────────
@@ -578,31 +579,13 @@ function CommunityContent() {
                                     ) : (
                                         <div className="grid sm:grid-cols-2 gap-3">
                                             {activePartners.map((p, i) => (
-                                                <div key={p.id} className="bg-white rounded-2xl border border-gray-200 p-4 hover:shadow-lg hover:border-purple-200 transition-all animate-fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
-                                                    <div className="flex items-center gap-3 mb-3">
-                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold text-lg flex items-center justify-center shadow-md">
-                                                            {p.partner?.avatar_url ? (
-                                                                <Image src={p.partner.avatar_url} alt={p.partner.full_name} width={48} height={48} className="rounded-full" />
-                                                            ) : (
-                                                                p.partner?.full_name?.charAt(0) || '?'
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="font-bold text-gray-900 text-sm">{p.partner?.full_name}</h3>
-                                                            <p className="text-xs text-gray-400">Accountability Partner</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2 mb-2">
-                                                        <button onClick={() => setSelectedPartner(p)} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-100 transition-colors">
-                                                            {icons.chart} Progress
-                                                        </button>
-                                                        <button onClick={() => setCheckInPartnership(p)} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors">
-                                                            {icons.chat} Check In
-                                                        </button>
-                                                    </div>
-                                                    <button onClick={() => handleEnd(p.id)} className="w-full text-[11px] text-gray-400 hover:text-red-500 transition-colors pt-1">
-                                                        End Partnership
-                                                    </button>
+                                                <div key={p.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
+                                                    <PartnerPulseCard
+                                                        partnership={p}
+                                                        onViewProgress={() => setSelectedPartner(p)}
+                                                        onCheckIn={() => setCheckInPartnership(p)}
+                                                        onEnd={() => handleEnd(p.id)}
+                                                    />
                                                 </div>
                                             ))}
                                         </div>

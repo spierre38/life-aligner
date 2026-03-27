@@ -1,6 +1,6 @@
 'use client';
 
-import { trackRoadmapSaved, trackActivityLogged, trackGoalAdded, trackRoadmapComplete } from '@/lib/analytics';
+import { trackRoadmapSaved, trackActivityLogged, trackGoalAdded, trackRoadmapComplete, trackEvent } from '@/lib/analytics';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,13 @@ import LifeFrameConnection from '@/app/components/LifeFrameConnection';
 import { AddToTodoButton } from '@/app/components/AddToTodoButton';
 import { useToast } from '@/app/components/Toast';
 import { SkeletonGoalCard } from '@/app/components/Skeleton';
+import { GoalSuggestionWizard, SelectedGoal } from './components/GoalSuggestionWizard';
+import { RoadmapCanvas, LaneData, Goal as VisualGoal, Activity as VisualActivity } from './components/RoadmapCanvas';
+import { DailyFocusPanel } from './components/DailyFocusPanel';
+import { ChapterCard } from './components/ChapterCard';
+import { ArchiveStorybook } from './components/ArchiveStorybook';
+import { CompletionCelebration } from './components/CompletionCelebration';
+import DailyInsightCard from './components/DailyInsightCard';
 
 // ============================================================================
 // SVG ICONS - Professional replacements for emojis
@@ -333,6 +340,13 @@ export default function RoadmapPage() {
     const [addingTo, setAddingTo] = useState<string | null>(null);
     const [reflectingOn, setReflectingOn] = useState<string | null>(null);
     const [currentQuarter, setCurrentQuarter] = useState('Q1 2026');
+    const [completedGoalTitle, setCompletedGoalTitle] = useState<string | null>(null);
+
+    // NEW: Goal suggestion wizard
+    const [showSuggestionWizard, setShowSuggestionWizard] = useState(false);
+
+    // NEW: Visual roadmap view mode
+    const [viewMode, setViewMode] = useState<'visual' | 'list'>('list');
 
     // NEW: Modal state for quick logging
     const [loggingActivity, setLoggingActivity] = useState<{
@@ -448,9 +462,13 @@ export default function RoadmapPage() {
 
                 // Extract roadmap
                 if (!roadmapResult.data) {
+                    // Show welcome animation first, then suggestion wizard
                     setShowWelcome(true);
                     setTimeout(() => {
-                        if (mounted) setShowWelcome(false);
+                        if (mounted) {
+                            setShowWelcome(false);
+                            setShowSuggestionWizard(true);
+                        }
                     }, 3000);
                 } else {
                     // MIGRATION: Ensure activities have logs array
@@ -461,6 +479,18 @@ export default function RoadmapPage() {
                             logs: activity.logs || [] // Initialize if doesn't exist
                         }))
                     }));
+
+                    // If items array is empty, show wizard after welcome
+                    if (migratedItems.length === 0) {
+                        setShowWelcome(true);
+                        setTimeout(() => {
+                            if (mounted) {
+                                setShowWelcome(false);
+                                setShowSuggestionWizard(true);
+                            }
+                        }, 3000);
+                    }
+
                     setRoadmapItems(migratedItems);
                 }
 
@@ -658,6 +688,7 @@ export default function RoadmapPage() {
     };
 
     const archiveItem = (itemId: string) => {
+        const itemToArchive = roadmapItems.find(item => item.id === itemId);
         const updatedItems = roadmapItems.map(item =>
             item.id === itemId
                 ? { ...item, archived: true, archived_date: new Date().toISOString() }
@@ -665,6 +696,9 @@ export default function RoadmapPage() {
         );
         setRoadmapItems(updatedItems);
         saveRoadmapImmediate(updatedItems);
+        if (itemToArchive) {
+            setCompletedGoalTitle(itemToArchive.title);
+        }
     };
 
     const unarchiveItem = (itemId: string) => {
@@ -702,6 +736,385 @@ export default function RoadmapPage() {
         };
         return iconMap[categoryName] || '⭐';
     };
+
+    // ============================================================================
+    // NEW: GOAL SUGGESTION HANDLERS
+    // ============================================================================
+
+    const handleSuggestionComplete = async (selectedGoals: SelectedGoal[]) => {
+        if (!userId) return;
+
+        // Convert selected templates to RoadmapItems
+        const newItems: RoadmapItem[] = selectedGoals.map(selected => ({
+            id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            category: selected.category,
+            type: 'goal',
+            title: selected.goal,
+            why: '',
+            activities: selected.activities.map(text => ({
+                id: `activity_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                text,
+                completed_dates: [],
+                logs: [],
+                notes: ''
+            })),
+            quarter: currentQuarter,
+            reflections: [],
+            archived: false,
+            connected_values: selected.connectedValues,
+            connected_purpose: selected.connectedPurpose
+        }));
+
+        // Save to database
+        const updatedItems = [...roadmapItems, ...newItems];
+        setRoadmapItems(updatedItems);
+        await saveRoadmapImmediate(updatedItems);
+
+        // Close wizard
+        setShowSuggestionWizard(false);
+
+        // Track analytics
+        trackEvent({ action: 'complete_goal_wizard', category: 'roadmap', value: selectedGoals.length });
+
+        // Show success
+        showToast(`Added ${selectedGoals.length} goals to your roadmap! 🎉`, 'success');
+    };
+
+    const handleSuggestionSkip = () => {
+        setShowSuggestionWizard(false);
+    };
+
+    // ============================================================================
+    // NEW: VISUAL ROADMAP HANDLERS
+    // ============================================================================
+
+    const getCategoryColor = (category: string): string => {
+        const colorMap: Record<string, string> = {
+            Health: '#10B981',
+            Career: '#6366F1',
+            Relationships: '#EC4899',
+            Purpose: '#8B5CF6',
+            Social: '#F59E0B',
+            Learning: '#3B82F6',
+            Finance: '#14B8A6',
+            Spiritual: '#A855F7',
+            Creative: '#F97316'
+        };
+        return colorMap[category] || '#6366F1';
+    };
+
+    const transformToLaneData = (): LaneData[] => {
+        const categoryMap = new Map<string, RoadmapItem[]>();
+
+        // Group items by category
+        roadmapItems.filter(item => !item.archived).forEach(item => {
+            if (!categoryMap.has(item.category)) {
+                categoryMap.set(item.category, []);
+            }
+            categoryMap.get(item.category)!.push(item);
+        });
+
+        const lanes: LaneData[] = [];
+
+        categoryMap.forEach((items, categoryName) => {
+            // Convert to visual format
+            const goals: VisualGoal[] = items.map((item, index) => {
+                const activities: VisualActivity[] = item.activities.map(activity => ({
+                    id: activity.id,
+                    text: activity.text,
+                    completed: activity.logs && activity.logs.length > 0,
+                    completedCount: activity.logs?.length || 0,
+                    logs: activity.logs
+                }));
+
+                return {
+                    id: item.id,
+                    title: item.title,
+                    type: item.type,
+                    why: item.why,
+                    activities,
+                    position: (index / items.length) * 100,
+                    connectedValues: item.connected_values,
+                    connectedPurpose: item.connected_purpose
+                };
+            });
+
+            // Calculate progress
+            const totalActivities = goals.reduce((sum, g) => sum + g.activities.length, 0);
+            const completedActivities = goals.reduce((sum, g) =>
+                sum + g.activities.filter(a => a.completed).length, 0
+            );
+            const progress = totalActivities > 0
+                ? Math.round((completedActivities / totalActivities) * 100)
+                : 0;
+
+            lanes.push({
+                id: categoryName,
+                category: categoryName,
+                emoji: getCategoryIcon(categoryName),
+                color: getCategoryColor(categoryName),
+                goals,
+                overallProgress: progress
+            });
+        });
+
+        return lanes;
+    };
+
+    const handleUpdateGoalFromVisual = async (laneId: string, goalId: string, updates: Partial<VisualGoal>) => {
+        // Only spread compatible fields (exclude activities which has a different type)
+        const { activities: _ignoredActivities, ...safeUpdates } = updates;
+
+        const updatedItems = roadmapItems.map(item => {
+            if (item.id === goalId) {
+                return { ...item, ...safeUpdates };
+            }
+            return item;
+        });
+
+        setRoadmapItems(updatedItems);
+        await saveRoadmapImmediate(updatedItems);
+    };
+
+    const handleToggleActivityFromVisual = async (laneId: string, goalId: string, activityId: string) => {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
+
+        const updatedItems = roadmapItems.map(item => {
+            if (item.id === goalId) {
+                return {
+                    ...item,
+                    activities: item.activities.map(activity => {
+                        if (activity.id === activityId) {
+                            const hasLogToday = activity.logs?.some(log => log.date === today);
+
+                            if (hasLogToday) {
+                                // Remove today's log
+                                return {
+                                    ...activity,
+                                    logs: activity.logs?.filter(log => log.date !== today) || [],
+                                    completed_dates: activity.completed_dates.filter(d => d !== today)
+                                };
+                            } else {
+                                // Add today's log
+                                const newLog: ActivityLog = {
+                                    date: today,
+                                    feeling: 'okay' as const,
+                                    note: 'Quick toggle from map view',
+                                    logged_at: now
+                                };
+                                return {
+                                    ...activity,
+                                    logs: [...(activity.logs || []), newLog],
+                                    completed_dates: [...activity.completed_dates, today]
+                                };
+                            }
+                        }
+                        return activity;
+                    })
+                };
+            }
+            return item;
+        });
+
+        setRoadmapItems(updatedItems);
+        await saveRoadmapImmediate(updatedItems);
+    };
+
+    const handleAddGoalFromVisual = (category: string) => {
+        setAddingTo(category);
+        setExpandedCategory(category);
+        setViewMode('list'); // Switch to list view to show form
+    };
+
+    // Direct log from DailyFocusPanel (bypasses modal)
+    const handleDailyFocusLog = (itemId: string, activityId: string, feeling: 'great' | 'okay' | 'hard', note: string) => {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
+
+        const updatedItems = roadmapItems.map(item => {
+            if (item.id === itemId) {
+                return {
+                    ...item,
+                    activities: item.activities.map(activity => {
+                        if (activity.id === activityId) {
+                            const newLog: ActivityLog = {
+                                date: today,
+                                feeling,
+                                note,
+                                logged_at: now
+                            };
+                            return {
+                                ...activity,
+                                completed_dates: activity.completed_dates.includes(today)
+                                    ? activity.completed_dates
+                                    : [...activity.completed_dates, today],
+                                logs: [...(activity.logs || []), newLog]
+                            };
+                        }
+                        return activity;
+                    })
+                };
+            }
+            return item;
+        });
+
+        setRoadmapItems(updatedItems);
+        saveRoadmapImmediate(updatedItems);
+
+        // Track analytics
+        const category = roadmapItems.find(i => i.id === itemId)?.category || 'unknown';
+        trackActivityLogged(category);
+    };
+
+    // ============================================================================
+    // ENGAGEMENT: STREAK, DAILY FOCUS & WEEKLY STATS
+    // ============================================================================
+
+    const calculateStreak = (): { current: number; longest: number; todayLogged: boolean } => {
+        // Collect ALL log dates across all activities
+        const allDates = new Set<string>();
+        roadmapItems.filter(i => !i.archived).forEach(item => {
+            item.activities.forEach(activity => {
+                (activity.logs || []).forEach(log => {
+                    allDates.add(log.date);
+                });
+            });
+        });
+
+        const today = new Date().toISOString().split('T')[0];
+        const todayLogged = allDates.has(today);
+
+        // Sort dates descending
+        const sorted = Array.from(allDates).sort((a, b) => b.localeCompare(a));
+        if (sorted.length === 0) return { current: 0, longest: 0, todayLogged: false };
+
+        // Calculate current streak (from today or yesterday backwards)
+        let current = 0;
+        const startDate = new Date(todayLogged ? today : sorted[0]);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        // Only count if most recent log is today or yesterday
+        if (!todayLogged && sorted[0] !== yesterdayStr) {
+            // Streak is broken
+        } else {
+            const checkDate = new Date(todayLogged ? today : yesterdayStr);
+            let missesAllowed = 1; // streak saver: 1 miss per 7 days
+            let daysCounted = 0;
+
+            while (true) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                if (allDates.has(dateStr)) {
+                    current++;
+                    daysCounted++;
+                } else {
+                    if (missesAllowed > 0 && daysCounted >= 3) {
+                        missesAllowed--;
+                        // Don't count but don't break
+                    } else {
+                        break;
+                    }
+                }
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+        }
+
+        // Calculate longest streak
+        let longest = 0;
+        let tempStreak = 0;
+        for (let i = 0; i < sorted.length; i++) {
+            if (i === 0) {
+                tempStreak = 1;
+            } else {
+                const prevDate = new Date(sorted[i - 1]);
+                const currDate = new Date(sorted[i]);
+                const diffDays = Math.round((prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24));
+                if (diffDays === 1) {
+                    tempStreak++;
+                } else {
+                    longest = Math.max(longest, tempStreak);
+                    tempStreak = 1;
+                }
+            }
+        }
+        longest = Math.max(longest, tempStreak, current);
+
+        return { current, longest, todayLogged };
+    };
+
+    const getStreakMilestone = (days: number): { message: string; emoji: string } | null => {
+        const milestones: Record<number, { message: string; emoji: string }> = {
+            3: { message: "3 days strong! You're building a habit", emoji: '🌱' },
+            7: { message: "1 week streak! Real momentum now", emoji: '🔥' },
+            14: { message: "2 weeks! This is becoming part of you", emoji: '⚡' },
+            30: { message: "30 days! You've transformed a habit", emoji: '🏆' },
+            60: { message: "60 days! Incredible discipline", emoji: '💎' },
+            90: { message: "90 days! You're unstoppable", emoji: '👑' },
+        };
+        return milestones[days] || null;
+    };
+
+    const getTodaysFocus = (count: number = 3): { item: RoadmapItem; activity: Activity }[] => {
+        const today = new Date().toISOString().split('T')[0];
+        const candidates: { item: RoadmapItem; activity: Activity; score: number }[] = [];
+
+        roadmapItems.filter(i => !i.archived).forEach(item => {
+            item.activities.forEach(activity => {
+                const logCount = (activity.logs || []).length;
+                const loggedToday = (activity.logs || []).some(l => l.date === today);
+                if (loggedToday) return; // Skip already-done-today
+
+                // Score: lower = more neglected = higher priority
+                const daysSinceLastLog = activity.logs && activity.logs.length > 0
+                    ? Math.floor((Date.now() - new Date(activity.logs[activity.logs.length - 1].date).getTime()) / (1000 * 60 * 60 * 24))
+                    : 999;
+
+                candidates.push({
+                    item,
+                    activity,
+                    score: daysSinceLastLog * 10 - logCount // prioritize neglected & low-count
+                });
+            });
+        });
+
+        // Sort by score descending (most neglected first)
+        return candidates
+            .sort((a, b) => b.score - a.score)
+            .slice(0, count)
+            .map(c => ({ item: c.item, activity: c.activity }));
+    };
+
+    const getWeeklyStats = (): { thisWeek: number; lastWeek: number; trend: 'up' | 'down' | 'same' } => {
+        const now = new Date();
+        const startOfThisWeek = new Date(now);
+        startOfThisWeek.setDate(now.getDate() - now.getDay());
+        startOfThisWeek.setHours(0, 0, 0, 0);
+
+        const startOfLastWeek = new Date(startOfThisWeek);
+        startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+        let thisWeek = 0;
+        let lastWeek = 0;
+
+        roadmapItems.filter(i => !i.archived).forEach(item => {
+            item.activities.forEach(activity => {
+                (activity.logs || []).forEach(log => {
+                    const logDate = new Date(log.date);
+                    if (logDate >= startOfThisWeek) thisWeek++;
+                    else if (logDate >= startOfLastWeek) lastWeek++;
+                });
+            });
+        });
+
+        const trend = thisWeek > lastWeek ? 'up' : thisWeek < lastWeek ? 'down' : 'same';
+        return { thisWeek, lastWeek, trend };
+    };
+
+    // Streak celebration state
+    const streakData = calculateStreak();
+    const milestone = getStreakMilestone(streakData.current);
 
     if (loading) {
         return (
@@ -749,6 +1162,29 @@ export default function RoadmapPage() {
     return (
         <>
             <AuthNavbar />
+
+            {/* Completion Celebration Overlay */}
+            {completedGoalTitle && (
+                <CompletionCelebration
+                    goalTitle={completedGoalTitle}
+                    onClose={() => setCompletedGoalTitle(null)}
+                    onNavigateToArchive={() => {
+                        setActiveTab('archive');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
+            )}
+
+            {/* NEW: Goal Suggestion Wizard */}
+            {showSuggestionWizard && (
+                <GoalSuggestionWizard
+                    userCategories={categories.map(c => c.name)}
+                    userValues={userValues}
+                    userPurpose={userPurpose}
+                    onComplete={handleSuggestionComplete}
+                    onSkip={handleSuggestionSkip}
+                />
+            )}
 
             {/* FEATURE 1.2: Quick Log Modal */}
             {loggingActivity && (
@@ -835,16 +1271,76 @@ export default function RoadmapPage() {
                     {/* Current Quarter Tab */}
                     {activeTab === 'current' && (
                         <div className="space-y-6">
-                            {/* Philosophy Reminder - More compact */}
-                            <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-500 rounded-r-lg p-3 mb-6">
-                                <div className="flex items-start gap-2">
-                                    <ReflectionIcon className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                                    <p className="text-sm text-gray-700">
-                                        <strong className="text-gray-900">Remember:</strong> Success = <strong>effort + learning</strong>.
-                                        Update every 3 months based on what you learn.
-                                    </p>
+                            {/* NEW: Daily Insight Card */}
+                            <DailyInsightCard roadmapItems={roadmapItems} />
+
+                            {/* Daily Focus Panel — streaks, today's activities, inline logging */}
+                            <DailyFocusPanel
+                                streak={streakData}
+                                focusActivities={getTodaysFocus(3).map(({ item, activity }) => ({
+                                    itemId: item.id,
+                                    activityId: activity.id,
+                                    activityText: activity.text,
+                                    goalTitle: item.title,
+                                    category: item.category,
+                                    existingCount: (activity.logs || []).length
+                                }))}
+                                weeklyStats={getWeeklyStats()}
+                                milestone={milestone}
+                                onLogActivity={handleDailyFocusLog}
+                            />
+
+                            {/* NEW: View Mode Toggle & Suggestions Button */}
+                            <div className="flex items-center justify-between mb-6">
+                                <button
+                                    onClick={() => setShowSuggestionWizard(true)}
+                                    className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold hover:bg-purple-200 transition text-sm"
+                                >
+                                    💡 Get Goal Suggestions
+                                </button>
+
+                                <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => {
+                                            setViewMode('visual');
+                                            trackEvent({ action: 'switch_view_mode', category: 'roadmap', label: 'visual' });
+                                        }}
+                                        className={`px-4 py-2 rounded-md font-semibold text-sm transition ${
+                                            viewMode === 'visual'
+                                                ? 'bg-white text-indigo-600 shadow'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        🗺️ Map View
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setViewMode('list');
+                                            trackEvent({ action: 'switch_view_mode', category: 'roadmap', label: 'list' });
+                                        }}
+                                        className={`px-4 py-2 rounded-md font-semibold text-sm transition ${
+                                            viewMode === 'list'
+                                                ? 'bg-white text-indigo-600 shadow'
+                                                : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                    >
+                                        📋 List View
+                                    </button>
                                 </div>
                             </div>
+
+                            {/* NEW: Visual Map View */}
+                            {viewMode === 'visual' && (
+                                <RoadmapCanvas
+                                    lanes={transformToLaneData()}
+                                    onUpdateGoal={handleUpdateGoalFromVisual}
+                                    onToggleActivity={handleToggleActivityFromVisual}
+                                    onAddGoal={handleAddGoalFromVisual}
+                                />
+                            )}
+
+                            {/* EXISTING: List View (wrapped in conditional) */}
+                            {viewMode === 'list' && (<>
 
                             {categories.length === 0 ? (
                                 <div className="text-center py-20">
@@ -1413,6 +1909,7 @@ export default function RoadmapPage() {
                                     </div>
                                 );
                             })()}
+                        </>)}
                         </div>
                     )}
 
@@ -1466,72 +1963,12 @@ export default function RoadmapPage() {
 
                     {/* Archive Tab */}
                     {activeTab === 'archive' && (
-                        <div className="bg-white rounded-2xl shadow-lg p-8">
-                            <div className="mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Archived Goals & Behaviors</h2>
-                                <p className="text-gray-800">
-                                    These aren't "completed" or "failed" — they're your learning history. Review them to see how far you've come.
-                                </p>
-                            </div>
-
-                            <div className="space-y-4">
-                                {archivedItems.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500">
-                                        <p>No archived items yet. Keep working on your current goals!</p>
-                                    </div>
-                                ) : (
-                                    archivedItems.map(item => (
-                                        <div key={item.id} className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="font-bold text-gray-900">{item.title}</h3>
-                                                        <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded">
-                                                            {item.category}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600">
-                                                        Archived: {item.archived_date ? new Date(item.archived_date).toLocaleDateString() : 'Unknown'}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    onClick={() => unarchiveItem(item.id)}
-                                                    className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm"
-                                                >
-                                                    ↩ Unarchive
-                                                </button>
-                                            </div>
-
-                                            {/* Show learnings from this item */}
-                                            {item.reflections.length > 0 && (
-                                                <div className="mt-4 space-y-2">
-                                                    <h4 className="text-sm font-semibold text-gray-700">What You Learned:</h4>
-                                                    {item.reflections.map(reflection => (
-                                                        <div key={reflection.id} className="bg-white rounded p-3 text-sm">
-                                                            <div className="text-gray-600 text-xs mb-1">
-                                                                {new Date(reflection.date).toLocaleDateString()}
-                                                            </div>
-                                                            <div className="text-gray-800">{reflection.learning}</div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {/* Show activities that were tried */}
-                                            <div className="mt-4">
-                                                <h4 className="text-sm font-semibold text-gray-700 mb-2">Activities Tried:</h4>
-                                                <div className="space-y-1">
-                                                    {item.activities.map(activity => (
-                                                        <div key={activity.id} className="text-sm text-gray-600">
-                                                            • {activity.text} ({activity.completed_dates.length} times)
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                        <div className="bg-transparent">
+                            <ArchiveStorybook 
+                                archivedGoals={archivedItems as any}
+                                onShare={(goal) => console.log('Share goal', goal.id)}
+                                onUnarchive={unarchiveItem}
+                            />
                         </div>
                     )}
                 </div>
