@@ -168,6 +168,9 @@ function CommunityContent() {
     const [checkInPartnership, setCheckInPartnership] = useState<any>(null);
     const [expandedCheckIns, setExpandedCheckIns] = useState(false);
 
+    // User activity stats
+    const [userActivityStats, setUserActivityStats] = useState<{ activitiesThisWeek: number; streak: number }>({ activitiesThisWeek: 0, streak: 0 });
+
     // Global
     const [loading, setLoading] = useState(true);
 
@@ -190,6 +193,52 @@ function CommunityContent() {
         setPendingPartners(pendingRes.data || []);
         setNotifications(notifsRes.data || []);
         setAllCheckIns(checkInsRes.data || []);
+
+        // Load user's own activity stats from roadmap data
+        if (user) {
+            const { data: roadmapEntry } = await supabase
+                .from('workbook_entries')
+                .select('responses')
+                .eq('user_id', user.id)
+                .eq('category', 'roadmap')
+                .single();
+
+            if (roadmapEntry?.responses?.items) {
+                const items = roadmapEntry.responses.items;
+                const now = new Date();
+                const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+                const startStr = startOfWeek.toISOString().split('T')[0];
+
+                let weeklyLogs = 0;
+                const loggedDates = new Set<string>();
+
+                items.forEach((item: any) => {
+                    if (item.archived) return;
+                    (item.activities || []).forEach((act: any) => {
+                        (act.logs || []).forEach((log: any) => {
+                            loggedDates.add(log.date);
+                            if (log.date >= startStr) weeklyLogs++;
+                        });
+                    });
+                });
+
+                // Calculate streak
+                let streak = 0;
+                const checkDate = new Date();
+                while (true) {
+                    const dateStr = checkDate.toISOString().split('T')[0];
+                    if (loggedDates.has(dateStr)) {
+                        streak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+
+                setUserActivityStats({ activitiesThisWeek: weeklyLogs, streak });
+            }
+        }
+
         setLoading(false);
     }, []);
 
@@ -630,6 +679,14 @@ function CommunityContent() {
                             <div className="bg-white rounded-2xl border border-gray-200 p-4">
                                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Quick Stats</h3>
                                 <div className="grid grid-cols-2 gap-2">
+                                    <div className="bg-indigo-50 rounded-xl p-3 text-center">
+                                        <p className="text-2xl font-bold text-indigo-700">{userActivityStats.activitiesThisWeek}</p>
+                                        <p className="text-[11px] text-gray-500 mt-0.5">This Week</p>
+                                    </div>
+                                    <div className="bg-orange-50 rounded-xl p-3 text-center">
+                                        <p className="text-2xl font-bold text-orange-600">{userActivityStats.streak > 0 ? `${userActivityStats.streak}🔥` : '0'}</p>
+                                        <p className="text-[11px] text-gray-500 mt-0.5">Streak</p>
+                                    </div>
                                     <div className="bg-purple-50 rounded-xl p-3 text-center">
                                         <p className="text-2xl font-bold text-purple-700">{posts.length}</p>
                                         <p className="text-[11px] text-gray-500 mt-0.5">Posts</p>
@@ -637,10 +694,6 @@ function CommunityContent() {
                                     <div className="bg-blue-50 rounded-xl p-3 text-center">
                                         <p className="text-2xl font-bold text-blue-700">{activePartners.length}</p>
                                         <p className="text-[11px] text-gray-500 mt-0.5">Partners</p>
-                                    </div>
-                                    <div className="bg-amber-50 rounded-xl p-3 text-center">
-                                        <p className="text-2xl font-bold text-amber-600">{pendingPartners.length}</p>
-                                        <p className="text-[11px] text-gray-500 mt-0.5">Pending</p>
                                     </div>
                                     <div className="bg-emerald-50 rounded-xl p-3 text-center">
                                         <p className="text-2xl font-bold text-emerald-600">{allCheckIns.length}</p>

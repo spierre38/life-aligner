@@ -16,11 +16,42 @@ export default function DailyInsightCard({ roadmapItems }: { roadmapItems: any[]
 
   useEffect(() => {
     setInsight(generateDailyInsight(roadmapItems));
-    setScoreResult(calculateContentmentScore(roadmapItems));
     setPreview(getInsightPreview());
 
-    // Check if already revealed today
+    // Lock contentment score to once-per-day — don't recalculate mid-day
     const today = new Date().toISOString().split('T')[0];
+    const cachedKey = 'contentment-score-date';
+    const cachedScoreKey = 'contentment-score-cached';
+    const cachedDate = localStorage.getItem(cachedKey);
+
+    if (cachedDate === today) {
+      // Use cached score from earlier today
+      try {
+        const cached = JSON.parse(localStorage.getItem(cachedScoreKey) || '');
+        if (cached && cached.score !== undefined) {
+          setScoreResult(cached);
+        } else {
+          // Fallback: recalculate
+          const result = calculateContentmentScore(roadmapItems);
+          setScoreResult(result);
+          localStorage.setItem(cachedScoreKey, JSON.stringify(result));
+          localStorage.setItem(cachedKey, today);
+        }
+      } catch {
+        const result = calculateContentmentScore(roadmapItems);
+        setScoreResult(result);
+        localStorage.setItem(cachedScoreKey, JSON.stringify(result));
+        localStorage.setItem(cachedKey, today);
+      }
+    } else {
+      // New day — calculate fresh and cache
+      const result = calculateContentmentScore(roadmapItems);
+      setScoreResult(result);
+      localStorage.setItem(cachedScoreKey, JSON.stringify(result));
+      localStorage.setItem(cachedKey, today);
+    }
+
+    // Check if already revealed today
     const lastReveal = localStorage.getItem('contentment-last-reveal');
     if (lastReveal === today) {
       setRevealed(true);

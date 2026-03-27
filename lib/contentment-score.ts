@@ -178,7 +178,7 @@ export function calculateContentmentScore(
     });
     const daysSince = latestLog
       ? Math.floor((date.getTime() - new Date(latestLog).getTime()) / (1000 * 60 * 60 * 24))
-      : 999;
+      : 30; // Cap at 30 for never-logged goals
     if (!mostNeglected || daysSince > mostNeglected.daysSince) {
       mostNeglected = { item, daysSince };
     }

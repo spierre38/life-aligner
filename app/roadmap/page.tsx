@@ -1069,7 +1069,7 @@ export default function RoadmapPage() {
                 // Score: lower = more neglected = higher priority
                 const daysSinceLastLog = activity.logs && activity.logs.length > 0
                     ? Math.floor((Date.now() - new Date(activity.logs[activity.logs.length - 1].date).getTime()) / (1000 * 60 * 60 * 24))
-                    : 999;
+                    : 30; // Cap at 30 for never-logged activities
 
                 candidates.push({
                     item,

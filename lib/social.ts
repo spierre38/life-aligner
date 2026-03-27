@@ -23,7 +23,8 @@ export async function createPartnership(partnerId: string) {
         .insert({
             user1_id,
             user2_id,
-            status: 'pending'
+            status: 'pending',
+            requested_by: user.id  // Track who sent the invite
         })
         .select()
         .single();
@@ -49,18 +50,42 @@ export async function getUserPartnerships(status: 'pending' | 'active' | 'ended'
         .eq('status', status);
 
     // Transform to always show partner (not self)
-    const formatted = data?.map(p => ({
+    let formatted = data?.map(p => ({
         ...p,
         partner: p.user1_id === user.id ? p.user2 : p.user1
     }));
+
+    // For pending: only show invites where current user is the RECIPIENT (not the sender)
+    if (status === 'pending' && formatted) {
+        formatted = formatted.filter(p => p.requested_by !== user.id);
+    }
 
     return { data: formatted, error };
 }
 
 /**
- * Accept partnership request
+ * Accept partnership request (only the RECIPIENT can accept, not the sender)
  */
 export async function acceptPartnership(partnershipId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null, error: { message: 'Not authenticated' } };
+
+    // First fetch the partnership to check who requested it
+    const { data: partnership, error: fetchError } = await supabase
+        .from('partnerships')
+        .select('*')
+        .eq('id', partnershipId)
+        .single();
+
+    if (fetchError || !partnership) {
+        return { data: null, error: fetchError || { message: 'Partnership not found' } };
+    }
+
+    // Block the sender from accepting their own invite
+    if (partnership.requested_by === user.id) {
+        return { data: null, error: { message: 'You cannot accept your own invite' } };
+    }
+
     const { data, error } = await supabase
         .from('partnerships')
         .update({ status: 'active' })
