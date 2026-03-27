@@ -34,11 +34,11 @@ const PartySvg = () => (
 
 // Extract weekly stats from roadmap data
 function extractWeeklyStats(roadmapData: any): { logs: number; categories: number; reflections: number } {
-  if (!roadmapData?.responses?.items) {
+  if (!roadmapData?.content?.items) {
     return { logs: 0, categories: 0, reflections: 0 };
   }
 
-  const items = roadmapData.responses.items;
+  const items = roadmapData.content.items;
   const now = new Date();
   const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
 

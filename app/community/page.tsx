@@ -198,13 +198,13 @@ function CommunityContent() {
         if (user) {
             const { data: roadmapEntry } = await supabase
                 .from('workbook_entries')
-                .select('responses')
+                .select('content')
                 .eq('user_id', user.id)
                 .eq('category', 'roadmap')
                 .single();
 
-            if (roadmapEntry?.responses?.items) {
-                const items = roadmapEntry.responses.items;
+            if (roadmapEntry?.content?.items) {
+                const items = roadmapEntry.content.items;
                 const now = new Date();
                 const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
                 const startStr = startOfWeek.toISOString().split('T')[0];
