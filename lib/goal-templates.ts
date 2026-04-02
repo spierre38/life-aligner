@@ -1,6 +1,5 @@
-// lib/goal-templates.ts
-// Goal suggestion templates for roadmap builder
-// Each template includes pre-written goals with activities for quick setup
+// lib/goal-templates.ts - CORRECTED VERSION
+// Updated to match your exact category names
 
 export interface GoalTemplate {
   id: string;
@@ -17,7 +16,7 @@ export interface CategoryTemplates {
 
 export const GOAL_TEMPLATES: CategoryTemplates = {
   // ============================================================================
-  // HEALTH - Physical and mental wellness
+  // HEALTH
   // ============================================================================
   Health: [
     {
@@ -119,7 +118,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
   ],
 
   // ============================================================================
-  // CAREER - Professional growth and advancement
+  // CAREER
   // ============================================================================
   Career: [
     {
@@ -221,7 +220,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
   ],
 
   // ============================================================================
-  // RELATIONSHIPS - Personal connections and intimacy
+  // RELATIONSHIPS
   // ============================================================================
   Relationships: [
     {
@@ -323,215 +322,11 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
   ],
 
   // ============================================================================
-  // PURPOSE - Making a positive impact
+  // EDUCATION (was "Learning")
   // ============================================================================
-  Purpose: [
+  Education: [
     {
-      id: 'purpose_1',
-      goal: "Volunteer 4 hours monthly",
-      description: "Give back to community",
-      activities: [
-        "Research local volunteer opportunities",
-        "Sign up for regular volunteer shift",
-        "Track hours and reflect on impact"
-      ],
-      difficulty: 'medium',
-      timeframe: '3-month'
-    },
-    {
-      id: 'purpose_2',
-      goal: "Mentor someone in my field",
-      description: "Share knowledge and experience",
-      activities: [
-        "Join mentorship program",
-        "Meet with mentee monthly",
-        "Provide guidance and feedback"
-      ],
-      difficulty: 'medium',
-      timeframe: '6-month'
-    },
-    {
-      id: 'purpose_3',
-      goal: "Donate to causes I believe in",
-      description: "Support important work",
-      activities: [
-        "Research 3 effective charities",
-        "Set up monthly recurring donations",
-        "Donate 5% of income"
-      ],
-      difficulty: 'medium',
-      timeframe: '1-month'
-    },
-    {
-      id: 'purpose_4',
-      goal: "Reduce environmental impact",
-      description: "Live more sustainably",
-      activities: [
-        "Switch to reusable bags and bottles",
-        "Reduce meat consumption 3x/week",
-        "Bike or walk instead of drive"
-      ],
-      difficulty: 'medium',
-      timeframe: '3-month'
-    },
-    {
-      id: 'purpose_5',
-      goal: "Help 1 person solve a problem weekly",
-      description: "Be of service to others",
-      activities: [
-        "Ask 'How can I help?' daily",
-        "Offer expertise or time",
-        "Connect people who need each other"
-      ],
-      difficulty: 'easy',
-      timeframe: '3-month'
-    },
-    {
-      id: 'purpose_6',
-      goal: "Create something that helps others",
-      description: "Build lasting value",
-      activities: [
-        "Identify problem you can solve",
-        "Build tool, guide, or resource",
-        "Share freely with those who need it"
-      ],
-      difficulty: 'challenging',
-      timeframe: '6-month'
-    },
-    {
-      id: 'purpose_7',
-      goal: "Advocate for a cause",
-      description: "Use your voice for change",
-      activities: [
-        "Learn about the issue deeply",
-        "Contact representatives monthly",
-        "Share information with network"
-      ],
-      difficulty: 'medium',
-      timeframe: '6-month'
-    },
-    {
-      id: 'purpose_8',
-      goal: "Practice random acts of kindness",
-      description: "Spread positivity",
-      activities: [
-        "Pay for stranger's coffee weekly",
-        "Leave encouraging notes",
-        "Offer help without being asked"
-      ],
-      difficulty: 'easy',
-      timeframe: '1-month'
-    }
-  ],
-
-  // ============================================================================
-  // SOCIAL - Community and friendships
-  // ============================================================================
-  Social: [
-    {
-      id: 'social_1',
-      goal: "Join a club or group activity",
-      description: "Meet new people with shared interests",
-      activities: [
-        "Research local clubs or meetups",
-        "Attend first meeting",
-        "Commit to attending monthly"
-      ],
-      difficulty: 'medium',
-      timeframe: '3-month'
-    },
-    {
-      id: 'social_2',
-      goal: "Say yes to social invitations",
-      description: "Be more socially active",
-      activities: [
-        "Accept next 3 invitations received",
-        "Initiate plans with others",
-        "Stay for full event (don't leave early)"
-      ],
-      difficulty: 'medium',
-      timeframe: '1-month'
-    },
-    {
-      id: 'social_3',
-      goal: "Make 3 new friends",
-      description: "Expand social circle",
-      activities: [
-        "Strike up conversations in new places",
-        "Exchange contact info",
-        "Follow up within 48 hours"
-      ],
-      difficulty: 'challenging',
-      timeframe: '6-month'
-    },
-    {
-      id: 'social_4',
-      goal: "Host a monthly social event",
-      description: "Bring people together",
-      activities: [
-        "Choose activity (dinner, game night, etc)",
-        "Send invitations 2 weeks ahead",
-        "Prepare and host event"
-      ],
-      difficulty: 'medium',
-      timeframe: '3-month'
-    },
-    {
-      id: 'social_5',
-      goal: "Attend networking events",
-      description: "Build professional and social connections",
-      activities: [
-        "Find 2 events per month",
-        "Prepare elevator pitch",
-        "Follow up with 3 people met"
-      ],
-      difficulty: 'medium',
-      timeframe: '3-month'
-    },
-    {
-      id: 'social_6',
-      goal: "Improve conversation skills",
-      description: "Become better at small talk",
-      activities: [
-        "Practice asking open-ended questions",
-        "Read 1 book on communication",
-        "Initiate conversations with strangers"
-      ],
-      difficulty: 'medium',
-      timeframe: '3-month'
-    },
-    {
-      id: 'social_7',
-      goal: "Organize a group outing",
-      description: "Plan fun activities with friends",
-      activities: [
-        "Choose activity (hiking, concert, etc)",
-        "Coordinate schedules",
-        "Handle logistics and reservations"
-      ],
-      difficulty: 'easy',
-      timeframe: '1-month'
-    },
-    {
-      id: 'social_8',
-      goal: "Be more vulnerable with others",
-      description: "Deepen connections through authenticity",
-      activities: [
-        "Share something personal in conversations",
-        "Ask for help when needed",
-        "Express feelings honestly"
-      ],
-      difficulty: 'challenging',
-      timeframe: '3-month'
-    }
-  ],
-
-  // ============================================================================
-  // LEARNING - Education and skill development
-  // ============================================================================
-  Learning: [
-    {
-      id: 'learning_1',
+      id: 'education_1',
       goal: "Read 12 books this year",
       description: "Expand knowledge and perspective",
       activities: [
@@ -543,7 +338,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-year'
     },
     {
-      id: 'learning_2',
+      id: 'education_2',
       goal: "Learn a new language",
       description: "Become conversational in 6 months",
       activities: [
@@ -555,7 +350,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '6-month'
     },
     {
-      id: 'learning_3',
+      id: 'education_3',
       goal: "Take an online course",
       description: "Gain new skills or knowledge",
       activities: [
@@ -567,7 +362,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'learning_4',
+      id: 'education_4',
       goal: "Learn to code or improve coding skills",
       description: "Develop technical capabilities",
       activities: [
@@ -579,7 +374,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '6-month'
     },
     {
-      id: 'learning_5',
+      id: 'education_5',
       goal: "Master a musical instrument",
       description: "Develop musical ability",
       activities: [
@@ -591,7 +386,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '6-month'
     },
     {
-      id: 'learning_6',
+      id: 'education_6',
       goal: "Listen to educational podcasts",
       description: "Learn during commute or exercise",
       activities: [
@@ -603,7 +398,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-month'
     },
     {
-      id: 'learning_7',
+      id: 'education_7',
       goal: "Attend workshops or seminars",
       description: "Learn from experts",
       activities: [
@@ -615,7 +410,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'learning_8',
+      id: 'education_8',
       goal: "Study a topic deeply",
       description: "Become knowledgeable in specific area",
       activities: [
@@ -629,11 +424,11 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
   ],
 
   // ============================================================================
-  // FINANCE - Money management and wealth building
+  // FINANCIAL (was "Finance")
   // ============================================================================
-  Finance: [
+  Financial: [
     {
-      id: 'finance_1',
+      id: 'financial_1',
       goal: "Save $5,000 for emergency fund",
       description: "Build financial security",
       activities: [
@@ -645,7 +440,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-year'
     },
     {
-      id: 'finance_2',
+      id: 'financial_2',
       goal: "Create and stick to budget",
       description: "Track and control spending",
       activities: [
@@ -657,7 +452,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'finance_3',
+      id: 'financial_3',
       goal: "Pay off credit card debt",
       description: "Eliminate high-interest debt",
       activities: [
@@ -669,7 +464,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-year'
     },
     {
-      id: 'finance_4',
+      id: 'financial_4',
       goal: "Start investing for retirement",
       description: "Build long-term wealth",
       activities: [
@@ -681,7 +476,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-month'
     },
     {
-      id: 'finance_5',
+      id: 'financial_5',
       goal: "Increase income by 20%",
       description: "Earn more money",
       activities: [
@@ -693,7 +488,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-year'
     },
     {
-      id: 'finance_6',
+      id: 'financial_6',
       goal: "Reduce monthly expenses by $300",
       description: "Cut unnecessary spending",
       activities: [
@@ -705,7 +500,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-month'
     },
     {
-      id: 'finance_7',
+      id: 'financial_7',
       goal: "Learn about investing",
       description: "Improve financial literacy",
       activities: [
@@ -717,7 +512,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'finance_8',
+      id: 'financial_8',
       goal: "Build passive income stream",
       description: "Earn money while you sleep",
       activities: [
@@ -731,11 +526,11 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
   ],
 
   // ============================================================================
-  // SPIRITUAL - Inner growth and meaning
+  // SPIRITUALITY (was "Spiritual")
   // ============================================================================
-  Spiritual: [
+  Spirituality: [
     {
-      id: 'spiritual_1',
+      id: 'spirituality_1',
       goal: "Establish daily meditation practice",
       description: "Cultivate inner peace",
       activities: [
@@ -747,7 +542,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'spiritual_2',
+      id: 'spirituality_2',
       goal: "Practice gratitude daily",
       description: "Develop appreciation mindset",
       activities: [
@@ -759,7 +554,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-month'
     },
     {
-      id: 'spiritual_3',
+      id: 'spirituality_3',
       goal: "Attend religious or spiritual services",
       description: "Connect with faith community",
       activities: [
@@ -771,7 +566,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'spiritual_4',
+      id: 'spirituality_4',
       goal: "Read spiritual or philosophical texts",
       description: "Deepen understanding of meaning",
       activities: [
@@ -783,7 +578,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'spiritual_5',
+      id: 'spirituality_5',
       goal: "Spend time in nature regularly",
       description: "Connect with natural world",
       activities: [
@@ -795,7 +590,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '1-month'
     },
     {
-      id: 'spiritual_6',
+      id: 'spirituality_6',
       goal: "Practice forgiveness",
       description: "Release resentment and pain",
       activities: [
@@ -807,7 +602,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'spiritual_7',
+      id: 'spirituality_7',
       goal: "Explore your purpose and values",
       description: "Clarify what matters most",
       activities: [
@@ -819,7 +614,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       timeframe: '3-month'
     },
     {
-      id: 'spiritual_8',
+      id: 'spirituality_8',
       goal: "Practice loving-kindness",
       description: "Cultivate compassion",
       activities: [
@@ -833,7 +628,7 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
   ],
 
   // ============================================================================
-  // CREATIVE - Artistic expression and creativity
+  // CREATIVE
   // ============================================================================
   Creative: [
     {
@@ -932,20 +727,120 @@ export const GOAL_TEMPLATES: CategoryTemplates = {
       difficulty: 'medium',
       timeframe: '3-month'
     }
+  ],
+
+  // ============================================================================
+  // COMMUNITY
+  // ============================================================================
+  Community: [
+    {
+      id: 'community_1',
+      goal: "Volunteer at local organization",
+      description: "Give back to community regularly",
+      activities: [
+        "Research volunteer opportunities",
+        "Commit to monthly volunteer shift",
+        "Build relationships with fellow volunteers"
+      ],
+      difficulty: 'medium',
+      timeframe: '3-month'
+    },
+    {
+      id: 'community_2',
+      goal: "Attend town hall or community meetings",
+      description: "Stay informed and engaged locally",
+      activities: [
+        "Find meeting schedule",
+        "Attend quarterly meetings",
+        "Voice opinions on local issues"
+      ],
+      difficulty: 'easy',
+      timeframe: '3-month'
+    },
+    {
+      id: 'community_3',
+      goal: "Support local businesses",
+      description: "Strengthen local economy",
+      activities: [
+        "Shop at farmers market weekly",
+        "Choose local restaurants over chains",
+        "Buy gifts from local makers"
+      ],
+      difficulty: 'easy',
+      timeframe: '3-month'
+    },
+    {
+      id: 'community_4',
+      goal: "Organize neighborhood event",
+      description: "Build community connections",
+      activities: [
+        "Plan block party or potluck",
+        "Invite neighbors personally",
+        "Create welcoming atmosphere"
+      ],
+      difficulty: 'medium',
+      timeframe: '3-month'
+    },
+    {
+      id: 'community_5',
+      goal: "Start or join community garden",
+      description: "Grow food with neighbors",
+      activities: [
+        "Find or create community garden",
+        "Coordinate with other gardeners",
+        "Share harvest with community"
+      ],
+      difficulty: 'medium',
+      timeframe: '6-month'
+    },
+    {
+      id: 'community_6',
+      goal: "Mentor youth in community",
+      description: "Support next generation",
+      activities: [
+        "Sign up for mentoring program",
+        "Meet with mentee weekly",
+        "Provide guidance and support"
+      ],
+      difficulty: 'medium',
+      timeframe: '6-month'
+    },
+    {
+      id: 'community_7',
+      goal: "Participate in community cleanup",
+      description: "Improve neighborhood environment",
+      activities: [
+        "Join existing cleanup events",
+        "Organize monthly litter pickup",
+        "Recruit neighbors to help"
+      ],
+      difficulty: 'easy',
+      timeframe: '3-month'
+    },
+    {
+      id: 'community_8',
+      goal: "Know your neighbors",
+      description: "Build local relationships",
+      activities: [
+        "Introduce yourself to 5 neighbors",
+        "Host coffee or tea gathering",
+        "Offer help when neighbors need it"
+      ],
+      difficulty: 'easy',
+      timeframe: '1-month'
+    }
   ]
 };
 
-// Helper function to get templates for a specific category
+// Helper functions remain the same
 export function getTemplatesForCategory(category: string): GoalTemplate[] {
   return GOAL_TEMPLATES[category] || [];
 }
 
-// Helper function to get all category names that have templates
 export function getAvailableCategories(): string[] {
   return Object.keys(GOAL_TEMPLATES);
 }
 
-// Helper function to filter templates by difficulty
 export function filterByDifficulty(
   templates: GoalTemplate[], 
   difficulty: 'easy' | 'medium' | 'challenging'
@@ -953,7 +848,6 @@ export function filterByDifficulty(
   return templates.filter(t => t.difficulty === difficulty);
 }
 
-// Helper function to filter templates by timeframe
 export function filterByTimeframe(
   templates: GoalTemplate[], 
   timeframe: '1-month' | '3-month' | '6-month' | '1-year'
