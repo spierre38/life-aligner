@@ -16,10 +16,87 @@ export default function YellowPadPage() {
     const [newTodoText, setNewTodoText] = useState('');
     const [newSubGoalText, setNewSubGoalText] = useState('');
 
+    // Theme state
+    const [theme, setTheme] = useState<'yellow' | 'blue' | 'green' | 'dark' | 'pink'>('yellow');
+
+    // Load saved theme on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('yellowpad-theme');
+        if (saved && ['yellow', 'blue', 'green', 'dark', 'pink'].includes(saved)) {
+            setTheme(saved as typeof theme);
+        }
+    }, []);
+
+    const changeTheme = (newTheme: typeof theme) => {
+        setTheme(newTheme);
+        localStorage.setItem('yellowpad-theme', newTheme);
+    };
+
+    const themes = {
+        yellow: {
+            bg: '#fef9c3', text: '#111827',
+            lineColor: '#94a3b8', marginColor: '#dc2626',
+            accentBg: 'bg-yellow-300 hover:bg-yellow-400 border-yellow-500',
+            accentText: 'text-gray-900',
+            checkBorder: 'border-gray-600', checkColor: 'text-gray-800',
+            hoverBg: 'hover:bg-yellow-200/50',
+            label: 'Classic', preview: '#fef9c3',
+            modalBg: 'bg-yellow-50 border-yellow-300',
+            inputBorder: 'border-yellow-400',
+        },
+        blue: {
+            bg: '#dbeafe', text: '#111827',
+            lineColor: '#93c5fd', marginColor: '#3b82f6',
+            accentBg: 'bg-blue-300 hover:bg-blue-400 border-blue-500',
+            accentText: 'text-gray-900',
+            checkBorder: 'border-blue-700', checkColor: 'text-blue-800',
+            hoverBg: 'hover:bg-blue-200/50',
+            label: 'Ocean', preview: '#dbeafe',
+            modalBg: 'bg-blue-50 border-blue-300',
+            inputBorder: 'border-blue-400',
+        },
+        green: {
+            bg: '#dcfce7', text: '#111827',
+            lineColor: '#86efac', marginColor: '#16a34a',
+            accentBg: 'bg-green-300 hover:bg-green-400 border-green-500',
+            accentText: 'text-gray-900',
+            checkBorder: 'border-green-700', checkColor: 'text-green-800',
+            hoverBg: 'hover:bg-green-200/50',
+            label: 'Forest', preview: '#dcfce7',
+            modalBg: 'bg-green-50 border-green-300',
+            inputBorder: 'border-green-400',
+        },
+        dark: {
+            bg: '#1e293b', text: '#e2e8f0',
+            lineColor: '#334155', marginColor: '#6366f1',
+            accentBg: 'bg-indigo-600 hover:bg-indigo-700 border-indigo-500',
+            accentText: 'text-white',
+            checkBorder: 'border-indigo-400', checkColor: 'text-indigo-300',
+            hoverBg: 'hover:bg-slate-700/50',
+            label: 'Midnight', preview: '#1e293b',
+            modalBg: 'bg-slate-800 border-indigo-500',
+            inputBorder: 'border-indigo-500',
+        },
+        pink: {
+            bg: '#fce7f3', text: '#111827',
+            lineColor: '#f9a8d4', marginColor: '#ec4899',
+            accentBg: 'bg-pink-300 hover:bg-pink-400 border-pink-500',
+            accentText: 'text-gray-900',
+            checkBorder: 'border-pink-600', checkColor: 'text-pink-700',
+            hoverBg: 'hover:bg-pink-200/50',
+            label: 'Rose', preview: '#fce7f3',
+            modalBg: 'bg-pink-50 border-pink-300',
+            inputBorder: 'border-pink-400',
+        },
+    };
+
+    const t = themes[theme];
+
     // Editing states
     const [editingTodo, setEditingTodo] = useState<string | null>(null);
     const [editingSubGoal, setEditingSubGoal] = useState<string | null>(null);
     const [editText, setEditText] = useState('');
+    const [showCompleted, setShowCompleted] = useState(false);
 
     useEffect(() => {
         loadUserAndTodos();
@@ -50,6 +127,10 @@ export default function YellowPadPage() {
             showToast.error('Failed to load todos');
         } else {
             const sorted = (data || []).sort((a, b) => {
+                // 1. Active items first, completed items last
+                if (a.completed && !b.completed) return 1;
+                if (!a.completed && b.completed) return -1;
+                // 2. Within each group, sort by priority
                 const aPriority = a.priority || 9999;
                 const bPriority = b.priority || 9999;
                 return aPriority - bPriority;
@@ -115,17 +196,20 @@ export default function YellowPadPage() {
     const handleDragEnd = (result: any) => {
         if (!result.destination) return;
 
-        const items = Array.from(todos);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
+        // Only active items are in the drag context
+        const active = todos.filter(t => !t.completed);
+        const completed = todos.filter(t => t.completed);
+        const [reorderedItem] = active.splice(result.source.index, 1);
+        active.splice(result.destination.index, 0, reorderedItem);
 
-        const updatedItems = items.map((item, index) => ({
+        const reorderedActive = active.map((item, index) => ({
             ...item,
             priority: index + 1
         }));
 
-        setTodos(updatedItems);
-        updateTodoOrder(updatedItems);
+        const merged = [...reorderedActive, ...completed];
+        setTodos(merged);
+        updateTodoOrder(merged);
     };
 
     const handleSubGoalDragEnd = (result: any, todoId: string) => {
@@ -367,33 +451,37 @@ export default function YellowPadPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#fef9c3' }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: t.bg }}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-yellow-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600 text-lg" style={{ fontFamily: 'Courier New, monospace' }}>
-                        Loading yellow pad...
+                    <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: t.marginColor, borderTopColor: 'transparent' }}></div>
+                    <p className="text-lg" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
+                        Loading your pad...
                     </p>
                 </div>
             </div>
         );
     }
 
+    // Separate active and completed for rendering
+    const activeTodos = todos.filter(todo => !todo.completed);
+    const completedTodos = todos.filter(todo => todo.completed);
+
     return (
         <>
-            {/* FULL PAGE YELLOW PAD */}
+            {/* FULL PAGE PAD */}
             <div
                 className="min-h-screen relative"
                 style={{
-                    backgroundColor: '#fef9c3',
-                    color: '#111827',
+                    backgroundColor: t.bg,
+                    color: t.text,
                     backgroundImage: `
                         repeating-linear-gradient(
                             transparent,
                             transparent 31px,
-                            #94a3b8 31px,
-                            #94a3b8 32px
+                            ${t.lineColor} 31px,
+                            ${t.lineColor} 32px
                         ),
-                        linear-gradient(90deg, transparent 0px, transparent 80px, #dc2626 80px, #dc2626 82px, transparent 82px)
+                        linear-gradient(90deg, transparent 0px, transparent 80px, ${t.marginColor} 80px, ${t.marginColor} 82px, transparent 82px)
                     `,
                     lineHeight: '32px'
                 }}
@@ -404,33 +492,52 @@ export default function YellowPadPage() {
                         <div>
                             <Link
                                 href="/dashboard"
-                                className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-800 font-bold text-sm mb-2 transition-colors"
-                                style={{ fontFamily: 'Courier New, monospace' }}
+                                className="inline-flex items-center gap-1 font-bold text-sm mb-2 transition-colors opacity-70 hover:opacity-100"
+                                style={{ fontFamily: 'Courier New, monospace', color: t.text }}
                             >
                                 ← DASHBOARD
                             </Link>
                             <h1
-                                className="text-5xl font-bold text-gray-900 mb-1"
-                                style={{ fontFamily: 'Courier New, monospace', lineHeight: '1.2' }}
+                                className="text-5xl font-bold mb-1"
+                                style={{ fontFamily: 'Courier New, monospace', lineHeight: '1.2', color: t.text }}
                             >
-                                {userName}'s Yellow Pad
+                                {userName}'s Pad
                             </h1>
-                            <p className="text-gray-700 font-semibold mb-1" style={{ fontFamily: 'Courier New, monospace' }}>
+                            <p className="font-semibold mb-1" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
                                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             </p>
-                            <p className="text-gray-600" style={{ fontFamily: 'Courier New, monospace' }}>
-                                <span className="text-blue-600 font-bold">Blue</span> = Roadmap •
-                                <span className="text-green-600 font-bold ml-2">Green</span> = Manual
+                            <p style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
+                                <span className="font-bold" style={{ color: '#2563eb' }}>Blue</span> = Roadmap •
+                                <span className="font-bold ml-2" style={{ color: '#15803d' }}>Green</span> = Manual
                             </p>
                         </div>
 
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="px-6 py-3 bg-yellow-300 hover:bg-yellow-400 border-2 border-yellow-500 text-gray-900 rounded-lg font-bold shadow-md transition-all"
-                            style={{ fontFamily: 'Courier New, monospace' }}
-                        >
-                            ✏️ ADD TODO
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {/* Theme Switcher */}
+                            <div className="flex items-center gap-1.5 bg-white/30 p-1.5 rounded-lg backdrop-blur-sm border border-white/20">
+                                {(Object.keys(themes) as Array<keyof typeof themes>).map(key => (
+                                    <button
+                                        key={key}
+                                        onClick={() => changeTheme(key)}
+                                        className={`w-7 h-7 rounded-md border-2 transition-all ${
+                                            theme === key
+                                                ? 'ring-2 ring-offset-1 ring-gray-500 scale-110'
+                                                : 'opacity-70 hover:opacity-100 hover:scale-105'
+                                        }`}
+                                        style={{ backgroundColor: themes[key].preview, borderColor: themes[key].marginColor }}
+                                        title={themes[key].label}
+                                    />
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className={`px-6 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
+                                style={{ fontFamily: 'Courier New, monospace' }}
+                            >
+                                ✏️ ADD TODO
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -454,7 +561,7 @@ export default function YellowPadPage() {
                                         {...provided.droppableProps}
                                         ref={provided.innerRef}
                                     >
-                                        {todos.map((todo, index) => (
+                                        {activeTodos.map((todo, index) => (
                                             <Draggable key={todo.id} draggableId={todo.id} index={index}>
                                                 {(provided, snapshot) => (
                                                     <div
@@ -483,16 +590,16 @@ export default function YellowPadPage() {
                                                             <div
                                                                 className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
                                                                 style={{
-                                                                    backgroundColor: (todo.priority || index + 1) <= 3 ? '#ef4444' : (todo.priority || index + 1) <= 6 ? '#f97316' : '#6b7280'
+                                                                    backgroundColor: (index + 1) <= 3 ? '#ef4444' : (index + 1) <= 6 ? '#f97316' : '#6b7280'
                                                                 }}
                                                             >
-                                                                {todo.priority && todo.priority < 9999 ? todo.priority : index + 1}
+                                                                {index + 1}
                                                             </div>
 
                                                             {/* Checkbox */}
                                                             <button
                                                                 onClick={() => handleToggle(todo)}
-                                                                className="w-5 h-5 rounded border-2 border-gray-600 flex-shrink-0 hover:border-gray-800 transition-colors"
+                                                                className={`w-5 h-5 rounded border-2 flex-shrink-0 hover:opacity-80 transition-colors ${t.checkBorder}`}
                                                             >
                                                                 {todo.completed && (
                                                                     <svg className="w-full h-full text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,10 +626,12 @@ export default function YellowPadPage() {
                                                             ) : (
                                                                 <span
                                                                     onClick={() => startEditingTodo(todo)}
-                                                                    className={`text-lg flex-1 cursor-pointer hover:bg-yellow-200/50 px-1 rounded ${todo.completed ? 'line-through' : ''}`}
+                                                                    className={`text-lg flex-1 cursor-pointer ${t.hoverBg} px-1 rounded ${todo.completed ? 'line-through opacity-50' : ''}`}
                                                                     style={{
                                                                         fontFamily: 'Courier New, monospace',
-                                                                        color: todo.source === 'roadmap' ? '#2563eb' : '#15803d'
+                                                                        color: todo.completed
+                                                                            ? (theme === 'dark' ? '#64748b' : '#9ca3af')
+                                                                            : todo.source === 'roadmap' ? '#2563eb' : '#15803d'
                                                                     }}
                                                                 >
                                                                     {todo.text}
@@ -599,7 +708,7 @@ export default function YellowPadPage() {
                                                                                                 className="text-sm font-bold text-gray-500 w-6"
                                                                                                 style={{ fontFamily: 'Courier New, monospace' }}
                                                                                             >
-                                                                                                {getSubGoalLabel(todo.priority || index + 1, subIndex)}
+                                                                                                {getSubGoalLabel(index + 1, subIndex)}
                                                                                             </span>
 
                                                                                             {/* Checkbox */}
@@ -668,6 +777,69 @@ export default function YellowPadPage() {
                             </Droppable>
                         </DragDropContext>
                     )}
+
+                    {/* Completed Section */}
+                    {completedTodos.length > 0 && (
+                        <div className="mt-8">
+                            <button
+                                onClick={() => setShowCompleted(!showCompleted)}
+                                className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity"
+                                style={{ fontFamily: 'Courier New, monospace' }}
+                            >
+                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
+                                <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: t.text }}>
+                                    {showCompleted ? '▼' : '▶'} {completedTodos.length} completed
+                                </span>
+                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
+                            </button>
+
+                            {showCompleted && (
+                                <div className="mt-4 space-y-0 opacity-50">
+                                    {completedTodos.map((todo) => (
+                                        <div
+                                            key={todo.id}
+                                            className="flex items-center gap-4 group"
+                                            style={{
+                                                minHeight: '32px',
+                                                lineHeight: '32px',
+                                            }}
+                                        >
+                                            {/* Spacer for drag handle */}
+                                            <div className="w-4" />
+
+                                            {/* Completed ✓ badge */}
+                                            <div
+                                                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 bg-green-500"
+                                            >
+                                                ✓
+                                            </div>
+
+                                            {/* Checkbox */}
+                                            <button
+                                                onClick={() => handleToggle(todo)}
+                                                className={`w-5 h-5 rounded border-2 flex-shrink-0 ${t.checkBorder}`}
+                                            >
+                                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Todo Text */}
+                                            <span
+                                                className="text-base flex-1 line-through"
+                                                style={{
+                                                    fontFamily: 'Courier New, monospace',
+                                                    color: theme === 'dark' ? '#475569' : '#9ca3af'
+                                                }}
+                                            >
+                                                {todo.text}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Paper Shadow */}
@@ -677,8 +849,8 @@ export default function YellowPadPage() {
             {/* Add Todo Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-yellow-50 rounded-2xl shadow-2xl max-w-lg w-full p-8 border-4 border-yellow-300">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'Courier New, monospace' }}>
+                    <div className={`rounded-2xl shadow-2xl max-w-lg w-full p-8 border-4 ${t.modalBg}`}>
+                        <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
                             Add New Todo
                         </h2>
                         <form onSubmit={handleAddTodo}>
@@ -687,8 +859,8 @@ export default function YellowPadPage() {
                                 value={newTodoText}
                                 onChange={(e) => setNewTodoText(e.target.value)}
                                 placeholder="What do you need to do?"
-                                className="w-full px-4 py-3 border-2 border-yellow-400 rounded-xl bg-white text-gray-900"
-                                style={{ fontFamily: 'Courier New, monospace' }}
+                                className={`w-full px-4 py-3 border-2 rounded-xl ${t.inputBorder}`}
+                                style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
                                 autoFocus
                                 required
                             />
@@ -696,14 +868,14 @@ export default function YellowPadPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowAddModal(false)}
-                                    className="flex-1 px-6 py-3 border-2 border-gray-400 bg-white rounded-xl font-bold text-gray-700 hover:bg-gray-50"
-                                    style={{ fontFamily: 'Courier New, monospace' }}
+                                    className="flex-1 px-6 py-3 border-2 border-gray-400 rounded-xl font-bold hover:opacity-80"
+                                    style={{ fontFamily: 'Courier New, monospace', color: t.text, backgroundColor: theme === 'dark' ? '#334155' : 'white' }}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-6 py-3 bg-yellow-300 border-2 border-yellow-500 text-gray-900 rounded-xl font-bold hover:bg-yellow-400"
+                                    className={`flex-1 px-6 py-3 border-2 rounded-xl font-bold ${t.accentBg} ${t.accentText}`}
                                     style={{ fontFamily: 'Courier New, monospace' }}
                                 >
                                     Add Todo
@@ -717,8 +889,8 @@ export default function YellowPadPage() {
             {/* Add Sub-Goal Modal */}
             {showSubGoalModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-yellow-50 rounded-2xl shadow-2xl max-w-lg w-full p-8 border-4 border-yellow-300">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6" style={{ fontFamily: 'Courier New, monospace' }}>
+                    <div className={`rounded-2xl shadow-2xl max-w-lg w-full p-8 border-4 ${t.modalBg}`}>
+                        <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
                             Add Sub-Goal
                         </h2>
                         <form onSubmit={(e) => {
@@ -730,8 +902,8 @@ export default function YellowPadPage() {
                                 value={newSubGoalText}
                                 onChange={(e) => setNewSubGoalText(e.target.value)}
                                 placeholder="Enter sub-goal..."
-                                className="w-full px-4 py-3 border-2 border-yellow-400 rounded-xl bg-white text-gray-900"
-                                style={{ fontFamily: 'Courier New, monospace' }}
+                                className={`w-full px-4 py-3 border-2 rounded-xl ${t.inputBorder}`}
+                                style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
                                 autoFocus
                                 required
                             />
@@ -739,14 +911,14 @@ export default function YellowPadPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowSubGoalModal(null)}
-                                    className="flex-1 px-6 py-3 border-2 border-gray-400 bg-white rounded-xl font-bold text-gray-700 hover:bg-gray-50"
-                                    style={{ fontFamily: 'Courier New, monospace' }}
+                                    className="flex-1 px-6 py-3 border-2 border-gray-400 rounded-xl font-bold hover:opacity-80"
+                                    style={{ fontFamily: 'Courier New, monospace', color: t.text, backgroundColor: theme === 'dark' ? '#334155' : 'white' }}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-6 py-3 bg-yellow-300 border-2 border-yellow-500 text-gray-900 rounded-xl font-bold hover:bg-yellow-400"
+                                    className={`flex-1 px-6 py-3 border-2 rounded-xl font-bold ${t.accentBg} ${t.accentText}`}
                                     style={{ fontFamily: 'Courier New, monospace' }}
                                 >
                                     Add Sub-Goal
