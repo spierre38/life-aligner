@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, TodoItem } from '@/lib/todos';
+import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, toggleTodoVisibility, TodoItem } from '@/lib/todos';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -97,6 +97,7 @@ export default function YellowPadPage() {
     const [editingSubGoal, setEditingSubGoal] = useState<string | null>(null);
     const [editText, setEditText] = useState('');
     const [showCompleted, setShowCompleted] = useState(false);
+    const [showHidden, setShowHidden] = useState(false);
 
     useEffect(() => {
         loadUserAndTodos();
@@ -155,6 +156,18 @@ export default function YellowPadPage() {
         if (error) {
             showToast.error('Failed to update');
         } else {
+            loadTodos();
+        }
+    };
+
+    const handleToggleVisibility = async (todo: TodoItem) => {
+        if (!confirm(todo.hidden ? 'Show this on your To-Do pad again?' : 'Hide this from your To-Do pad?')) return;
+        
+        const { error } = await toggleTodoVisibility(todo.id, todo.source);
+        if (error) {
+            showToast.error('Failed to update visibility');
+        } else {
+            showToast.success(todo.hidden ? 'Added back to To-Do pad' : 'Hidden from To-Do pad');
             loadTodos();
         }
     };
@@ -462,9 +475,11 @@ export default function YellowPadPage() {
         );
     }
 
-    // Separate active and completed for rendering
-    const activeTodos = todos.filter(todo => !todo.completed);
-    const completedTodos = todos.filter(todo => todo.completed);
+    // Separate active, completed, and hidden for rendering
+    const visibleTodos = todos.filter(todo => !todo.hidden);
+    const activeTodos = visibleTodos.filter(todo => !todo.completed);
+    const completedTodos = visibleTodos.filter(todo => todo.completed);
+    const hiddenTodos = todos.filter(todo => todo.hidden);
 
     return (
         <>
@@ -637,6 +652,16 @@ export default function YellowPadPage() {
                                                                     {todo.text}
                                                                 </span>
                                                             )}
+
+                                                            {/* Hide Button (for non-completed items) */}
+                                                            <button
+                                                                onClick={() => handleToggleVisibility(todo)}
+                                                                className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 border border-yellow-400 rounded text-xs font-bold transition-all ml-2"
+                                                                style={{ fontFamily: 'Courier New, monospace' }}
+                                                                title="Hide from To-Do Pad"
+                                                            >
+                                                                hide
+                                                            </button>
 
                                                             {/* Add Sub-Goal Button */}
                                                             <button
@@ -834,6 +859,63 @@ export default function YellowPadPage() {
                                             >
                                                 {todo.text}
                                             </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Hidden Section */}
+                    {hiddenTodos.length > 0 && (
+                        <div className="mt-8 mb-8">
+                            <button
+                                onClick={() => setShowHidden(!showHidden)}
+                                className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity"
+                                style={{ fontFamily: 'Courier New, monospace' }}
+                            >
+                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
+                                <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: t.text }}>
+                                    {showHidden ? '▼' : '▶'} {hiddenTodos.length} hidden
+                                </span>
+                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
+                            </button>
+
+                            {showHidden && (
+                                <div className="mt-4 space-y-0 opacity-60">
+                                    {hiddenTodos.map((todo) => (
+                                        <div
+                                            key={todo.id}
+                                            className="flex items-center gap-4 group"
+                                            style={{
+                                                minHeight: '32px',
+                                                lineHeight: '32px',
+                                            }}
+                                        >
+                                            {/* Spacer */}
+                                            <div className="w-12 h-8" />
+
+                                            {/* Todo Text */}
+                                            <span
+                                                className="text-base flex-1"
+                                                style={{
+                                                    fontFamily: 'Courier New, monospace',
+                                                    color: theme === 'dark' ? '#94a3b8' : '#6b7280'
+                                                }}
+                                            >
+                                                {todo.text}
+                                                <span className="text-xs ml-2 italic">({todo.source === 'roadmap' ? 'Roadmap Goal' : 'Manual'})</span>
+                                            </span>
+
+                                            {/* Unhide Button */}
+                                            <button
+                                                onClick={() => handleToggleVisibility(todo)}
+                                                className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-gray-200 hover:bg-gray-300 border border-gray-400 rounded text-xs font-bold transition-all text-gray-800"
+                                                style={{ fontFamily: 'Courier New, monospace' }}
+                                                title="Show on To-Do Pad"
+                                            >
+                                                unhide
+                                            </button>
                                         </div>
                                     ))}
                                 </div>

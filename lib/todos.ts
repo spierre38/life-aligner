@@ -17,6 +17,7 @@ export interface TodoItem {
     text: string;
     completed: boolean;
     completed_at?: string | null;
+    hidden?: boolean;
     source: 'roadmap' | 'manual';
     goal_title?: string;
     category?: string;
@@ -68,6 +69,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
                                 id: `roadmap_${itemIndex}_${actIndex}`,
                                 text: activity,
                                 completed: false,
+                                hidden: false,
                                 source: 'roadmap',
                                 goal_title: goalTitle,
                                 category: item.category,
@@ -80,6 +82,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
                                 text: activity.text || activity,
                                 completed: activity.completed || false,
                                 completed_at: activity.completed_at || null,
+                                hidden: activity.hidden || false,
                                 source: 'roadmap',
                                 goal_title: goalTitle,
                                 category: item.category,
@@ -102,6 +105,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
                     text: todo.text,
                     completed: todo.completed || false,
                     completed_at: todo.completed_at || null,
+                    hidden: todo.hidden || false,
                     source: 'manual',
                     category: todo.category,
                     priority: todo.priority || (todos.length + 1),
@@ -223,6 +227,84 @@ export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | '
 
     } catch (err) {
         console.error('Error toggling todo:', err);
+        return { error: err };
+    }
+}
+
+// ===================================
+// TOGGLE TODO VISIBILITY (HIDE/UNHIDE)
+// ===================================
+
+export async function toggleTodoVisibility(todoId: string, source: 'roadmap' | 'manual') {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { error: { message: 'Not authenticated' } };
+
+        const { data: roadmapEntry, error: fetchError } = await supabase
+            .from('workbook_entries')
+            .select('content')
+            .eq('user_id', user.id)
+            .eq('category', 'roadmap')
+            .single();
+
+        if (fetchError || !roadmapEntry) {
+            return { error: fetchError || { message: 'No roadmap found' } };
+        }
+
+        const content = roadmapEntry.content;
+        let updated = false;
+
+        if (source === 'roadmap' && content.items) {
+            content.items = content.items.map((item: any) => {
+                if (item.activities) {
+                    item.activities = item.activities.map((activity: any) => {
+                        const activityId = typeof activity === 'object' ? activity.id : null;
+
+                        if (activityId === todoId) {
+                            updated = true;
+                            const currentHidden = typeof activity === 'object' ? !!activity.hidden : false;
+                            
+                            return {
+                                ...(typeof activity === 'string' ? { text: activity } : activity),
+                                id: activityId || todoId,
+                                hidden: !currentHidden
+                            };
+                        }
+                        return activity;
+                    });
+                }
+                return item;
+            });
+        } else if (source === 'manual' && content.manual_todos) {
+            content.manual_todos = content.manual_todos.map((todo: any) => {
+                if (todo.id === todoId) {
+                    updated = true;
+                    return {
+                        ...todo,
+                        hidden: !todo.hidden
+                    };
+                }
+                return todo;
+            });
+        }
+
+        if (!updated) {
+            return { error: { message: 'Todo not found' } };
+        }
+
+        const { error: updateError } = await supabase
+            .from('workbook_entries')
+            .update({
+                content,
+                updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id)
+            .eq('category', 'roadmap');
+
+        return { error: updateError };
+
+    } catch (err) {
+        console.error('Error toggling todo visibility:', err);
         return { error: err };
     }
 }
