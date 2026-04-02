@@ -3,7 +3,7 @@
 
 import { RoadmapLane } from './RoadmapLane';
 import { GoalDetailModal } from './GoalDetailModal';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { calculateLaneDecay } from '@/lib/roadmap-decay-helpers';
 
 export interface RoadmapCanvasProps {
@@ -42,7 +42,7 @@ export interface Activity {
 }
 
 export function RoadmapCanvas({ lanes, onUpdateGoal, onToggleActivity, onAddGoal }: RoadmapCanvasProps) {
-  const [selectedGoal, setSelectedGoal] = useState<{ lane: LaneData; goal: Goal } | null>(null);
+  const [selectedGoalIds, setSelectedGoalIds] = useState<{ laneId: string; goalId: string } | null>(null);
 
   // Calculate overall progress across all lanes
   const overallProgress = lanes.length > 0
@@ -58,12 +58,24 @@ export function RoadmapCanvas({ lanes, onUpdateGoal, onToggleActivity, onAddGoal
   );
 
   const handleGoalClick = (lane: LaneData, goal: Goal) => {
-    setSelectedGoal({ lane, goal });
+    setSelectedGoalIds({ laneId: lane.id, goalId: goal.id });
   };
 
   const handleCloseModal = () => {
-    setSelectedGoal(null);
+    setSelectedGoalIds(null);
   };
+
+  const selectedGoalData = useMemo(() => {
+    if (!selectedGoalIds) return null;
+    
+    const lane = lanes.find(l => l.id === selectedGoalIds.laneId);
+    if (!lane) return null;
+    
+    const goal = lane.goals.find(g => g.id === selectedGoalIds.goalId);
+    if (!goal) return null;
+    
+    return { lane, goal };
+  }, [selectedGoalIds, lanes]);
 
   // Category health based on recent activity
   const getCategoryHealth = (lane: LaneData) => {
@@ -153,13 +165,13 @@ export function RoadmapCanvas({ lanes, onUpdateGoal, onToggleActivity, onAddGoal
       )}
 
       {/* Goal Detail Modal */}
-      {selectedGoal && (
+      {selectedGoalData && (
         <GoalDetailModal
-          lane={selectedGoal.lane}
-          goal={selectedGoal.goal}
+          lane={selectedGoalData.lane}
+          goal={selectedGoalData.goal}
           onClose={handleCloseModal}
-          onUpdateGoal={(updates) => onUpdateGoal(selectedGoal.lane.id, selectedGoal.goal.id, updates)}
-          onToggleActivity={(activityId) => onToggleActivity(selectedGoal.lane.id, selectedGoal.goal.id, activityId)}
+          onUpdateGoal={(updates) => onUpdateGoal(selectedGoalData.lane.id, selectedGoalData.goal.id, updates)}
+          onToggleActivity={(activityId) => onToggleActivity(selectedGoalData.lane.id, selectedGoalData.goal.id, activityId)}
         />
       )}
     </div>
