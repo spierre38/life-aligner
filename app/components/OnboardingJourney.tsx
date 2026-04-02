@@ -29,11 +29,13 @@ const ANIM_STYLES = `
   .float-plane{animation:floatPlane 5s ease-in-out infinite}
   .fly-across {animation:flyAcross 1.5s cubic-bezier(.22,1,.36,1) both}
   .opt-item{
-    filter:blur(5px);color:rgba(148,163,184,.65);
-    transition:filter .22s ease,color .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1);
+    opacity:.7;color:rgba(203,213,225,.85);
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.06);
+    transition:opacity .22s ease,color .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1),background .22s ease,border-color .22s ease;
     cursor:pointer;
   }
-  .opt-item:hover{filter:blur(0);color:#fff;transform:scale(1.04) translateX(5px)}
+  .opt-item:hover{opacity:1;color:#fff;transform:scale(1.02) translateX(4px);background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15)}
 `;
 
 // ── Airplane SVG (purple-tinted, inspired by reference) ───────
