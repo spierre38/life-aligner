@@ -123,10 +123,10 @@ export default function PartnerProgressModal({ partner, onClose }: PartnerProgre
                                                     <div>
                                                         <p className="text-sm font-semibold text-gray-700 mb-2">Activities:</p>
                                                         <ul className="space-y-1">
-                                                            {item.activities.map((activity: string, j: number) => (
+                                                            {item.activities.map((activity: any, j: number) => (
                                                                 <li key={j} className="text-sm text-gray-700 flex items-start gap-2">
                                                                     <span className="text-green-500 mt-0.5">✓</span>
-                                                                    {activity}
+                                                                    {typeof activity === 'string' ? activity : activity.text || 'Untitled'}
                                                                 </li>
                                                             ))}
                                                         </ul>
