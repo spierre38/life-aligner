@@ -193,12 +193,22 @@ export default function PartnerProgressModal({ partner, onClose }: PartnerProgre
                                                     <div>
                                                         <p className="text-sm font-semibold text-gray-700 mb-2">Activities:</p>
                                                         <ul className="space-y-1">
-                                                            {item.activities.map((activity: any, j: number) => (
-                                                                <li key={j} className="text-sm text-gray-700 flex items-start gap-2">
-                                                                    <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                                                    {typeof activity === 'string' ? activity : activity.text || 'Untitled'}
-                                                                </li>
-                                                            ))}
+                                                            {item.activities.map((activity: any, j: number) => {
+                                                                let activityText: string;
+                                                                if (typeof activity === 'string') {
+                                                                    activityText = activity;
+                                                                } else if (activity && typeof activity === 'object') {
+                                                                    activityText = activity.text || activity.name || activity.description || activity.activity_text || activity.title || `Activity ${j + 1}`;
+                                                                } else {
+                                                                    activityText = `Activity ${j + 1}`;
+                                                                }
+                                                                return (
+                                                                    <li key={j} className="text-sm text-gray-700 flex items-start gap-2">
+                                                                        <CheckCircleIcon className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                                                                        <span>{activityText}</span>
+                                                                    </li>
+                                                                );
+                                                            })}
                                                         </ul>
                                                     </div>
                                                 )}
