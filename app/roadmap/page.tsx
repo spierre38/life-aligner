@@ -5,6 +5,7 @@ import { trackRoadmapSaved, trackActivityLogged, trackGoalAdded, trackRoadmapCom
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { logActivity } from '@/lib/accountability';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import QuickLogModal from '@/app/components/QuickLogModal';
@@ -595,6 +596,13 @@ export default function RoadmapPage() {
         saveRoadmapImmediate(updatedItems);
         setLoggingActivity(null);
         showToast('Activity logged successfully! 🎉', 'success');
+
+        // Log social activity for partners
+        const goalMatch = updatedItems.find(i => i.id === loggingActivity.itemId);
+        logActivity('goal_completed', { 
+            activity_text: loggingActivity.activityText,
+            goal_title: goalMatch?.title || 'a goal'
+        }).catch(err => console.error('Failed to log social activity:', err));
     };
 
     const getFeelingEmoji = (feeling: 'great' | 'okay' | 'hard') => {
@@ -698,6 +706,10 @@ export default function RoadmapPage() {
         saveRoadmapImmediate(updatedItems);
         if (itemToArchive) {
             setCompletedGoalTitle(itemToArchive.title);
+            logActivity('milestone_posted', {
+                goal_title: itemToArchive.title,
+                message: "Completed a major goal and added it to the Archive Storybook!"
+            }).catch(console.error);
         }
     };
 
@@ -778,6 +790,14 @@ export default function RoadmapPage() {
 
         // Show success
         showToast(`Added ${selectedGoals.length} goals to your roadmap! 🎉`, 'success');
+
+        // Social feed logging
+        selectedGoals.forEach(suggestion => {
+            logActivity('roadmap_updated', {
+                goal_title: suggestion.goal || 'New Goal',
+                action: 'added_goal'
+            }).catch(err => console.error('Failed to log social activity:', err));
+        });
     };
 
     const handleSuggestionSkip = () => {

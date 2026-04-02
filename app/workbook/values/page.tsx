@@ -2,12 +2,43 @@
 
 import { trackValuesSaved } from '@/lib/analytics';
 import { useToast } from '@/app/components/Toast';
+import { logActivity } from '@/lib/accountability';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+
+// ── Inline SVG Illustrations ──────────────────────────────────────────────────
+const CompassIllustration = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="compassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#4f46e5" />
+                <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r="80" fill="url(#compassGrad)" opacity="0.1" />
+        <circle cx="100" cy="100" r="60" fill="url(#compassGrad)" opacity="0.15" />
+        <circle cx="100" cy="100" r="50" stroke="#4f46e5" strokeWidth="2" opacity="0.3" />
+        <polygon points="100,45 108,90 100,80 92,90" fill="#ef4444" />
+        <polygon points="100,155 108,110 100,120 92,110" fill="#6366f1" />
+        <circle cx="100" cy="100" r="6" fill="#4f46e5" />
+        <circle cx="100" cy="100" r="3" fill="white" />
+    </svg>
+);
+
+const WbIcons = {
+    pin: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    lightbulb: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>,
+    target: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+    sparkle: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+    heart: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+    shield: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+    compass: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>,
+    quote: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>,
+};
 
 // Values from the workbook (pages 12-13)
 const VALUES_LIST = [
@@ -359,6 +390,13 @@ export default function ValuesWorksheet() {
             trackValuesSaved(prioritizedValues.length);
             setShowSuccess(true);
             showToast('Values saved successfully!', 'success');
+
+            // Social feed logging
+            logActivity('value_changed', {
+                value_count: prioritizedValues.length,
+                top_value: prioritizedValues[0]?.name || 'a core value'
+            }).catch(console.error);
+
             setTimeout(() => {
                 router.push('/dashboard');
             }, 2000);
@@ -416,29 +454,31 @@ export default function ValuesWorksheet() {
                     {/* Step 1: Introduction (Navy-Teal Gradient) */}
                     {currentStep === 1 && (
                         <div className="min-h-screen flex items-center justify-center animate-fade-in">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-gradient-to-r from-[#0a1f44] via-[#1e4d7b] to-[#3b8b9f] rounded-3xl transform rotate-1"></div>
-                                <div className="relative bg-white rounded-3xl p-12 shadow-2xl max-w-3xl">
+                            <div className="max-w-2xl w-full">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20">
                                     <div className="text-center">
-                                        <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6">
-                                            📌
+                                        <div className="w-20 h-20 mx-auto mb-6">
+                                            <CompassIllustration />
                                         </div>
-                                        <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
                                             Define Your Values
                                         </h1>
-                                        <p className="text-xl text-gray-800 leading-relaxed mb-8">
+                                        <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
                                             Your Values are the principles and standards of behavior that guide your life decisions.
                                             They form the foundation of your LifeFrame and influence everything that follows.
                                         </p>
-                                        <p className="text-lg text-gray-700 mb-8">
-                                            LifeFrame • Step 1 of 5 • 15-30 minutes
-                                        </p>
-                                        <button
-                                            onClick={() => setCurrentStep(2)}
-                                            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl transition-all transform hover:scale-105"
-                                        >
-                                            Let's Begin →
-                                        </button>
+                                        <div className="inline-flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full text-sm font-semibold text-indigo-700 mb-8">
+                                            {WbIcons.compass('w-4 h-4')}
+                                            <span>LifeFrame • Step 1 of 3 • 15-30 min</span>
+                                        </div>
+                                        <div>
+                                            <button
+                                                onClick={() => setCurrentStep(2)}
+                                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-indigo-600/20 transition-all transform hover:scale-105"
+                                            >
+                                                Let's Begin →
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -518,23 +558,23 @@ export default function ValuesWorksheet() {
                                     Back
                                 </button>
 
-                                <div className="bg-white rounded-3xl shadow-2xl p-12">
-                                    <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 p-8 md:p-12">
+                                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                                         Values in Action
                                     </h2>
-                                    <p className="text-lg text-gray-800 mb-8">
+                                    <p className="text-lg text-gray-600 mb-8">
                                         Here are real examples of how values guide people's lives:
                                     </p>
 
-                                    <div className="space-y-6">
-                                        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                                    <div className="space-y-5">
+                                        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
                                             <div className="flex items-start gap-4">
-                                                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                                    A
+                                                <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                                                    {WbIcons.heart('w-5 h-5')}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Sarah - Authenticity & Compassion</h3>
-                                                    <p className="text-gray-800">
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Sarah - Authenticity & Compassion</h3>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">
                                                         Sarah left a high-paying corporate job to become a social worker. Her values of
                                                         <strong> authenticity</strong> (being true to herself) and <strong>compassion</strong> (helping
                                                         others) guided this decision. She makes less money but feels fulfilled every day.
@@ -543,14 +583,14 @@ export default function ValuesWorksheet() {
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
+                                        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow">
                                             <div className="flex items-start gap-4">
-                                                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                                    M
+                                                <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-purple-500/20">
+                                                    {WbIcons.shield('w-5 h-5')}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Marcus - Perseverance & Growth</h3>
-                                                    <p className="text-gray-800">
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Marcus - Perseverance & Growth</h3>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">
                                                         Marcus failed his first startup but launched a second one. His values of
                                                         <strong> perseverance</strong> and <strong>continuous improvement</strong> meant he learned
                                                         from mistakes instead of giving up. The second company is now thriving.
@@ -559,14 +599,14 @@ export default function ValuesWorksheet() {
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                                        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 hover:shadow-md transition-shadow">
                                             <div className="flex items-start gap-4">
-                                                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                                    J
+                                                <div className="w-11 h-11 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-green-500/20">
+                                                    {WbIcons.sparkle('w-5 h-5')}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Jess - Creativity & Generosity</h3>
-                                                    <p className="text-gray-800">
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Jess - Creativity & Generosity</h3>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">
                                                         After a sucessful career in admissions in education. Jess opened an art school for adults to address loneliness in her community. Her values of
                                                         <strong> creativity</strong> and <strong>generosity</strong> shaped her business model— building community while proividng a place for people to express their creativity.
                                                     </p>
@@ -574,9 +614,10 @@ export default function ValuesWorksheet() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
-                                            <p className="text-gray-800">
-                                                💡 <strong>Notice the pattern:</strong> Each person's values directly influenced their major life
+                                        <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-5">
+                                            <span className="text-indigo-500 flex-shrink-0 mt-0.5">{WbIcons.lightbulb('w-5 h-5')}</span>
+                                            <p className="text-gray-700 text-sm">
+                                                <strong>Notice the pattern:</strong> Each person's values directly influenced their major life
                                                 decisions. When your actions align with your values, you experience fulfillment—even when facing
                                                 challenges.
                                             </p>
@@ -586,7 +627,7 @@ export default function ValuesWorksheet() {
                                     <div className="mt-10">
                                         <button
                                             onClick={() => setCurrentStep(4)}
-                                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition"
+                                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl hover:shadow-indigo-600/20 transition"
                                         >
                                             Next: Why Values Matter →
                                         </button>
@@ -610,55 +651,71 @@ export default function ValuesWorksheet() {
                                     Back
                                 </button>
 
-                                <div className="bg-white rounded-3xl shadow-2xl p-12">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 p-8 md:p-12">
                                     <div className="text-center mb-10">
-                                        <h2 className=" text-4xl font-bold text-gray-900 mb-4">
+                                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                                             Why Values Matter
                                         </h2>
-                                        <p className="text-xl text-gray-800">
+                                        <p className="text-lg text-gray-600">
                                             The foundation of everything that follows
                                         </p>
                                     </div>
 
-                                    <div className="space-y-6">
-                                        <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
-                                            <h3 className="text-xl font-bold text-gray-900 mb-3">🎯 Values Guide Your Decisions</h3>
-                                            <p className="text-gray-800">
-                                                When faced with tough choices, your values act as a compass. Should you take that job?
-                                                Move to that city? End that relationship? Your values provide clarity.
-                                            </p>
+                                    <div className="space-y-5">
+                                        <div className="flex items-start gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                                                {WbIcons.compass('w-5 h-5')}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2">Values Guide Your Decisions</h3>
+                                                <p className="text-gray-700 text-sm leading-relaxed">
+                                                    When faced with tough choices, your values act as a compass. Should you take that job?
+                                                    Move to that city? End that relationship? Your values provide clarity.
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl">
-                                            <h3 className="text-xl font-bold text-gray-900 mb-3">✨ Values Shape Your Purpose</h3>
-                                            <p className="text-gray-800">
-                                                Your purpose emerges from your values. If you value creativity and generosity, your purpose
-                                                might involve using your creative gifts to help others. Values → Purpose → Goals.
-                                            </p>
+                                        <div className="flex items-start gap-4 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-purple-500/20">
+                                                {WbIcons.sparkle('w-5 h-5')}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2">Values Shape Your Purpose</h3>
+                                                <p className="text-gray-700 text-sm leading-relaxed">
+                                                    Your purpose emerges from your values. If you value creativity and generosity, your purpose
+                                                    might involve using your creative gifts to help others. Values → Purpose → Goals.
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <div className="p-6 bg-gradient-to-r from-pink-50 to-orange-50 rounded-xl">
-                                            <h3 className="text-xl font-bold text-gray-900 mb-3">💪 Values Build Self-Esteem</h3>
-                                            <p className="text-gray-800">
-                                                When your actions align with your values, you respect yourself. You feel authentic.
-                                                This alignment is the foundation of lasting contentment.
-                                            </p>
+                                        <div className="flex items-start gap-4 p-6 bg-gradient-to-r from-pink-50 to-orange-50 rounded-2xl border border-pink-100">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-orange-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-pink-500/20">
+                                                {WbIcons.shield('w-5 h-5')}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2">Values Build Self-Esteem</h3>
+                                                <p className="text-gray-700 text-sm leading-relaxed">
+                                                    When your actions align with your values, you respect yourself. You feel authentic.
+                                                    This alignment is the foundation of lasting contentment.
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6">
-                                            <p className="text-gray-800 text-lg">
-                                                <strong>"The more you put into defining your values, the more you'll get out of this entire
-                                                    framework. Your values influence everything: your purpose, your goals, your relationships,
-                                                    and ultimately your level of contentment."</strong>
+                                        <div className="relative bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-6">
+                                            <span className="absolute -top-3 left-6 text-amber-300">{WbIcons.quote('w-8 h-8')}</span>
+                                            <p className="text-gray-800 text-base italic leading-relaxed mt-2">
+                                                "The more you put into defining your values, the more you'll get out of this entire
+                                                framework. Your values influence everything: your purpose, your goals, your relationships,
+                                                and ultimately your level of contentment."
                                             </p>
-                                            <p className="text-gray-700 mt-2">— Tim Collins</p>
+                                            <p className="text-amber-700 font-semibold mt-3 text-sm">— Tim Collins</p>
                                         </div>
                                     </div>
 
                                     <div className="mt-10">
                                         <button
                                             onClick={() => setCurrentStep(5)}
-                                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-5 rounded-full font-bold text-lg hover:shadow-xl transition-all transform hover:scale-105"
+                                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-5 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-indigo-600/20 transition-all transform hover:scale-105"
                                         >
                                             Ready to Select Your Values →
                                         </button>
@@ -682,12 +739,12 @@ export default function ValuesWorksheet() {
                             </button>
 
                             <div className="flex items-center gap-4 mb-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                                    📌
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                                    {WbIcons.pin('w-6 h-6')}
                                 </div>
                                 <div>
                                     <h1 className="text-4xl font-bold text-gray-900">Define Your Values</h1>
-                                    <p className="text-lg text-gray-800">Select and prioritize what matters most to you</p>
+                                    <p className="text-lg text-gray-600">Select and prioritize what matters most to you</p>
                                 </div>
                             </div>
 
@@ -699,9 +756,9 @@ export default function ValuesWorksheet() {
 
                             {/* Instructions Box */}
                             {phase === 'select' && (
-                                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
                                     <div className="flex items-start gap-3">
-                                        <div className="text-3xl">💡</div>
+                                        <span className="text-blue-500 flex-shrink-0 mt-0.5">{WbIcons.lightbulb('w-6 h-6')}</span>
                                         <div>
                                             <h3 className="font-bold text-gray-900 text-lg mb-2">How to Select Your Values</h3>
                                             <ul className="space-y-2 text-gray-800">
@@ -728,9 +785,9 @@ export default function ValuesWorksheet() {
                             )}
 
                             {phase === 'prioritize' && (
-                                <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                                <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-6">
                                     <div className="flex items-start gap-3">
-                                        <div className="text-3xl">🎯</div>
+                                        <span className="text-purple-500 flex-shrink-0 mt-0.5">{WbIcons.target('w-6 h-6')}</span>
                                         <div>
                                             <h3 className="font-bold text-gray-900 text-lg mb-2">How to Prioritize Your Values</h3>
                                             <ul className="space-y-2 text-gray-800">

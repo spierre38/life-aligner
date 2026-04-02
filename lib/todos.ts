@@ -3,6 +3,7 @@
 
 import { supabase } from './supabase';
 import { nanoid } from 'nanoid';
+import { logActivity } from './accountability';
 
 export interface SubGoal {
     id: string;
@@ -144,6 +145,7 @@ export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | '
 
         const content = roadmapEntry.content;
         let updated = false;
+        let loggedActivityData: any = null;
 
         if (source === 'roadmap' && content.items) {
             content.items = content.items.map((item: any) => {
@@ -154,6 +156,14 @@ export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | '
                         if (activityId === todoId) {
                             updated = true;
                             const newCompleted = typeof activity === 'object' ? !activity.completed : true;
+                            
+                            if (newCompleted) {
+                                loggedActivityData = {
+                                    text: typeof activity === 'string' ? activity : activity.text,
+                                    goalTitle: item.title || item.goal || item.behavior_change || 'Roadmap Goal'
+                                };
+                            }
+                            
                             return {
                                 ...(typeof activity === 'string' ? { text: activity } : activity),
                                 id: activityId || todoId,
@@ -171,6 +181,14 @@ export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | '
                 if (todo.id === todoId) {
                     updated = true;
                     const newCompleted = !todo.completed;
+                    
+                    if (newCompleted) {
+                        loggedActivityData = {
+                            text: todo.text,
+                            goalTitle: 'Manual Todo'
+                        };
+                    }
+                    
                     return {
                         ...todo,
                         completed: newCompleted,
@@ -193,6 +211,13 @@ export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | '
             })
             .eq('user_id', user.id)
             .eq('category', 'roadmap');
+
+        if (!updateError && loggedActivityData) {
+            logActivity('goal_completed', {
+                activity_text: loggedActivityData.text,
+                goal_title: loggedActivityData.goalTitle
+            }).catch(console.error);
+        }
 
         return { error: updateError };
 

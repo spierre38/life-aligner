@@ -8,6 +8,34 @@ import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 
+// ── Inline SVG Icons for workbook pages ───────────────────────────────────────
+const HeartIllustration = () => (
+    <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ec4899" />
+                <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r="80" fill="url(#heartGrad)" opacity="0.1" />
+        <circle cx="100" cy="100" r="60" fill="url(#heartGrad)" opacity="0.15" />
+        <path d="M100 160 C60 120 30 95 30 70 C30 50 48 35 68 35 C82 35 93 43 100 55 C107 43 118 35 132 35 C152 35 170 50 170 70 C170 95 140 120 100 160Z" fill="url(#heartGrad)" opacity="0.8" />
+        <path d="M100 145 C70 115 50 95 50 78 C50 65 60 55 73 55 C83 55 90 62 100 72 C110 62 117 55 127 55 C140 55 150 65 150 78 C150 95 130 115 100 145Z" fill="white" opacity="0.3" />
+    </svg>
+);
+
+const IntIcons = {
+    heart: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+    lightbulb: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>,
+    target: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+    tv: (cn = 'w-5 h-5') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>,
+    runner: (cn = 'w-5 h-5') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="2"/><path d="m15 9-2 3 3 5-3 1"/><path d="M9 9l2 3-3 5 3 1"/></svg>,
+    handshake: (cn = 'w-5 h-5') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    check: (cn = 'w-5 h-5') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+    star: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    sparkle: (cn = 'w-6 h-6') => <svg className={cn} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+};
+
 // Interests from workbook page 15 - organized by category
 const INTERESTS_BY_CATEGORY = {
     'Arts & Crafts': [
@@ -261,29 +289,31 @@ export default function InterestsWorksheet() {
                     {/* Step 1: Introduction */}
                     {currentStep === 1 && (
                         <div className="min-h-screen flex items-center justify-center animate-fade-in">
-                            <div className="relative">
-                                <div className="absolute inset-0 bg-gradient-to-r from-pink-600 via-orange-500 to-yellow-500 rounded-3xl transform rotate-1"></div>
-                                <div className="relative bg-white rounded-3xl p-12 shadow-2xl max-w-3xl">
+                            <div className="max-w-2xl w-full">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20">
                                     <div className="text-center">
-                                        <div className="w-20 h-20 bg-gradient-to-br from-pink-600 to-orange-600 rounded-full flex items-center justify-center text-white text-4xl mx-auto mb-6">
-                                            ❤️
+                                        <div className="w-20 h-20 mx-auto mb-6">
+                                            <HeartIllustration />
                                         </div>
-                                        <h1 className="text-5xl font-bold text-gray-900 mb-6">
+                                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
                                             Your Interests
                                         </h1>
-                                        <p className="text-xl text-gray-800 leading-relaxed mb-8">
+                                        <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
                                             Interests are activities that bring you joy and rejuvenate you. The sweet spot?
                                             Finding interests that allow you to deploy your creativity to benefit others.
                                         </p>
-                                        <p className="text-lg text-gray-700 mb-8">
-                                            LifeFrame • Step 2 of 5 • 10-15 minutes
-                                        </p>
-                                        <button
-                                            onClick={() => setCurrentStep(2)}
-                                            className="bg-gradient-to-r from-pink-600 to-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl transition-all transform hover:scale-105"
-                                        >
-                                            Let's Explore →
-                                        </button>
+                                        <div className="inline-flex items-center gap-2 bg-pink-50 px-4 py-2 rounded-full text-sm font-semibold text-pink-700 mb-8">
+                                            {IntIcons.heart('w-4 h-4')}
+                                            <span>LifeFrame • Step 2 of 3 • 10-15 min</span>
+                                        </div>
+                                        <div>
+                                            <button
+                                                onClick={() => setCurrentStep(2)}
+                                                className="bg-gradient-to-r from-pink-600 to-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-pink-600/20 transition-all transform hover:scale-105"
+                                            >
+                                                Let's Explore →
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -362,79 +392,92 @@ export default function InterestsWorksheet() {
                                     Back
                                 </button>
 
-                                <div className="bg-white rounded-3xl shadow-2xl p-12">
-                                    <h2 className="text-4xl font-bold text-gray-900 mb-6">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 p-8 md:p-12">
+                                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                                         How Interests Show Up in Life
                                     </h2>
-                                    <p className="text-lg text-gray-800 mb-8">
+                                    <p className="text-lg text-gray-600 mb-8">
                                         Let's look at how different people experience their interests:
                                     </p>
 
                                     <div className="space-y-8">
                                         {/* Tim's Example */}
-                                        <div className="border-l-4 border-blue-600 pl-6">
+                                        <div className="border-l-4 border-blue-500 pl-6">
                                             <h3 className="text-2xl font-bold text-gray-900 mb-3">Tim's Interests</h3>
 
                                             <div className="space-y-4">
-                                                <div className="p-4 bg-blue-50 rounded-lg">
-                                                    <p className="font-semibold text-gray-900 mb-2">📺 Watching Sports</p>
-                                                    <p className="text-gray-800">
-                                                        <strong>Joy:</strong> ✓ Yes, he enjoys it<br />
-                                                        <strong>Rejuvenation:</strong> ✗ Not really<br />
-                                                        <strong>Creativity/Helping Others:</strong> ✗ No
-                                                    </p>
+                                                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                                    <span className="text-blue-500 mt-0.5">{IntIcons.tv()}</span>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900 mb-1">Watching Sports</p>
+                                                        <p className="text-gray-700 text-sm">
+                                                            <strong>Joy:</strong> ✓ Yes, he enjoys it<br />
+                                                            <strong>Rejuvenation:</strong> ✗ Not really<br />
+                                                            <strong>Creativity/Helping Others:</strong> ✗ No
+                                                        </p>
+                                                    </div>
                                                 </div>
 
-                                                <div className="p-4 bg-green-50 rounded-lg">
-                                                    <p className="font-semibold text-gray-900 mb-2">🏃 HIIT Classes</p>
-                                                    <p className="text-gray-800">
-                                                        <strong>Joy:</strong> ✓ Yes, loves the challenge<br />
-                                                        <strong>Rejuvenation:</strong> ✓ Feels energized after<br />
-                                                        <strong>Creativity/Helping Others:</strong> ✗ No
-                                                    </p>
+                                                <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
+                                                    <span className="text-green-500 mt-0.5">{IntIcons.runner()}</span>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900 mb-1">HIIT Classes</p>
+                                                        <p className="text-gray-700 text-sm">
+                                                            <strong>Joy:</strong> ✓ Yes, loves the challenge<br />
+                                                            <strong>Rejuvenation:</strong> ✓ Feels energized after<br />
+                                                            <strong>Creativity/Helping Others:</strong> ✗ No
+                                                        </p>
+                                                    </div>
                                                 </div>
 
-                                                <div className="p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg border-2 border-green-500">
-                                                    <p className="font-semibold text-gray-900 mb-2">🤝 Problem Solving & Partnerships</p>
-                                                    <p className="text-gray-800">
-                                                        <strong>Joy:</strong> ✓ Yes, finds it exciting<br />
-                                                        <strong>Rejuvenation:</strong> ✓ Gets energy from it<br />
-                                                        <strong>Creativity:</strong> ✓ Uses creative thinking<br />
-                                                        <strong>Helping Others:</strong> ✓ Created jobs, helped millions, now assisting multiple non-profit orgranizations
-                                                    </p>
-                                                    <p className="text-green-800 font-semibold mt-2">🎯 The Sweet Spot!</p>
+                                                <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl border-2 border-green-400">
+                                                    <span className="text-emerald-600 mt-0.5">{IntIcons.handshake()}</span>
+                                                    <div>
+                                                        <p className="font-semibold text-gray-900 mb-1">Problem Solving & Partnerships</p>
+                                                        <p className="text-gray-700 text-sm">
+                                                            <strong>Joy:</strong> ✓ Yes, finds it exciting<br />
+                                                            <strong>Rejuvenation:</strong> ✓ Gets energy from it<br />
+                                                            <strong>Creativity:</strong> ✓ Uses creative thinking<br />
+                                                            <strong>Helping Others:</strong> ✓ Created jobs, helped millions, now assisting multiple non-profit orgranizations
+                                                        </p>
+                                                        <div className="flex items-center gap-1.5 mt-2">
+                                                            <span className="text-emerald-600">{IntIcons.target('w-4 h-4')}</span>
+                                                            <p className="text-emerald-700 font-semibold text-sm">The Sweet Spot!</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Other Examples */}
-                                        <div className="grid md:grid-cols-2 gap-6">
-                                            <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
-                                                <h4 className="text-xl font-bold text-gray-900 mb-3">Jess - Art School Owner</h4>
-                                                <p className="text-gray-800 mb-2">
+                                        <div className="grid md:grid-cols-2 gap-5">
+                                            <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow">
+                                                <h4 className="text-lg font-bold text-gray-900 mb-2">Jess - Art School Owner</h4>
+                                                <p className="text-gray-700 text-sm mb-1">
                                                     <strong>Interests:</strong> Painting & Teaching
                                                 </p>
-                                                <p className="text-gray-700">
+                                                <p className="text-gray-600 text-sm">
                                                     Turned her love of art into a business that addresses adult loneliness.
                                                     She gets joy, uses creativity, AND helps others combat isolation.
                                                 </p>
                                             </div>
 
-                                            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200">
-                                                <h4 className="text-xl font-bold text-gray-900 mb-3">Laura - Fitness Trainer, Group Class Instructor</h4>
-                                                <p className="text-gray-800 mb-2">
+                                            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 hover:shadow-md transition-shadow">
+                                                <h4 className="text-lg font-bold text-gray-900 mb-2">Laura - Fitness Trainer, Group Class Instructor</h4>
+                                                <p className="text-gray-700 text-sm mb-1">
                                                     <strong>Interests:</strong> Fitness, Nutrition
                                                 </p>
-                                                <p className="text-gray-700">
+                                                <p className="text-gray-600 text-sm">
                                                     Loved HIIT classes so much she became an instructor. Now she gets rejuvenated
                                                     by her work AND helps others achieve their health goals.
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6">
-                                            <p className="text-gray-800">
-                                                💡 <strong>Key Insight:</strong> All interests are valid and bring value to your life.
+                                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-5">
+                                            <span className="text-amber-500 flex-shrink-0 mt-0.5">{IntIcons.lightbulb('w-5 h-5')}</span>
+                                            <p className="text-gray-700 text-sm">
+                                                <strong>Key Insight:</strong> All interests are valid and bring value to your life.
                                                 But the most fulfilling interests combine joy, rejuvenation, creativity, and service to others.
                                             </p>
                                         </div>
@@ -443,7 +486,7 @@ export default function InterestsWorksheet() {
                                     <div className="mt-10">
                                         <button
                                             onClick={() => setCurrentStep(4)}
-                                            className="w-full bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition"
+                                            className="w-full bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl hover:shadow-pink-600/20 transition"
                                         >
                                             Next: Finding Your Sweet Spot →
                                         </button>
@@ -467,72 +510,83 @@ export default function InterestsWorksheet() {
                                     Back
                                 </button>
 
-                                <div className="bg-white rounded-3xl shadow-2xl p-12">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 p-8 md:p-12">
                                     <div className="text-center mb-10">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                                            🎯
+                                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-orange-500/20">
+                                            {IntIcons.target('w-7 h-7')}
                                         </div>
-                                        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                                             Finding Your Sweet Spot
                                         </h2>
-                                        <p className="text-xl text-gray-800">
+                                        <p className="text-lg text-gray-600">
                                             Two types of interests to identify
                                         </p>
                                     </div>
 
-                                    <div className="space-y-8">
-                                        <div className="p-8 bg-gradient-to-br from-pink-50 to-orange-50 rounded-2xl border-2 border-pink-200">
-                                            <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                                <span className="text-3xl">✓</span>
-                                                Existing Interests
-                                            </h3>
-                                            <p className="text-gray-800 text-lg mb-4">
-                                                These are activities you <strong>currently engage in</strong> that bring you joy and rejuvenation.
-                                            </p>
-                                            <p className="text-gray-700">
-                                                Examples: Reading, hiking, cooking, playing guitar, watching movies, working out,
-                                                photography, gardening, gaming, painting...
-                                            </p>
+                                    <div className="space-y-6">
+                                        <div className="flex items-start gap-4 p-7 bg-gradient-to-br from-pink-50 to-orange-50 rounded-2xl border border-pink-100">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-orange-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-pink-500/20">
+                                                {IntIcons.check('w-5 h-5')}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                                    Existing Interests
+                                                </h3>
+                                                <p className="text-gray-700 mb-2">
+                                                    These are activities you <strong>currently engage in</strong> that bring you joy and rejuvenation.
+                                                </p>
+                                                <p className="text-gray-500 text-sm">
+                                                    Examples: Reading, hiking, cooking, playing guitar, watching movies, working out,
+                                                    photography, gardening, gaming, painting...
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <div className="p-8 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-200">
-                                            <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                                <span className="text-3xl">⭐</span>
-                                                Interests to Explore
-                                            </h3>
-                                            <p className="text-gray-800 text-lg mb-4">
-                                                These are activities you'd like to <strong>try over the next 3 months</strong>—things that spark your curiosity.
-                                            </p>
-                                            <p className="text-gray-700">
-                                                Examples: Pottery class, learning an instrument, rock climbing, podcasting,
-                                                woodworking, yoga, creative writing, martial arts...
-                                            </p>
+                                        <div className="flex items-start gap-4 p-7 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border border-blue-100">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                                                {IntIcons.star('w-5 h-5')}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                                    Interests to Explore
+                                                </h3>
+                                                <p className="text-gray-700 mb-2">
+                                                    These are activities you'd like to <strong>try over the next 3 months</strong>—things that spark your curiosity.
+                                                </p>
+                                                <p className="text-gray-500 text-sm">
+                                                    Examples: Pottery class, learning an instrument, rock climbing, podcasting,
+                                                    woodworking, yoga, creative writing, martial arts...
+                                                </p>
+                                            </div>
                                         </div>
 
-                                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-8 border-2 border-green-300">
-                                            <h3 className="text-xl font-bold text-gray-900 mb-4">🌟 The Ultimate Sweet Spot</h3>
-                                            <p className="text-gray-800 mb-4">
+                                        <div className="p-7 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-emerald-500">{IntIcons.sparkle('w-5 h-5')}</span>
+                                                <h3 className="text-lg font-bold text-gray-900">The Ultimate Sweet Spot</h3>
+                                            </div>
+                                            <p className="text-gray-700 mb-4 text-sm">
                                                 As you go through life, look for opportunities to combine interests that:
                                             </p>
-                                            <ul className="space-y-2 text-gray-800">
+                                            <ul className="space-y-2 text-gray-700 text-sm">
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-600 font-bold mt-1">✓</span>
+                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span>Bring you <strong>joy</strong> (you genuinely enjoy them)</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-600 font-bold mt-1">✓</span>
+                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span>Provide <strong>rejuvenation</strong> (you feel energized, not drained)</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-600 font-bold mt-1">✓</span>
+                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span>Deploy your <strong>creativity</strong> (you can express yourself)</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-600 font-bold mt-1">✓</span>
+                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span><strong>Benefit others</strong> (your interest helps people)</span>
                                                 </li>
                                             </ul>
-                                            <p className="text-green-800 font-semibold mt-4 text-lg">
+                                            <p className="text-emerald-700 font-semibold mt-4 text-sm">
                                                 When all four align, you've found deep fulfillment.
                                             </p>
                                         </div>
@@ -541,7 +595,7 @@ export default function InterestsWorksheet() {
                                     <div className="mt-10">
                                         <button
                                             onClick={() => setCurrentStep(5)}
-                                            className="w-full bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-5 rounded-full font-bold text-lg hover:shadow-xl transition-all transform hover:scale-105"
+                                            className="w-full bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-5 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-pink-600/20 transition-all transform hover:scale-105"
                                         >
                                             Ready to Select Your Interests →
                                         </button>
