@@ -800,46 +800,43 @@ export default function DashboardPage() {
                 <div className="max-w-7xl mx-auto px-4 py-8">
 
                     {/* HERO SECTION */}
-                    <div className="relative mb-12 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                    <div className="relative mb-6 rounded-2xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600"></div>
                         <div className="absolute inset-0 opacity-10" style={{
                             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
                         }}></div>
 
-                        <div className="relative z-10 px-8 md:px-12 py-12 md:py-16">
-                            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-                                <div className="text-white">
-                                    <div className="text-lg md:text-xl font-medium mb-2 opacity-90">
-                                        {getGreeting()},
-                                    </div>
-                                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
-                                        {user?.profile?.full_name || 'Friend'}!
+                        <div className="relative z-10 px-6 md:px-10 py-6 md:py-8">
+                            <div className="flex items-center gap-6 md:gap-10">
+                                <div className="flex-1 text-white">
+                                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1">
+                                        {getGreeting()}, {user?.profile?.full_name || 'Friend'}!
                                     </h1>
-                                    <p className="text-lg md:text-xl text-white/90 mb-6 md:mb-8 leading-relaxed">
+                                    <p className="text-sm md:text-base text-white/90 mb-4 leading-relaxed">
                                         {lifeFrameComplete
                                             ? "Your LifeFrame is complete! Now let's build your personalized Roadmap."
                                             : `You're ${worksheetsComplete} of 3 steps into building your LifeFrame foundation.`
                                         }
                                     </p>
 
-                                    <div className="grid grid-cols-3 gap-3 md:gap-4">
-                                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/30">
-                                            <div className="text-2xl md:text-3xl font-bold">{worksheetsComplete}</div>
-                                            <div className="text-xs md:text-sm opacity-90">Done</div>
+                                    <div className="grid grid-cols-3 gap-2 md:gap-3 max-w-md">
+                                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 md:p-3 border border-white/30 text-center">
+                                            <div className="text-xl md:text-2xl font-bold">{worksheetsComplete}</div>
+                                            <div className="text-[10px] md:text-xs opacity-90">Done</div>
                                         </div>
-                                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/30">
-                                            <div className="text-2xl md:text-3xl font-bold">{Math.round(progressPercentage)}%</div>
-                                            <div className="text-xs md:text-sm opacity-90">Progress</div>
+                                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 md:p-3 border border-white/30 text-center">
+                                            <div className="text-xl md:text-2xl font-bold">{Math.round(progressPercentage)}%</div>
+                                            <div className="text-[10px] md:text-xs opacity-90">Progress</div>
                                         </div>
-                                        <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 md:p-4 border border-white/30">
-                                            <div className="text-2xl md:text-3xl font-bold">{hasRoadmap ? roadmapStats.activeGoals : '—'}</div>
-                                            <div className="text-xs md:text-sm opacity-90">Goals</div>
+                                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2 md:p-3 border border-white/30 text-center">
+                                            <div className="text-xl md:text-2xl font-bold">{hasRoadmap ? roadmapStats.activeGoals : '—'}</div>
+                                            <div className="text-[10px] md:text-xs opacity-90">Goals</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="hidden md:flex items-center justify-center">
-                                    <div className="w-64 lg:w-80 h-64 lg:h-80">
+                                <div className="hidden md:flex items-center justify-center flex-shrink-0">
+                                    <div className="w-32 lg:w-40 h-32 lg:h-40">
                                         <HeroIllustration />
                                     </div>
                                 </div>
@@ -848,10 +845,10 @@ export default function DashboardPage() {
                     </div>
 
                     {/* PROGRESS JOURNEY */}
-                    <div className="mb-12 md:mb-16">
-                        <div className="text-center mb-6 md:mb-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Your LifeFrame Journey</h2>
-                            <p className="text-gray-600">Three steps to build your foundation</p>
+                    <div className="mb-8 md:mb-10">
+                        <div className="text-center mb-4 md:mb-5">
+                            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Your LifeFrame Journey</h2>
+                            <p className="text-gray-500 text-sm">Three steps to build your foundation</p>
                         </div>
 
                         {/* Progress Timeline */}
@@ -890,7 +887,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Step Cards */}
-                        <div className="grid md:grid-cols-3 gap-4 md:gap-6">
+                        <div className="grid md:grid-cols-3 gap-3 md:gap-4">
                             {/* Values Card */}
                             <div className={`
                 relative rounded-3xl p-6 transition-all duration-300

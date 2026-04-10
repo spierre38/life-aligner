@@ -145,6 +145,7 @@ export default function ValuesWorksheet() {
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
     const [editingPriority, setEditingPriority] = useState<{ name: string, value: string } | null>(null);
+    const [showFewValuesConfirm, setShowFewValuesConfirm] = useState(false);
     // Ref for auto-scroll during drag
     const scrollInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -208,6 +209,15 @@ export default function ValuesWorksheet() {
     };
 
     const moveToPhase2 = () => {
+        if (selectedValues.size < 5) {
+            setShowFewValuesConfirm(true);
+            return;
+        }
+        proceedToPhase2();
+    };
+
+    const proceedToPhase2 = () => {
+        setShowFewValuesConfirm(false);
         const values = Array.from(selectedValues).map((name, index) => ({
             name,
             description: VALUES_LIST.find(v => v.name === name)?.description || '',
@@ -1026,6 +1036,37 @@ export default function ValuesWorksheet() {
                     )}
                 </div>
             </div >
+        
+            {/* Few Values Confirmation Dialog */}
+            {showFewValuesConfirm && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-8 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Only {selectedValues.size} {selectedValues.size === 1 ? 'Value' : 'Values'} Selected</h3>
+                        <p className="text-gray-600 text-sm mb-6">
+                            We recommend selecting at least <strong>5 values</strong> to get the most out of your LifeFrame. More values give you a richer picture of what drives you.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowFewValuesConfirm(false)}
+                                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition"
+                            >
+                                Select More
+                            </button>
+                            <button
+                                onClick={proceedToPhase2}
+                                className="flex-1 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition"
+                            >
+                                Continue Anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
