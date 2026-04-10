@@ -1,6 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+
+interface Goal {
+  id: string;
+  title: string;
+  category: string;
+  progress: number; // 0-100
+}
 
 interface JourneyProgressBannerProps {
   totalGoals: number;
@@ -8,41 +15,43 @@ interface JourneyProgressBannerProps {
   activeGoals: number;
   totalActivitiesLogged: number;
   streakDays: number;
+  goals?: Goal[]; // ✅ NEW: Pass in actual goals for interactivity
+  onGoalClick?: (goalId: string) => void; // ✅ NEW: Callback when flag clicked
 }
 
-export default function JourneyProgressBannerOptimized({
+export default function JourneyProgressBannerInteractive({
   totalGoals,
   completedGoals,
   activeGoals,
   totalActivitiesLogged,
   streakDays,
+  goals = [],
+  onGoalClick,
 }: JourneyProgressBannerProps) {
+  const [hoveredMilestone, setHoveredMilestone] = useState<number | null>(null);
 
-  // ✅ SIMPLIFIED: Define trail as a series of waypoints
+  // ✅ OPTIMIZED: Trail waypoints - more spaced out
   const trailWaypoints = useMemo(() => [
     { x: 30, y: 140 },    // Start
-    { x: 80, y: 138 },
-    { x: 130, y: 115 },
-    { x: 180, y: 95 },    // First hill
-    { x: 230, y: 110 },
-    { x: 280, y: 120 },
-    { x: 330, y: 115 },
-    { x: 380, y: 90 },
-    { x: 430, y: 75 },    // Peak
-    { x: 480, y: 82 },
-    { x: 530, y: 105 },
-    { x: 580, y: 100 },
-    { x: 630, y: 85 },
-    { x: 680, y: 72 },
-    { x: 730, y: 68 },    // Valley
-    { x: 780, y: 78 },
-    { x: 830, y: 88 },
-    { x: 880, y: 85 },
+    { x: 90, y: 138 },
+    { x: 150, y: 110 },
+    { x: 210, y: 95 },    // First hill
+    { x: 270, y: 105 },
+    { x: 330, y: 118 },
+    { x: 390, y: 112 },
+    { x: 450, y: 85 },
+    { x: 510, y: 72 },    // Peak
+    { x: 570, y: 80 },
+    { x: 630, y: 98 },
+    { x: 690, y: 95 },
+    { x: 750, y: 78 },
+    { x: 810, y: 68 },    // Valley
+    { x: 870, y: 75 },
     { x: 930, y: 62 },
     { x: 970, y: 55 },    // Summit
   ], []);
 
-  // ✅ Generate smooth SVG path from waypoints
+  // Generate smooth SVG path
   const trailPath = useMemo(() => {
     let path = `M ${trailWaypoints[0].x},${trailWaypoints[0].y}`;
 
@@ -52,12 +61,10 @@ export default function JourneyProgressBannerOptimized({
       const next = trailWaypoints[i + 1];
 
       if (next) {
-        // Smooth curve using quadratic Bezier
         const cx = curr.x;
         const cy = curr.y;
         path += ` Q ${cx},${cy} ${(curr.x + next.x) / 2},${(curr.y + next.y) / 2}`;
       } else {
-        // Last point - straight line
         path += ` L ${curr.x},${curr.y}`;
       }
     }
@@ -65,7 +72,7 @@ export default function JourneyProgressBannerOptimized({
     return path;
   }, [trailWaypoints]);
 
-  // Progress 0-100
+  // Progress calculation
   const progress = useMemo(() => {
     if (totalGoals === 0) return 5;
     const goalProgress = totalGoals > 0 ? (completedGoals / Math.max(totalGoals, 1)) * 60 : 0;
@@ -73,7 +80,7 @@ export default function JourneyProgressBannerOptimized({
     return Math.min(Math.max(goalProgress + activityProgress, 5), 95);
   }, [totalGoals, completedGoals, totalActivitiesLogged]);
 
-  // ✅ SIMPLE: Get point on trail by percentage (0-100)
+  // Get point on trail
   const getPointOnTrail = (percent: number) => {
     const t = percent / 100;
     const totalPoints = trailWaypoints.length - 1;
@@ -89,30 +96,38 @@ export default function JourneyProgressBannerOptimized({
     };
   };
 
-  // ✅ Marker position
+  // Marker position
   const markerPos = useMemo(() => getPointOnTrail(progress), [progress]);
 
-  // ✅ OPTIMIZED: Milestone flags evenly spaced
+  // ✅ IMPROVED: Milestones with better spacing (15% to 85% range)
   const milestones = useMemo(() => {
     if (totalGoals === 0) return [];
 
     return Array.from({ length: Math.min(totalGoals, 10) }, (_, i) => {
-      // Space evenly: first at 10%, last at 90%
-      const percent = 10 + (i / Math.max(totalGoals - 1, 1)) * 80;
+      // ✅ Better spacing: 15% start, 85% end, evenly distributed
+      const percent = 15 + (i / Math.max(totalGoals - 1, 1)) * 70;
       const pos = getPointOnTrail(percent);
       const isCompleted = i < completedGoals;
+      const goal = goals[i];
 
       return {
         x: pos.x,
         y: pos.y,
         isCompleted,
         index: i,
-        percent
+        percent,
+        goal: goal || { id: `goal-${i}`, title: `Goal ${i + 1}`, category: 'Unknown', progress: 0 }
       };
     });
-  }, [totalGoals, completedGoals]);
+  }, [totalGoals, completedGoals, goals]);
 
   const journeyMiles = totalActivitiesLogged * 3 + completedGoals * 25;
+
+  const handleMilestoneClick = (milestone: typeof milestones[0]) => {
+    if (onGoalClick && milestone.goal) {
+      onGoalClick(milestone.goal.id);
+    }
+  };
 
   return (
     <div className="relative rounded-2xl overflow-hidden mb-6 shadow-[0_8px_30px_rgba(120,80,40,0.12)]">
@@ -164,6 +179,14 @@ export default function JourneyProgressBannerOptimized({
             <stop offset="50%" stopColor="#FBBF24" stopOpacity="0.6" />
             <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
           </radialGradient>
+          {/* ✅ NEW: Hover glow effect */}
+          <filter id="hoverGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Sun */}
@@ -176,7 +199,7 @@ export default function JourneyProgressBannerOptimized({
         <path d="M0,150 L60,110 L120,140 L200,95 L280,130 L360,90 L440,125 L520,85 L600,120 L680,80 L760,115 L840,75 L920,110 L1000,90 L1000,200 L0,200 Z"
           fill="#78716C" opacity="0.2" />
 
-        {/* Trees - positioned at waypoints */}
+        {/* Trees */}
         {[0.08, 0.18, 0.35, 0.50, 0.63, 0.78, 0.90].map((t, i) => {
           const pos = getPointOnTrail(t * 100);
           const size = 8 + Math.sin(i * 2.5) * 3;
@@ -206,49 +229,93 @@ export default function JourneyProgressBannerOptimized({
         <path d={trailPath} fill="none" stroke="#D4A85C" strokeWidth="1.5" strokeLinecap="round"
           strokeDasharray="4 12" opacity="0.5" />
 
-        {/* ✅ MILESTONE FLAGS - Perfectly positioned */}
-        {milestones.map((m) => (
-          <g key={m.index} transform={`translate(${m.x}, ${m.y})`}>
-            {/* Flag pole */}
-            <line x1="0" y1="2" x2="0" y2="-18" stroke="#6B5B4F" strokeWidth="2" />
+        {/* ✅ INTERACTIVE MILESTONE FLAGS */}
+        {milestones.map((m) => {
+          const isHovered = hoveredMilestone === m.index;
 
-            {/* Flag */}
-            <path
-              d="M0,-18 L14,-14 L14,-22 Z"
-              fill={m.isCompleted ? 'url(#flagCompletedGrad)' : '#9CA3AF'}
-              stroke={m.isCompleted ? '#16A34A' : '#6B7280'}
-              strokeWidth="0.5"
-              className={m.isCompleted ? 'animate-flag-wave' : 'opacity-60'}
-            />
-
-            {/* Flag number/label */}
-            <text
-              x="7"
-              y="-15"
-              textAnchor="middle"
-              fill="white"
-              fontSize="6"
-              fontWeight="bold"
+          return (
+            <g
+              key={m.index}
+              transform={`translate(${m.x}, ${m.y})`}
+              className={`transition-all duration-300 ${onGoalClick ? 'cursor-pointer' : ''}`}
+              onMouseEnter={() => setHoveredMilestone(m.index)}
+              onMouseLeave={() => setHoveredMilestone(null)}
+              onClick={() => handleMilestoneClick(m)}
+              filter={isHovered ? 'url(#hoverGlow)' : undefined}
             >
-              {m.index + 1}
-            </text>
+              {/* Flag pole */}
+              <line
+                x1="0"
+                y1="2"
+                x2="0"
+                y2="-22"
+                stroke={isHovered ? '#4B5563' : '#6B5B4F'}
+                strokeWidth={isHovered ? 2.5 : 2}
+                className="transition-all duration-200"
+              />
 
-            {/* Base circle on trail */}
-            {m.isCompleted && (
-              <circle cx="0" cy="2" r="3" fill="#22C55E" stroke="white" strokeWidth="1" />
-            )}
-          </g>
-        ))}
+              {/* Flag */}
+              <path
+                d="M0,-22 L16,-17 L16,-27 Z"
+                fill={m.isCompleted ? 'url(#flagCompletedGrad)' : '#9CA3AF'}
+                stroke={m.isCompleted ? '#16A34A' : '#6B7280'}
+                strokeWidth="0.5"
+                className={`transition-all duration-200 ${m.isCompleted ? 'animate-flag-wave' : 'opacity-60'} ${isHovered ? 'scale-110' : ''}`}
+                style={{ transformOrigin: '0 -24px' }}
+              />
 
-        {/* ✅ YOU ARE HERE - Perfectly positioned */}
+              {/* Flag number */}
+              <text
+                x="8"
+                y="-20"
+                textAnchor="middle"
+                fill="white"
+                fontSize={isHovered ? "7" : "6"}
+                fontWeight="bold"
+                className="transition-all duration-200 select-none"
+              >
+                {m.index + 1}
+              </text>
+
+              {/* Base circle on trail */}
+              {m.isCompleted && (
+                <circle
+                  cx="0"
+                  cy="2"
+                  r={isHovered ? 4 : 3}
+                  fill="#22C55E"
+                  stroke="white"
+                  strokeWidth={isHovered ? 1.5 : 1}
+                  className="transition-all duration-200"
+                />
+              )}
+
+              {/* ✅ Hover ring effect */}
+              {isHovered && (
+                <circle
+                  cx="0"
+                  cy="-24"
+                  r="12"
+                  fill="none"
+                  stroke="#F59E0B"
+                  strokeWidth="2"
+                  opacity="0.6"
+                >
+                  <animate attributeName="r" values="10;16;10" dur="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+              )}
+            </g>
+          );
+        })}
+
+        {/* YOU ARE HERE marker */}
         <g transform={`translate(${markerPos.x}, ${markerPos.y})`} filter="url(#markerGlow)">
-          {/* Pulsing ring */}
           <circle cx="0" cy="0" r="10" fill="none" stroke="#F59E0B" strokeWidth="2" opacity="0.4">
             <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite" />
             <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite" />
           </circle>
 
-          {/* Pin */}
           <circle cx="0" cy="0" r="8" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
           <circle cx="0" cy="0" r="3" fill="white" />
           <circle cx="0" cy="0" r="1.5" fill="#B45309" />
@@ -266,6 +333,64 @@ export default function JourneyProgressBannerOptimized({
           <text x="0" y="10" textAnchor="middle" fill="#78716C" fontSize="6" fontWeight="bold">SUMMIT</text>
         </g>
       </svg>
+
+      {/* ✅ FLOATING TOOLTIP - Shows on hover */}
+      {hoveredMilestone !== null && milestones[hoveredMilestone] && (
+        <div
+          className="absolute z-30 pointer-events-none transition-all duration-200"
+          style={{
+            left: `${(milestones[hoveredMilestone].x / 1000) * 100}%`,
+            top: `${((milestones[hoveredMilestone].y - 50) / 200) * 100}%`,
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          <div className="bg-white rounded-xl shadow-2xl border-2 border-gray-200 p-4 min-w-[200px] animate-fade-in">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">
+                  {milestones[hoveredMilestone].isCompleted ? '✓' : (hoveredMilestone + 1)}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-gray-900 text-sm mb-1 truncate">
+                  {milestones[hoveredMilestone].goal.title}
+                </h4>
+                <p className="text-xs text-gray-500 mb-2">
+                  {milestones[hoveredMilestone].goal.category}
+                </p>
+                {milestones[hoveredMilestone].isCompleted ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Completed!
+                  </span>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-500">Progress</span>
+                      <span className="font-bold text-gray-900">{milestones[hoveredMilestone].goal.progress}%</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                        style={{ width: `${milestones[hoveredMilestone].goal.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {onGoalClick && (
+              <div className="mt-2 pt-2 border-t border-gray-100 text-center">
+                <span className="text-xs text-indigo-600 font-semibold">Click to view details →</span>
+              </div>
+            )}
+          </div>
+          {/* Tooltip arrow */}
+          <div className="w-3 h-3 bg-white border-r-2 border-b-2 border-gray-200 absolute left-1/2 -translate-x-1/2 rotate-45" style={{ bottom: '-6px' }} />
+        </div>
+      )}
 
       {/* Stats overlay */}
       <div className="relative z-20 bg-gradient-to-t from-stone-800/90 to-stone-800/60 backdrop-blur-sm px-6 py-3">
@@ -308,6 +433,7 @@ export default function JourneyProgressBannerOptimized({
         </div>
       </div>
 
+      {/* CSS Animations */}
       <style jsx>{`
         @keyframes flag-wave {
           0%, 100% { transform: scaleX(1); }
@@ -315,6 +441,13 @@ export default function JourneyProgressBannerOptimized({
         }
         .animate-flag-wave {
           animation: flag-wave 2s ease-in-out infinite;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translate(-50%, -90%); }
+          to { opacity: 1; transform: translate(-50%, -100%); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
         }
       `}</style>
     </div>
