@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import { Confetti } from '@/app/components/Confetti';
 
 // ============================================================================
 // INLINE SVG ILLUSTRATIONS
@@ -91,6 +92,7 @@ export default function LifeCategoriesWorksheet() {
     const [saving, setSaving] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     // Worksheet data
     const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
@@ -260,6 +262,7 @@ export default function LifeCategoriesWorksheet() {
 
             trackCategoriesSaved(categoryDetails.length);
             setShowSuccess(true);
+            setShowConfetti(true);
             setTimeout(() => {
                 router.push('/dashboard');
             }, 2000);
@@ -288,6 +291,7 @@ export default function LifeCategoriesWorksheet() {
     if (showSuccess) {
         return (
             <>
+                <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
                 <AuthNavbar />
                 <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 pt-16 flex items-center justify-center">
                     <div className="text-center animate-fade-in">

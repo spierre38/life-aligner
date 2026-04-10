@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import { Confetti } from '@/app/components/Confetti';
 
 // ── Inline SVG Icons for workbook pages ───────────────────────────────────────
 const HeartIllustration = () => (
@@ -121,6 +122,7 @@ export default function InterestsWorksheet() {
     const [selectedExisting, setSelectedExisting] = useState<Set<string>>(new Set());
     const [selectedExploring, setSelectedExploring] = useState<Set<string>>(new Set());
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
         new Set() // Start with all categories collapsed
     );
@@ -224,6 +226,7 @@ export default function InterestsWorksheet() {
 
             trackInterestsSaved(selectedExisting.size, selectedExploring.size);
             setShowSuccess(true);
+            setShowConfetti(true);
             setTimeout(() => {
                 router.push('/dashboard');
             }, 2000);
@@ -255,6 +258,8 @@ export default function InterestsWorksheet() {
 
     if (showSuccess) {
         return (
+            <>
+            <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
                 <div className="text-center animate-fade-in">
                     <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
@@ -265,7 +270,9 @@ export default function InterestsWorksheet() {
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">Interests Saved! ✨</h2>
                     <p className="text-xl text-gray-800">Redirecting to your dashboard...</p>
                 </div>
+                </div>
             </div>
+            </>
         );
     }
 

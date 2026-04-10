@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import { Confetti } from '@/app/components/Confetti';
 
 // ── Inline SVG Illustrations ──────────────────────────────────────────────────
 const CompassIllustration = () => (
@@ -141,6 +142,7 @@ export default function ValuesWorksheet() {
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
     const [prioritizedValues, setPrioritizedValues] = useState<SelectedValue[]>([]);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
     const [hoveredValue, setHoveredValue] = useState<string | null>(null);
     const [draggedItem, setDraggedItem] = useState<string | null>(null);
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
@@ -399,6 +401,7 @@ export default function ValuesWorksheet() {
 
             trackValuesSaved(prioritizedValues.length);
             setShowSuccess(true);
+            setShowConfetti(true);
             showToast('Values saved successfully!', 'success');
 
             // Social feed logging
@@ -1037,6 +1040,8 @@ export default function ValuesWorksheet() {
                 </div>
             </div >
         
+            <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
+
             {/* Few Values Confirmation Dialog */}
             {showFewValuesConfirm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">

@@ -663,6 +663,12 @@ export default function DashboardPage() {
         completedGoals: 0,
         weeklyProgress: 0
     });
+    const [lifeFrameData, setLifeFrameData] = useState<{
+        topValues: string[];
+        interests: { existing: string[]; exploring: string[] };
+        categories: string[];
+    } | null>(null);
+    const [progressToast, setProgressToast] = useState<string | null>(null);
 
     useEffect(() => {
         const loadDashboard = async () => {
@@ -694,6 +700,32 @@ export default function DashboardPage() {
                 };
 
                 setStatus(completed);
+
+                // Extract LifeFrame preview data
+                const valuesEntry = worksheets?.find(w => w.category === 'values');
+                const interestsEntry = worksheets?.find(w => w.category === 'interests');
+                const categoriesEntry = worksheets?.find(w => w.category === 'life_categories');
+                
+                if (valuesEntry || interestsEntry || categoriesEntry) {
+                    setLifeFrameData({
+                        topValues: (valuesEntry?.content?.selected_values || []).slice(0, 3).map((v: any) => v.name),
+                        interests: {
+                            existing: (interestsEntry?.content?.existing || []).slice(0, 4),
+                            exploring: (interestsEntry?.content?.exploring || []).slice(0, 4),
+                        },
+                        categories: (categoriesEntry?.content?.categories || []).slice(0, 5).map((c: any) => c.name || c),
+                    });
+                }
+
+                // Show progress toast for returning users
+                const completedCount = [completed.values, completed.interests, completed.life_categories].filter(Boolean).length;
+                if (completedCount > 0 && completedCount < 3) {
+                    const nextStep = !completed.values ? 'Values' : !completed.interests ? 'Interests' : 'Life Categories';
+                    setTimeout(() => {
+                        setProgressToast(`You're ${completedCount}/3 done — ${nextStep} is next!`);
+                        setTimeout(() => setProgressToast(null), 5000);
+                    }, 1500);
+                }
 
                 const roadmapEntry = worksheets?.find(w => w.category === 'roadmap');
                 if (roadmapEntry && roadmapEntry.content?.items) {
@@ -809,7 +841,7 @@ export default function DashboardPage() {
                         <div className="relative z-10 px-6 md:px-10 py-6 md:py-8">
                             <div className="flex items-center gap-6 md:gap-10">
                                 <div className="flex-1 text-white">
-                                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1">
+                                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1 animate-typewriter">
                                         {getGreeting()}, {user?.profile?.full_name || 'Friend'}!
                                     </h1>
                                     <p className="text-sm md:text-base text-white/90 mb-4 leading-relaxed">
@@ -1006,6 +1038,57 @@ export default function DashboardPage() {
                                 </button>
                             </div>
                         </div>
+
+                        {/* LifeFrame Preview Card */}
+                        {lifeFrameData && (lifeFrameData.topValues.length > 0 || lifeFrameData.interests.existing.length > 0 || lifeFrameData.categories.length > 0) && (
+                            <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-indigo-100 shadow-[0_4px_20px_rgb(0,0,0,0.06)] animate-fade-in">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-900">Your LifeFrame at a Glance</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {lifeFrameData.topValues.length > 0 && (
+                                        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
+                                            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-2">Top Values</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {lifeFrameData.topValues.map((v, i) => (
+                                                    <span key={i} className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                                                        {i + 1}. {v}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {lifeFrameData.interests.existing.length > 0 && (
+                                        <div className="bg-gradient-to-br from-pink-50 to-orange-50 rounded-xl p-4 border border-pink-100">
+                                            <p className="text-[10px] font-bold text-pink-600 uppercase tracking-wider mb-2">Interests</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {lifeFrameData.interests.existing.slice(0, 3).map((i, idx) => (
+                                                    <span key={idx} className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-xs font-medium">✓ {i}</span>
+                                                ))}
+                                                {lifeFrameData.interests.exploring.slice(0, 2).map((i, idx) => (
+                                                    <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">⭐ {i}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {lifeFrameData.categories.length > 0 && (
+                                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                                            <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mb-2">Life Categories</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {lifeFrameData.categories.map((c, i) => (
+                                                    <span key={i} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{c}</span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* LifeFrame Complete CTA / Locked State */}
                         <div className="mt-8 md:mt-12 max-w-4xl mx-auto">
@@ -1206,6 +1289,25 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Progress Nudge Toast */}
+            {progressToast && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-toast-in">
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                        <span className="font-semibold text-sm whitespace-nowrap">{progressToast}</span>
+                        <button onClick={() => setProgressToast(null)} className="text-white/70 hover:text-white ml-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
