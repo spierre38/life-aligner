@@ -270,7 +270,6 @@ export default function InterestsWorksheet() {
                     <h2 className="text-4xl font-bold text-gray-900 mb-4">Interests Saved! ✨</h2>
                     <p className="text-xl text-gray-800">Redirecting to your dashboard...</p>
                 </div>
-                </div>
             </div>
             </>
         );
