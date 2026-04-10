@@ -20,6 +20,7 @@ import { ChapterCard } from './components/ChapterCard';
 import { ArchiveStorybook } from './components/ArchiveStorybook';
 import { CompletionCelebration } from './components/CompletionCelebration';
 import DailyInsightCard from './components/DailyInsightCard';
+import JourneyProgressBanner from './components/JourneyProgressBanner';
 
 // ============================================================================
 // SVG ICONS - Professional replacements for emojis
@@ -1301,7 +1302,18 @@ export default function RoadmapPage() {
                     {/* Current Quarter Tab */}
                     {activeTab === 'current' && (
                         <div className="space-y-6">
-                            {/* NEW: Daily Insight Card */}
+                            {/* Journey Progress Banner */}
+                            <JourneyProgressBanner
+                                totalGoals={roadmapItems.length}
+                                completedGoals={archivedItems.length}
+                                activeGoals={activeItems.length}
+                                totalActivitiesLogged={roadmapItems.reduce((sum, item) => 
+                                    sum + item.activities.reduce((aSum, act) => aSum + (act.logs?.length || 0), 0), 0
+                                )}
+                                streakDays={streakData.current}
+                            />
+
+                            {/* Daily Insight Card */}
                             <DailyInsightCard roadmapItems={roadmapItems} />
 
                             {/* Daily Focus Panel — streaks, today's activities, inline logging */}
