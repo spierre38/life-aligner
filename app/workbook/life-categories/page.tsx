@@ -377,7 +377,7 @@ export default function LifeCategoriesWorksheet() {
                             </button>
 
                             <div className="grid lg:grid-cols-2 gap-6 mb-8">
-                                {/* Video Card */}
+                                {/* Video Card 1 */}
                                 <div className="bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
                                     <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 aspect-video flex items-center justify-center">
                                         <div className="text-center">
@@ -389,6 +389,9 @@ export default function LifeCategoriesWorksheet() {
                                             <p className="text-white text-xl font-semibold mb-1">Video Coming Soon</p>
                                             <p className="text-gray-300 text-sm">Life Categories Explained</p>
                                         </div>
+                                        <div className="absolute top-3 left-3 bg-indigo-500/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+                                            Video 1
+                                        </div>
                                         <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
                                             4 min
                                         </div>
@@ -399,6 +402,35 @@ export default function LifeCategoriesWorksheet() {
                                         </h3>
                                         <p className="text-gray-600 text-sm">
                                             Tim explains how to identify your life areas and define meaningful purpose elements.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Video Card 2 */}
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
+                                    <div className="relative bg-gradient-to-br from-purple-900 to-pink-900 aspect-video flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                                                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-white text-xl font-semibold mb-1">Video Coming Soon</p>
+                                            <p className="text-purple-300 text-sm">Defining Your Purpose</p>
+                                        </div>
+                                        <div className="absolute top-3 left-3 bg-purple-500/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+                                            Video 2
+                                        </div>
+                                        <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
+                                            3 min
+                                        </div>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                            Defining Your Purpose
+                                        </h3>
+                                        <p className="text-gray-600 text-sm">
+                                            Tim explores how purpose is driven by long-term goals that are meaningful to you and beneficial to others.
                                         </p>
                                     </div>
                                 </div>
@@ -927,6 +959,37 @@ export default function LifeCategoriesWorksheet() {
                                     className="px-6 py-3 bg-white/80 backdrop-blur-sm border-2 border-gray-300 text-gray-700 rounded-full font-bold hover:border-indigo-600 hover:text-indigo-600 transition shadow-lg"
                                 >
                                     ← Back
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const catText = categoryDetails.map(c =>
+                                            `${c.name}${c.subCategories.length > 0 ? '\n  Sub-categories: ' + c.subCategories.join(', ') : ''}`
+                                        ).join('\n\n');
+                                        const purposeText = purposeElements.filter(p => p.name.trim()).map(p =>
+                                            `• ${p.name}${p.description ? '\n  ' + p.description : ''}`
+                                        ).join('\n');
+                                        const text = `My Life Categories\n${'='.repeat(30)}\n\n${catText}\n\nPurpose Elements\n${'-'.repeat(20)}\n${purposeText || '(None defined yet)'}`;
+                                        const blob = new Blob([text], { type: 'text/plain' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = 'my-life-categories.txt';
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                    }}
+                                    disabled={categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0}
+                                    className={`
+                    px-6 py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 flex items-center gap-2
+                    ${(categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0)
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl'
+                                        }
+                  `}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Export
                                 </button>
                                 <button
                                     onClick={saveCategories}

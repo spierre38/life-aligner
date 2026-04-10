@@ -638,7 +638,7 @@ export default function InterestsWorksheet() {
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-sm font-bold text-gray-700">Your Progress</span>
                                         <span className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">
-                                            {selectedExisting.size + selectedExploring.size} / 20
+                                            {selectedExisting.size + selectedExploring.size} / 10
                                         </span>
                                     </div>
 
@@ -647,14 +647,14 @@ export default function InterestsWorksheet() {
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-1">
                                                 <span className="text-xs font-medium text-gray-600">✓ Existing</span>
-                                                <span className={`text-xs font-bold ${selectedExisting.size >= 10 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                    {selectedExisting.size}/15
+                                                <span className={`text-xs font-bold ${selectedExisting.size >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                    {selectedExisting.size}/5
                                                 </span>
                                             </div>
                                             <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full bg-gradient-to-r from-pink-500 to-orange-500 transition-all duration-500"
-                                                    style={{ width: `${Math.min(100, (selectedExisting.size / 15) * 100)}%` }}
+                                                    style={{ width: `${Math.min(100, (selectedExisting.size / 5) * 100)}%` }}
                                                 />
                                             </div>
                                         </div>
@@ -681,11 +681,11 @@ export default function InterestsWorksheet() {
                                         </svg>
                                         <p className="text-xs text-indigo-800">
                                             {selectedExisting.size === 0 && selectedExploring.size === 0 ? (
-                                                <><strong>Getting started:</strong> Select 10-15 existing interests and 3-5 to explore.</>
-                                            ) : selectedExisting.size < 10 ? (
-                                                <><strong>Good start!</strong> Add {10 - selectedExisting.size} more existing interests for a complete picture.</>
+                                                <><strong>Getting started:</strong> Select 5 existing interests and 5 to explore.</>
+                                            ) : selectedExisting.size < 5 ? (
+                                                <><strong>Good start!</strong> Add {5 - selectedExisting.size} more existing interests for a complete picture.</>
                                             ) : selectedExploring.size === 0 ? (
-                                                <><strong>Great existing interests!</strong> Now add 3-5 new things you want to explore.</>
+                                                <><strong>Great existing interests!</strong> Now add {5 - selectedExploring.size} new things you want to explore.</>
                                             ) : (
                                                 <><strong>Excellent work!</strong> You can save now or keep refining your selections.</>
                                             )}
@@ -802,159 +802,156 @@ export default function InterestsWorksheet() {
                                 </div>
                             </div>
 
-                            {/* Enhanced Categories with Unified 3-State Selection */}
-                            <div className="space-y-4 mb-8">
-                                {Object.entries(INTERESTS_BY_CATEGORY).map(([category, interests]) => {
-                                    const filteredInterests = filterInterests(interests);
-                                    if (filteredInterests.length === 0 && searchTerm) return null;
+                            {/* Category Tabs - All 9 Across */}
+                            <div className="mb-4">
+                                <div className="flex flex-wrap gap-2">
+                                    {Object.entries(INTERESTS_BY_CATEGORY).map(([category]) => {
+                                        const existingCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExisting.has(i)).length;
+                                        const exploringCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExploring.has(i)).length;
+                                        const totalSelected = existingCount + exploringCount;
+                                        const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === Object.keys(INTERESTS_BY_CATEGORY)[0]);
 
-                                    const isExpanded = expandedCategories.has(category);
-                                    const existingCount = interests.filter(i => selectedExisting.has(i)).length;
-                                    const exploringCount = interests.filter(i => selectedExploring.has(i)).length;
-                                    const totalSelected = existingCount + exploringCount;
-
-                                    return (
-                                        <div key={category} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
-                                            {/* Category Header */}
+                                        return (
                                             <button
-                                                onClick={() => toggleCategory(category)}
+                                                key={category}
+                                                onClick={() => {
+                                                    setExpandedCategories(new Set([category]));
+                                                }}
                                                 className={`
-                                                    w-full p-5 flex items-center justify-between
-                                                    bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]}
-                                                    text-white hover:opacity-90 transition-all
+                                                    px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap
+                                                    ${isActive
+                                                        ? `bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white shadow-lg scale-105`
+                                                        : 'bg-white/80 text-gray-700 border border-gray-200 hover:border-gray-400 hover:shadow-sm'
+                                                    }
                                                 `}
                                             >
-                                                <div className="flex items-center gap-4">
-                                                    <h3 className="text-xl font-bold">{category}</h3>
-                                                    {totalSelected > 0 && (
-                                                        <div className="flex items-center gap-2">
-                                                            {existingCount > 0 && (
-                                                                <span className="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold">
-                                                                    ✓ {existingCount}
-                                                                </span>
-                                                            )}
-                                                            {exploringCount > 0 && (
-                                                                <span className="bg-white/30 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold">
-                                                                    ⭐ {exploringCount}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <svg
-                                                    className={`w-6 h-6 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                                </svg>
+                                                {category}
+                                                {totalSelected > 0 && (
+                                                    <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/30' : 'bg-gray-200'}`}>
+                                                        {totalSelected}
+                                                    </span>
+                                                )}
                                             </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
 
-                                            {/* Category Interests - Enhanced 3-State Cards */}
-                                            {isExpanded && (
-                                                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                    {filteredInterests.map((interest) => {
-                                                        const isExisting = selectedExisting.has(interest);
-                                                        const isExploring = selectedExploring.has(interest);
-                                                        const isSelected = isExisting || isExploring;
+                            {/* Active Category Interests */}
+                            <div className="mb-8">
+                                {Object.entries(INTERESTS_BY_CATEGORY).map(([category, interests]) => {
+                                    const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === Object.keys(INTERESTS_BY_CATEGORY)[0]);
+                                    if (!isActive) return null;
 
-                                                        return (
-                                                            <div
-                                                                key={interest}
-                                                                className={`
-                                                                    group relative rounded-xl p-4 transition-all duration-300 border-2
-                                                                    ${isExisting
-                                                                        ? 'bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-lg shadow-pink-500/20 border-pink-600'
-                                                                        : isExploring
-                                                                            ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/20 border-blue-600'
-                                                                            : 'bg-white/70 backdrop-blur-sm text-gray-800 hover:bg-white hover:shadow-md border-gray-200'
-                                                                    }
-                                                                `}
-                                                            >
-                                                                {/* Interest Name */}
-                                                                <div className="flex items-start justify-between mb-3">
-                                                                    <span className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                                                                        {interest}
+                                    const filteredInterests = filterInterests(interests);
+
+                                    return (
+                                        <div key={category} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden">
+                                            {/* Category Header */}
+                                            <div className={`p-4 bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white`}>
+                                                <h3 className="text-lg font-bold">{category}</h3>
+                                                <p className="text-white/80 text-xs">Click to add as existing or exploring</p>
+                                            </div>
+
+                                            {/* Interests Grid - Compact */}
+                                            <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                {filteredInterests.map((interest) => {
+                                                    const isExisting = selectedExisting.has(interest);
+                                                    const isExploring = selectedExploring.has(interest);
+                                                    const isSelected = isExisting || isExploring;
+
+                                                    return (
+                                                        <div
+                                                            key={interest}
+                                                            className={`
+                                                                group relative rounded-xl p-3 transition-all duration-200 border-2 cursor-pointer
+                                                                ${isExisting
+                                                                    ? 'bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-md border-pink-600'
+                                                                    : isExploring
+                                                                        ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-md border-blue-600'
+                                                                        : 'bg-white/70 text-gray-800 hover:bg-white hover:shadow-sm border-gray-200'
+                                                                }
+                                                            `}
+                                                        >
+                                                            {/* Interest Name */}
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className={`font-medium text-xs ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                                                                    {interest}
+                                                                </span>
+                                                                {isSelected && (
+                                                                    <span className="text-xs bg-white/30 rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                                                        {isExisting ? '✓' : '⭐'}
                                                                     </span>
-                                                                    {isSelected && (
-                                                                        <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-md flex-shrink-0">
-                                                                            <span className="text-sm">{isExisting ? '✓' : '⭐'}</span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Action Buttons */}
-                                                                <div className="space-y-2">
-                                                                    {!isSelected ? (
-                                                                        // Unselected state: Two add buttons
-                                                                        <div className="grid grid-cols-2 gap-2">
-                                                                            <button
-                                                                                onClick={() => toggleInterest(interest, 'existing')}
-                                                                                className="px-3 py-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg text-xs font-bold hover:shadow-lg transition"
-                                                                            >
-                                                                                + Existing
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => toggleInterest(interest, 'exploring')}
-                                                                                className="px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-xs font-bold hover:shadow-lg transition"
-                                                                            >
-                                                                                + Explore
-                                                                            </button>
-                                                                        </div>
-                                                                    ) : isExisting ? (
-                                                                        // Existing state: Switch or remove
-                                                                        <div className="grid grid-cols-2 gap-2">
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    setSelectedExisting(prev => {
-                                                                                        const newSet = new Set(prev);
-                                                                                        newSet.delete(interest);
-                                                                                        return newSet;
-                                                                                    });
-                                                                                    setSelectedExploring(prev => new Set([...prev, interest]));
-                                                                                }}
-                                                                                className="px-3 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg text-xs font-semibold transition"
-                                                                            >
-                                                                                → Explore
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => toggleInterest(interest, 'existing')}
-                                                                                className="px-3 py-2 bg-white/20 backdrop-blur-sm hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition"
-                                                                            >
-                                                                                Remove
-                                                                            </button>
-                                                                        </div>
-                                                                    ) : (
-                                                                        // Exploring state: Switch or remove
-                                                                        <div className="grid grid-cols-2 gap-2">
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    setSelectedExploring(prev => {
-                                                                                        const newSet = new Set(prev);
-                                                                                        newSet.delete(interest);
-                                                                                        return newSet;
-                                                                                    });
-                                                                                    setSelectedExisting(prev => new Set([...prev, interest]));
-                                                                                }}
-                                                                                className="px-3 py-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg text-xs font-semibold transition"
-                                                                            >
-                                                                                → Existing
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => toggleInterest(interest, 'exploring')}
-                                                                                className="px-3 py-2 bg-white/20 backdrop-blur-sm hover:bg-red-500 text-white rounded-lg text-xs font-semibold transition"
-                                                                            >
-                                                                                Remove
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                                )}
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
+
+                                                            {/* Action Buttons - Compact */}
+                                                            <div>
+                                                                {!isSelected ? (
+                                                                    <div className="grid grid-cols-2 gap-1">
+                                                                        <button
+                                                                            onClick={() => toggleInterest(interest, 'existing')}
+                                                                            className="px-2 py-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg text-[10px] font-bold hover:shadow-md transition"
+                                                                        >
+                                                                            + Existing
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => toggleInterest(interest, 'exploring')}
+                                                                            className="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-[10px] font-bold hover:shadow-md transition"
+                                                                        >
+                                                                            + Explore
+                                                                        </button>
+                                                                    </div>
+                                                                ) : isExisting ? (
+                                                                    <div className="grid grid-cols-2 gap-1">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedExisting(prev => {
+                                                                                    const newSet = new Set(prev);
+                                                                                    newSet.delete(interest);
+                                                                                    return newSet;
+                                                                                });
+                                                                                setSelectedExploring(prev => new Set([...prev, interest]));
+                                                                            }}
+                                                                            className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                        >
+                                                                            → Explore
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => toggleInterest(interest, 'existing')}
+                                                                            className="px-2 py-1 bg-white/20 hover:bg-red-500 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                        >
+                                                                            Remove
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="grid grid-cols-2 gap-1">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedExploring(prev => {
+                                                                                    const newSet = new Set(prev);
+                                                                                    newSet.delete(interest);
+                                                                                    return newSet;
+                                                                                });
+                                                                                setSelectedExisting(prev => new Set([...prev, interest]));
+                                                                            }}
+                                                                            className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                        >
+                                                                            → Existing
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => toggleInterest(interest, 'exploring')}
+                                                                            className="px-2 py-1 bg-white/20 hover:bg-red-500 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                        >
+                                                                            Remove
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -965,11 +962,11 @@ export default function InterestsWorksheet() {
                                 <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-[0_-4px_30px_rgb(0,0,0,0.15)] border-2 border-gray-200">
                                     <div className="flex flex-col sm:flex-row items-center gap-4">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedExisting.size >= 10 && selectedExploring.size >= 3
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedExisting.size >= 5 && selectedExploring.size >= 5
                                                 ? 'bg-green-100'
                                                 : 'bg-gray-100'
                                                 }`}>
-                                                {selectedExisting.size >= 10 && selectedExploring.size >= 3 ? (
+                                                {selectedExisting.size >= 5 && selectedExploring.size >= 5 ? (
                                                     <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                     </svg>
@@ -981,7 +978,7 @@ export default function InterestsWorksheet() {
                                             </div>
                                             <div className="text-left">
                                                 <p className="text-sm font-bold text-gray-900">
-                                                    {selectedExisting.size >= 10 && selectedExploring.size >= 3
+                                                    {selectedExisting.size >= 5 && selectedExploring.size >= 5
                                                         ? 'Looking Great!'
                                                         : 'Keep Selecting...'}
                                                 </p>
@@ -990,6 +987,32 @@ export default function InterestsWorksheet() {
                                                 </p>
                                             </div>
                                         </div>
+
+                                        <button
+                                            onClick={() => {
+                                                const text = `My Interests\n${'='.repeat(30)}\n\nExisting Interests (${selectedExisting.size}):\n${Array.from(selectedExisting).map(i => `  • ${i}`).join('\n')}\n\nInterests to Explore (${selectedExploring.size}):\n${Array.from(selectedExploring).map(i => `  • ${i}`).join('\n')}`;
+                                                const blob = new Blob([text], { type: 'text/plain' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'my-interests.txt';
+                                                a.click();
+                                                URL.revokeObjectURL(url);
+                                            }}
+                                            disabled={selectedExisting.size === 0 && selectedExploring.size === 0}
+                                            className={`
+                                                px-6 py-3 rounded-full font-bold shadow-xl transition-all transform flex items-center gap-2
+                                                ${(selectedExisting.size === 0 && selectedExploring.size === 0)
+                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-2xl hover:scale-105'
+                                                }
+                                            `}
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            Export
+                                        </button>
 
                                         <button
                                             onClick={saveInterests}

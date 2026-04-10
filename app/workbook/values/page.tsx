@@ -570,30 +570,14 @@ export default function ValuesWorksheet() {
                                         <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
                                             <div className="flex items-start gap-4">
                                                 <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
-                                                    {WbIcons.heart('w-5 h-5')}
+                                                    {WbIcons.compass('w-5 h-5')}
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Sarah - Authenticity & Compassion</h3>
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Tim - Authenticity & Continuous Improvement</h3>
                                                     <p className="text-gray-700 text-sm leading-relaxed">
-                                                        Sarah left a high-paying corporate job to become a social worker. Her values of
-                                                        <strong> authenticity</strong> (being true to herself) and <strong>compassion</strong> (helping
-                                                        others) guided this decision. She makes less money but feels fulfilled every day.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow">
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-purple-500/20">
-                                                    {WbIcons.shield('w-5 h-5')}
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Marcus - Perseverance & Growth</h3>
-                                                    <p className="text-gray-700 text-sm leading-relaxed">
-                                                        Marcus failed his first startup but launched a second one. His values of
-                                                        <strong> perseverance</strong> and <strong>continuous improvement</strong> meant he learned
-                                                        from mistakes instead of giving up. The second company is now thriving.
+                                                        Tim built a $2B company by staying true to his principles. His values of
+                                                        <strong> authenticity</strong> (never compromising who he is) and <strong>continuous improvement</strong> (always
+                                                        learning and growing) guided every business decision — from hiring to partnerships to how he treated his team.
                                                     </p>
                                                 </div>
                                             </div>
@@ -607,8 +591,23 @@ export default function ValuesWorksheet() {
                                                 <div>
                                                     <h3 className="text-lg font-bold text-gray-900 mb-1">Jess - Creativity & Generosity</h3>
                                                     <p className="text-gray-700 text-sm leading-relaxed">
-                                                        After a sucessful career in admissions in education. Jess opened an art school for adults to address loneliness in her community. Her values of
-                                                        <strong> creativity</strong> and <strong>generosity</strong> shaped her business model— building community while proividng a place for people to express their creativity.
+                                                        After a successful career in admissions in education, Jess opened an art school for adults to address loneliness in her community. Her values of
+                                                        <strong> creativity</strong> and <strong>generosity</strong> shaped her business model — building community while providing a place for people to express their creativity.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow">
+                                            <div className="flex items-start gap-4">
+                                                <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-purple-500/20">
+                                                    {WbIcons.heart('w-5 h-5')}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-1">Laura - Compassion & Perseverance</h3>
+                                                    <p className="text-gray-700 text-sm leading-relaxed">
+                                                        Laura turned her passion for fitness into a career as a group class instructor and personal trainer. Her values of
+                                                        <strong> compassion</strong> (genuinely caring about each person's journey) and <strong>perseverance</strong> (never giving up on her clients or herself) drive her to help others achieve their health goals every day.
                                                     </p>
                                                 </div>
                                             </div>
@@ -975,12 +974,37 @@ export default function ValuesWorksheet() {
                                         )}
                                     </div>
 
-                                    <div className="flex justify-center gap-4">
+                                    <div className="flex justify-center gap-4 flex-wrap">
                                         <button
                                             onClick={() => setPhase('select')}
                                             className="px-8 py-4 rounded-full font-bold text-lg border-2 border-gray-300 text-gray-800 hover:border-purple-600 hover:text-purple-600 transition"
                                         >
                                             ← Back
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const text = `My Values (Prioritized)\n${'='.repeat(30)}\n\n${prioritizedValues.map((v, i) => `${i + 1}. ${v.name}\n   ${v.description}\n`).join('\n')}`;
+                                                const blob = new Blob([text], { type: 'text/plain' });
+                                                const url = URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = 'my-values.txt';
+                                                a.click();
+                                                URL.revokeObjectURL(url);
+                                            }}
+                                            disabled={prioritizedValues.length === 0}
+                                            className={`
+                        px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 flex items-center gap-2
+                        ${prioritizedValues.length === 0
+                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl'
+                                                }
+                      `}
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            Export
                                         </button>
                                         <button
                                             onClick={saveValues}

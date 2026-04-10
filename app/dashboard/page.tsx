@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 const OnboardingJourney = dynamic(() => import('@/app/components/OnboardingJourney'));
 const OnboardingModal = dynamic(() => import('@/app/components/OnboardingModal').then(m => ({ default: m.OnboardingModal })));
 const DashboardTodoWidget = dynamic(() => import('@/app/components/DashboardTodoWidget').then(m => ({ default: m.DashboardTodoWidget })));
+const VideoIntroStep = dynamic(() => import('@/app/components/VideoIntroStep'));
 
 // ============================================================================
 // INLINE SVG ILLUSTRATIONS
@@ -649,6 +650,7 @@ export default function DashboardPage() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showWelcome, setShowWelcome] = useState(false);
+    const [showVideoIntro, setShowVideoIntro] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [status, setStatus] = useState<WorksheetStatus>({
         values: false,
@@ -764,9 +766,20 @@ export default function DashboardPage() {
             <OnboardingJourney
                 onComplete={() => {
                     setShowWelcome(false);
-                    setShowOnboarding(true);
+                    setShowVideoIntro(true);
                 }}
                 userName={user?.profile?.full_name}
+            />
+        );
+    }
+
+    if (showVideoIntro) {
+        return (
+            <VideoIntroStep
+                onComplete={() => {
+                    setShowVideoIntro(false);
+                    setShowOnboarding(true);
+                }}
             />
         );
     }
@@ -886,34 +899,32 @@ export default function DashboardPage() {
                                     : 'bg-white/80 backdrop-blur-sm border-2 border-indigo-200 shadow-[0_8px_30px_rgb(99,102,241,0.08)] hover:shadow-[0_8px_30px_rgb(99,102,241,0.15)] hover:-translate-y-1'
                                 }
               `}>
-                                <div className="relative h-40 md:h-48 mb-4 md:mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center overflow-hidden">
-                                    <div className="w-32 h-32 md:w-40 md:h-40">
+                                <div className="space-y-1 mb-3">
+                                    <div className="inline-flex items-center gap-2 bg-indigo-100 px-3 py-1 rounded-full text-xs md:text-sm font-semibold text-indigo-700">
+                                        {status.values ? '✓ Complete' : 'Step 1'}
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">Values</h3>
+                                    <p className="text-sm text-gray-600">Define your guiding principles</p>
+                                </div>
+
+                                <div className="relative h-32 md:h-36 mb-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                                    <div className="w-28 h-28 md:w-32 md:h-32">
                                         <ValuesIllustration />
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 md:space-y-4">
-                                    <div>
-                                        <div className="inline-flex items-center gap-2 bg-indigo-100 px-3 py-1 rounded-full text-xs md:text-sm font-semibold text-indigo-700 mb-2">
-                                            {status.values ? '✓ Complete' : 'Step 1'}
-                                        </div>
-                                        <h3 className="text-xl md:text-2xl font-bold text-gray-900">Values</h3>
-                                        <p className="text-sm md:text-base text-gray-600">Define your guiding principles</p>
-                                    </div>
-
-                                    <button
-                                        onClick={() => router.push('/workbook/values')}
-                                        className={`
+                                <button
+                                    onClick={() => router.push('/workbook/values')}
+                                    className={`
                       w-full py-2 md:py-3 rounded-xl font-semibold text-sm md:text-base transition-all
                       ${status.values
-                                                ? 'bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100'
-                                                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-600/20 transform hover:scale-105'
-                                            }
+                                            ? 'bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100'
+                                            : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-600/20 transform hover:scale-105'
+                                        }
                     `}
-                                    >
-                                        {status.values ? 'Review →' : 'Start →'}
-                                    </button>
-                                </div>
+                                >
+                                    {status.values ? 'Review →' : 'Start →'}
+                                </button>
                             </div>
 
                             {/* Interests Card */}
@@ -926,37 +937,35 @@ export default function DashboardPage() {
                                         : 'bg-white/80 backdrop-blur-sm border-2 border-pink-200 shadow-[0_8px_30px_rgb(236,72,153,0.08)] hover:shadow-[0_8px_30px_rgb(236,72,153,0.15)] hover:-translate-y-1'
                                 }
               `}>
-                                <div className="relative h-40 md:h-48 mb-4 md:mb-6 bg-gradient-to-br from-pink-100 to-orange-100 rounded-2xl flex items-center justify-center overflow-hidden">
-                                    <div className="w-32 h-32 md:w-40 md:h-40">
+                                <div className="space-y-1 mb-3">
+                                    <div className="inline-flex items-center gap-2 bg-pink-100 px-3 py-1 rounded-full text-xs md:text-sm font-semibold text-pink-700">
+                                        {status.interests ? '✓ Complete' : status.values ? 'Step 2' : 'Locked'}
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">Interests</h3>
+                                    <p className="text-sm text-gray-600">What brings you joy</p>
+                                </div>
+
+                                <div className="relative h-32 md:h-36 mb-4 bg-gradient-to-br from-pink-100 to-orange-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                                    <div className="w-28 h-28 md:w-32 md:h-32">
                                         <InterestsIllustration />
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 md:space-y-4">
-                                    <div>
-                                        <div className="inline-flex items-center gap-2 bg-pink-100 px-3 py-1 rounded-full text-xs md:text-sm font-semibold text-pink-700 mb-2">
-                                            {status.interests ? '✓ Complete' : status.values ? 'Step 2' : 'Locked'}
-                                        </div>
-                                        <h3 className="text-xl md:text-2xl font-bold text-gray-900">Interests</h3>
-                                        <p className="text-sm md:text-base text-gray-600">What brings you joy</p>
-                                    </div>
-
-                                    <button
-                                        onClick={() => router.push('/workbook/interests')}
-                                        disabled={!status.values}
-                                        className={`
+                                <button
+                                    onClick={() => router.push('/workbook/interests')}
+                                    disabled={!status.values}
+                                    className={`
                       w-full py-2 md:py-3 rounded-xl font-semibold text-sm md:text-base transition-all
                       ${status.interests
-                                                ? 'bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100'
-                                                : !status.values
-                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-pink-600 to-orange-600 text-white hover:shadow-lg hover:shadow-pink-600/20 transform hover:scale-105'
-                                            }
+                                            ? 'bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100'
+                                            : !status.values
+                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-pink-600 to-orange-600 text-white hover:shadow-lg hover:shadow-pink-600/20 transform hover:scale-105'
+                                        }
                     `}
-                                    >
-                                        {status.interests ? 'Review →' : !status.values ? 'Locked' : 'Start →'}
-                                    </button>
-                                </div>
+                                >
+                                    {status.interests ? 'Review →' : !status.values ? 'Locked' : 'Start →'}
+                                </button>
                             </div>
 
                             {/* Life Categories Card */}
@@ -969,37 +978,35 @@ export default function DashboardPage() {
                                         : 'bg-white/80 backdrop-blur-sm border-2 border-purple-200 shadow-[0_8px_30px_rgb(147,51,234,0.08)] hover:shadow-[0_8px_30px_rgb(147,51,234,0.15)] hover:-translate-y-1'
                                 }
               `}>
-                                <div className="relative h-40 md:h-48 mb-4 md:mb-6 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center overflow-hidden">
-                                    <div className="w-32 h-32 md:w-40 md:h-40">
+                                <div className="space-y-1 mb-3">
+                                    <div className="inline-flex items-center gap-2 bg-purple-100 px-3 py-1 rounded-full text-xs md:text-sm font-semibold text-purple-700">
+                                        {status.life_categories ? '✓ Complete' : status.interests ? 'Step 3' : 'Locked'}
+                                    </div>
+                                    <h3 className="text-xl md:text-2xl font-bold text-gray-900">Life Categories</h3>
+                                    <p className="text-sm text-gray-600">Your focus areas & purpose</p>
+                                </div>
+
+                                <div className="relative h-32 md:h-36 mb-4 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center overflow-hidden">
+                                    <div className="w-28 h-28 md:w-32 md:h-32">
                                         <CategoriesIllustration />
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 md:space-y-4">
-                                    <div>
-                                        <div className="inline-flex items-center gap-2 bg-purple-100 px-3 py-1 rounded-full text-xs md:text-sm font-semibold text-purple-700 mb-2">
-                                            {status.life_categories ? '✓ Complete' : status.interests ? 'Step 3' : 'Locked'}
-                                        </div>
-                                        <h3 className="text-xl md:text-2xl font-bold text-gray-900">Life Categories</h3>
-                                        <p className="text-sm md:text-base text-gray-600">Your focus areas & purpose</p>
-                                    </div>
-
-                                    <button
-                                        onClick={() => router.push('/workbook/life-categories')}
-                                        disabled={!status.interests}
-                                        className={`
+                                <button
+                                    onClick={() => router.push('/workbook/life-categories')}
+                                    disabled={!status.interests}
+                                    className={`
                       w-full py-2 md:py-3 rounded-xl font-semibold text-sm md:text-base transition-all
                       ${status.life_categories
-                                                ? 'bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100'
-                                                : !status.interests
-                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:shadow-purple-600/20 transform hover:scale-105'
-                                            }
+                                            ? 'bg-green-50 text-green-600 border-2 border-green-200 hover:bg-green-100'
+                                            : !status.interests
+                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:shadow-purple-600/20 transform hover:scale-105'
+                                        }
                     `}
-                                    >
-                                        {status.life_categories ? 'Review →' : !status.interests ? 'Locked' : 'Start →'}
-                                    </button>
-                                </div>
+                                >
+                                    {status.life_categories ? 'Review →' : !status.interests ? 'Locked' : 'Start →'}
+                                </button>
                             </div>
                         </div>
 
