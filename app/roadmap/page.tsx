@@ -1216,43 +1216,53 @@ export default function RoadmapPage() {
                 />
             )}
 
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-16">
-                {/* COMPACT STICKY HEADER */}
-                <div className="bg-white border-b border-gray-200 sticky top-16 z-40 shadow-sm">
+            <div className="min-h-screen pt-16 relative" style={{ background: 'linear-gradient(180deg, #FEF3E2 0%, #FDE8D0 15%, #F5E6D8 30%, #E8DDD4 50%, #DDD6CE 70%, #D4CFC8 100%)' }}>
+                {/* Terrain silhouette */}
+                <div className="fixed bottom-0 left-0 right-0 h-48 pointer-events-none z-0 opacity-[0.07]">
+                    <svg viewBox="0 0 1440 320" className="w-full h-full" preserveAspectRatio="none">
+                        <path fill="#5B4A3F" d="M0,224L48,213.3C96,203,192,181,288,186.7C384,192,480,224,576,218.7C672,213,768,171,864,154.7C960,139,1056,149,1152,165.3C1248,181,1344,203,1392,213.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+                        <path fill="#6B5B4F" d="M0,288L48,272C96,256,192,224,288,208C384,192,480,192,576,197.3C672,203,768,213,864,224C960,235,1056,245,1152,234.7C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+                    </svg>
+                </div>
+
+                {/* JOURNEY HEADER */}
+                <div className="sticky top-16 z-40 backdrop-blur-md bg-gradient-to-r from-amber-800/90 via-orange-900/90 to-amber-800/90 border-b border-amber-700/30 shadow-lg">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        {/* Top Row - Title & Stats */}
-                        <div className="flex items-center justify-between py-4">
+                        {/* Top Row */}
+                        <div className="flex items-center justify-between py-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white shadow-md">
-                                    <RoadmapIcon className="w-6 h-6" />
+                                <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                    </svg>
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-gray-900">Roadmap</h1>
-                                    <p className="text-sm text-gray-600">{currentQuarter}</p>
+                                    <h1 className="text-xl font-bold text-amber-50">Your Journey</h1>
+                                    <p className="text-xs text-amber-200/80">{currentQuarter} · Keep moving forward</p>
                                 </div>
                             </div>
 
-                            {/* Quick Stats - Compact */}
-                            <div className="hidden md:flex items-center gap-4">
-                                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                                    <div className="text-xl font-bold text-blue-600">{activeItems.length}</div>
-                                    <div className="text-xs text-gray-600">Active</div>
+                            {/* Quick Stats */}
+                            <div className="hidden md:flex items-center gap-3">
+                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/10">
+                                    <div className="text-lg font-bold text-amber-200">{activeItems.length}</div>
+                                    <div className="text-[10px] text-amber-100/70 uppercase tracking-wider">Active</div>
                                 </div>
-                                <div className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-lg">
-                                    <div className="text-xl font-bold text-purple-600">
+                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/10">
+                                    <div className="text-lg font-bold text-amber-200">
                                         {activeItems.reduce((sum, item) => sum + item.reflections.length, 0)}
                                     </div>
-                                    <div className="text-xs text-gray-600">Reflections</div>
+                                    <div className="text-[10px] text-amber-100/70 uppercase tracking-wider">Reflections</div>
                                 </div>
-                                <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-lg">
-                                    <div className="text-xl font-bold text-green-600">{archivedItems.length}</div>
-                                    <div className="text-xs text-gray-600">Archived</div>
+                                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/10">
+                                    <div className="text-lg font-bold text-green-300">{archivedItems.length}</div>
+                                    <div className="text-[10px] text-amber-100/70 uppercase tracking-wider">Complete</div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={() => router.push('/dashboard')}
-                                className="text-gray-400 hover:text-gray-600 transition"
+                                className="text-amber-300/60 hover:text-amber-100 transition"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1260,21 +1270,21 @@ export default function RoadmapPage() {
                             </button>
                         </div>
 
-                        {/* Tabs - Compact */}
-                        <div className="flex gap-1 border-b border-gray-200 -mb-px">
+                        {/* Tabs */}
+                        <div className="flex gap-1 -mb-px">
                             {[
-                                { id: 'current', label: 'Current', icon: GoalIcon },
-                                { id: 'reflect', label: 'Reflect', icon: ReflectionIcon },
-                                { id: 'archive', label: 'Archive', icon: ArchiveIcon }
+                                { id: 'current', label: 'Trail', icon: GoalIcon },
+                                { id: 'reflect', label: 'Journal', icon: ReflectionIcon },
+                                { id: 'archive', label: 'Milestones', icon: ArchiveIcon }
                             ].map(tab => (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`
-                                        flex items-center gap-2 px-4 py-2.5 font-semibold text-sm transition-all
+                                        flex items-center gap-2 px-4 py-2.5 font-semibold text-sm transition-all rounded-t-lg
                                         ${activeTab === tab.id
-                                            ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-white/15 text-amber-100 border-b-2 border-amber-400'
+                                            : 'text-amber-300/60 hover:text-amber-100'
                                         }
                                     `}
                                 >
@@ -1287,7 +1297,7 @@ export default function RoadmapPage() {
                 </div>
 
                 {/* Main Content */}
-                <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
                     {/* Current Quarter Tab */}
                     {activeTab === 'current' && (
                         <div className="space-y-6">
@@ -1310,11 +1320,11 @@ export default function RoadmapPage() {
                                 onLogActivity={handleDailyFocusLog}
                             />
 
-                            {/* NEW: View Mode Toggle & Suggestions Button */}
+                            {/* View Mode Toggle & Suggestions */}
                             <div className="flex items-center justify-between mb-6">
                                 <button
                                     onClick={() => setShowSuggestionWizard(true)}
-                                    className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold hover:bg-purple-200 transition text-sm"
+                                    className="px-4 py-2 bg-amber-100 text-amber-800 rounded-lg font-semibold hover:bg-amber-200 transition text-sm border border-amber-200"
                                 >
                                     💡 Get Goal Suggestions
                                 </button>
@@ -1379,23 +1389,41 @@ export default function RoadmapPage() {
                                     const isExpanded = expandedCategory === category.name;
 
                                     return (
-                                        <div key={category.name} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                                            {/* Category Header */}
+                                        <div key={category.name} className="relative">
+                                            {/* Connecting trail line */}
+                                            <div className="absolute left-7 top-0 bottom-0 w-0.5 bg-gradient-to-b from-amber-300/40 to-amber-200/20 -z-0" style={{ top: '-12px' }} />
+                                            
+                                            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-[0_4px_20px_rgba(120,80,40,0.08)] overflow-hidden border border-amber-100/50">
+                                            {/* Category Header - Waypoint */}
                                             <button
                                                 onClick={() => setExpandedCategory(isExpanded ? null : category.name)}
-                                                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition group"
+                                                className="w-full p-4 flex items-center justify-between hover:bg-amber-50/50 transition group"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white shadow-sm group-hover:scale-110 transition-transform">
-                                                        {React.createElement(getCategoryIconComponent(category.name), { className: "w-5 h-5" })}
+                                                    {/* Trail marker dot */}
+                                                    <div className="relative">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110 ${
+                                                            categoryItems.length > 0 
+                                                                ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/30'
+                                                                : 'bg-gradient-to-br from-stone-400 to-stone-500 shadow-stone-400/20'
+                                                        }`}>
+                                                            {React.createElement(getCategoryIconComponent(category.name), { className: "w-5 h-5" })}
+                                                        </div>
+                                                        {categoryItems.length > 0 && (
+                                                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white border-2 border-white">
+                                                                {categoryItems.length}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="text-left">
-                                                        <h3 className="text-lg font-bold text-gray-900">{category.name}</h3>
-                                                        <p className="text-xs text-gray-600">{categoryItems.length} items</p>
+                                                        <h3 className="text-lg font-bold text-stone-800">{category.name}</h3>
+                                                        <p className="text-xs text-stone-500">
+                                                            {categoryItems.length === 0 ? 'No goals yet — start your path' : `${categoryItems.length} goal${categoryItems.length !== 1 ? 's' : ''} on this trail`}
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <svg
-                                                    className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                                    className={`w-5 h-5 text-stone-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                                     fill="none"
                                                     stroke="currentColor"
                                                     viewBox="0 0 24 24"
@@ -1409,7 +1437,7 @@ export default function RoadmapPage() {
                                                 <div className="p-6 pt-0 space-y-4">
                                                     {/* Existing Items */}
                                                     {categoryItems.map(item => (
-                                                        <div key={item.id} className="border-2 border-indigo-100 rounded-xl p-6 bg-gradient-to-br from-white to-indigo-50">
+                                                        <div key={item.id} className="border-2 border-amber-100 rounded-xl p-6 bg-gradient-to-br from-white to-amber-50/30">
                                                             <div className="flex items-start justify-between mb-4">
                                                                 <div className="flex-1">
                                                                     <div className="flex items-center gap-2 mb-2">
@@ -1835,13 +1863,14 @@ export default function RoadmapPage() {
                                                     ) : (
                                                         <button
                                                             onClick={() => setAddingTo(category.name)}
-                                                            className="w-full py-4 border-2 border-dashed border-indigo-300 rounded-xl text-indigo-600 hover:bg-indigo-50 font-semibold transition"
+                                                            className="w-full py-4 border-2 border-dashed border-amber-300 rounded-xl text-amber-700 hover:bg-amber-50 font-semibold transition"
                                                         >
                                                             + Add to {category.name}
                                                         </button>
                                                     )}
                                                 </div>
                                             )}
+                                        </div>
                                         </div>
                                     );
                                 })
