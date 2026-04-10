@@ -27,35 +27,60 @@ export default function JourneyProgressBanner({
   }, [totalGoals, completedGoals, totalActivitiesLogged]);
 
   // Path coordinates for the winding trail (SVG path)
-  // This creates a path from left to right with gentle curves
   const trailPath = "M 30,140 C 80,140 100,90 160,95 C 220,100 240,130 300,120 C 360,110 380,70 440,75 C 500,80 520,110 580,100 C 640,90 660,60 720,65 C 780,70 800,95 860,85 C 920,75 940,50 970,55";
 
+  // ✅ NEW: Helper function to get point on cubic Bezier curve
+  const getPointOnPath = (t: number) => {
+    // Parse the path and interpolate along the curves
+    // For simplicity, we'll use a piecewise approximation
+    // The path has multiple cubic Bezier segments
+
+    // Path segments (M start, then series of C curves)
+    const segments = [
+      { x0: 30, y0: 140, x1: 80, y1: 140, x2: 100, y2: 90, x3: 160, y3: 95 },
+      { x0: 160, y0: 95, x1: 220, y1: 100, x2: 240, y2: 130, x3: 300, y3: 120 },
+      { x0: 300, y0: 120, x1: 360, y1: 110, x2: 380, y2: 70, x3: 440, y3: 75 },
+      { x0: 440, y0: 75, x1: 500, y1: 80, x2: 520, y2: 110, x3: 580, y3: 100 },
+      { x0: 580, y0: 100, x1: 640, y1: 90, x2: 660, y2: 60, x3: 720, y3: 65 },
+      { x0: 720, y0: 65, x1: 780, y1: 70, x2: 800, y2: 95, x3: 860, y3: 85 },
+      { x0: 860, y0: 85, x1: 920, y1: 75, x2: 940, y2: 50, x3: 970, y3: 55 },
+    ];
+
+    // Find which segment we're on
+    const segmentIndex = Math.min(Math.floor(t * segments.length), segments.length - 1);
+    const segment = segments[segmentIndex];
+
+    // Local t within this segment
+    const localT = (t * segments.length) % 1;
+
+    // Cubic Bezier formula: B(t) = (1-t)³P₀ + 3(1-t)²tP₁ + 3(1-t)t²P₂ + t³P₃
+    const mt = 1 - localT;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+    const t2 = localT * localT;
+    const t3 = t2 * localT;
+
+    const x = mt3 * segment.x0 + 3 * mt2 * localT * segment.x1 + 3 * mt * t2 * segment.x2 + t3 * segment.x3;
+    const y = mt3 * segment.y0 + 3 * mt2 * localT * segment.y1 + 3 * mt * t2 * segment.y2 + t3 * segment.y3;
+
+    return { x, y };
+  };
+
   // Calculate position on the path based on progress
-  const markerX = 30 + (progress / 100) * 940;
-  const markerY = useMemo(() => {
-    // Approximate Y from the path curves
-    const t = progress / 100;
-    const baseY = 140;
-    const wave1 = Math.sin(t * Math.PI * 4) * 30;
-    const wave2 = Math.sin(t * Math.PI * 2) * 15;
-    const trend = -t * 60; // Generally goes upward
-    return baseY + wave1 + wave2 + trend;
+  const markerPosition = useMemo(() => {
+    return getPointOnPath(progress / 100);
   }, [progress]);
 
-  // Milestone positions (evenly spaced along the trail)
+  // ✅ FIXED: Milestone positions along the actual path
   const milestones = useMemo(() => {
     if (totalGoals === 0) return [];
     const allGoals = totalGoals;
     return Array.from({ length: Math.min(allGoals, 8) }, (_, i) => {
-      const t = ((i + 1) / (allGoals + 1));
-      const x = 30 + t * 940;
-      const baseY = 140;
-      const wave1 = Math.sin(t * Math.PI * 4) * 30;
-      const wave2 = Math.sin(t * Math.PI * 2) * 15;
-      const trend = -t * 60;
-      const y = baseY + wave1 + wave2 + trend;
+      // Space milestones evenly along the path (0.1 to 0.9)
+      const t = (i + 1) / (allGoals + 1);
+      const position = getPointOnPath(t);
       const isCompleted = i < completedGoals;
-      return { x, y, isCompleted, index: i };
+      return { x: position.x, y: position.y, isCompleted, index: i };
     });
   }, [totalGoals, completedGoals]);
 
@@ -137,14 +162,11 @@ export default function JourneyProgressBanner({
         {/* Trees scattered along the trail */}
         {[80, 180, 350, 500, 630, 780, 900].map((tx, i) => {
           const t = tx / 1000;
-          const baseY = 140;
-          const wave1 = Math.sin(t * Math.PI * 4) * 30;
-          const wave2 = Math.sin(t * Math.PI * 2) * 15;
-          const trend = -t * 60;
-          const ty = baseY + wave1 + wave2 + trend + 10;
+          const pos = getPointOnPath(t);
+          const ty = pos.y + 10;
           const size = 8 + Math.sin(i * 2.5) * 3;
           return (
-            <g key={i} transform={`translate(${tx + (i % 2 === 0 ? 20 : -20)}, ${ty})`} opacity="0.6">
+            <g key={i} transform={`translate(${pos.x + (i % 2 === 0 ? 20 : -20)}, ${ty})`} opacity="0.6">
               <rect x={-1} y={-size * 0.3} width={2} height={size * 0.4} fill="#8B6914" />
               <path d={`M0,${-size * 0.3} L${-size * 0.4},${size * 0.1} L${size * 0.4},${size * 0.1} Z`} fill="#2D5016" />
               <path d={`M0,${-size * 0.6} L${-size * 0.3},${-size * 0.1} L${size * 0.3},${-size * 0.1} Z`} fill="#3A6B20" />
@@ -169,7 +191,7 @@ export default function JourneyProgressBanner({
         <path d={trailPath} fill="none" stroke="#D4A85C" strokeWidth="1.5" strokeLinecap="round"
           strokeDasharray="4 12" opacity="0.5" />
 
-        {/* Milestone flags */}
+        {/* ✅ FIXED: Milestone flags now positioned on the actual trail */}
         {milestones.map((m) => (
           <g key={m.index} transform={`translate(${m.x}, ${m.y})`}
             className="transition-all duration-500"
@@ -191,8 +213,8 @@ export default function JourneyProgressBanner({
           </g>
         ))}
 
-        {/* YOU ARE HERE marker */}
-        <g transform={`translate(${markerX}, ${markerY})`}
+        {/* ✅ FIXED: YOU ARE HERE marker now uses correct position */}
+        <g transform={`translate(${markerPosition.x}, ${markerPosition.y})`}
           filter="url(#markerGlow)"
           className="transition-all duration-1000"
         >
