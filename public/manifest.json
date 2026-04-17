@@ -1,0 +1,39 @@
+{
+  "name": "LifeAligner",
+  "short_name": "LifeAligner",
+  "description": "Align your goals with your values and purpose",
+  "start_url": "/daily",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0a2e",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Today's Focus",
+      "url": "/daily?tab=today",
+      "description": "View today's focus activities"
+    },
+    {
+      "name": "My To-Do Pad",
+      "url": "/daily?tab=pad",
+      "description": "Check your to-do list"
+    }
+  ]
+}

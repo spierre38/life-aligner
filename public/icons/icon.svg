@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0f0a2e"/>
+  <!-- Outer ring -->
+  <circle cx="256" cy="220" r="100" fill="none" stroke="#6366f1" stroke-width="8" opacity="0.6"/>
+  <!-- Compass arrows -->
+  <polygon points="256,100 244,200 256,190 268,200" fill="#f59e0b"/>
+  <polygon points="256,340 244,240 256,250 268,240" fill="#f59e0b" opacity="0.6"/>
+  <polygon points="116,220 216,208 206,220 216,232" fill="#f59e0b" opacity="0.6"/>
+  <polygon points="396,220 296,208 306,220 296,232" fill="#f59e0b"/>
+  <!-- Center dot -->
+  <circle cx="256" cy="220" r="16" fill="#a78bfa"/>
+  <circle cx="256" cy="220" r="8" fill="#f59e0b"/>
+  <!-- Mountain silhouette -->
+  <polygon points="150,380 256,290 362,380" fill="#4f46e5" opacity="0.7"/>
+  <polygon points="195,380 270,315 345,380" fill="#6366f1" opacity="0.5"/>
+  <!-- App name hint bar -->
+  <rect x="100" y="400" width="312" height="3" rx="2" fill="#4f46e5" opacity="0.4"/>
+</svg>

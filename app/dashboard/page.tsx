@@ -820,6 +820,25 @@ export default function DashboardPage() {
         <>
             <AuthNavbar />
 
+            {/* Mobile Daily Hub Banner — only shown on small screens */}
+            <div className="md:hidden fixed top-16 left-0 right-0 z-30 px-4 pt-2">
+                <a
+                    href="/daily"
+                    className="flex items-center justify-between gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-3 rounded-xl shadow-lg shadow-indigo-500/20"
+                >
+                    <div className="flex items-center gap-2">
+                        <span className="text-lg">📱</span>
+                        <div>
+                            <p className="text-xs font-bold leading-tight">Daily Hub</p>
+                            <p className="text-[10px] text-indigo-200 leading-tight">Mobile-optimized view</p>
+                        </div>
+                    </div>
+                    <svg className="w-4 h-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
+
             {/* Onboarding Modal - shows after WelcomeAnimation for new users */}
             {user?.user?.id && showOnboarding && (
                 <OnboardingModal
@@ -828,7 +847,7 @@ export default function DashboardPage() {
                 />
             )}
 
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16">
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16 md:pt-16 pt-28">
                 <div className="max-w-7xl mx-auto px-4 py-8">
 
                     {/* HERO SECTION */}
