@@ -99,7 +99,17 @@ export default function VideoIntroStep({ onComplete }: VideoIntroStepProps) {
                     </button>
                 </div>
 
-                <p className="text-slate-600 text-xs mt-6">
+                <button
+                    onClick={onComplete}
+                    className="mt-4 text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2 group"
+                >
+                    <svg className="w-4 h-4 opacity-60 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                    Skip — I've already seen this
+                </button>
+
+                <p className="text-slate-600 text-xs mt-4">
                     Videos will be available soon — you can always come back to watch them later.
                 </p>
             </div>

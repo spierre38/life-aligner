@@ -107,6 +107,17 @@ const CATEGORY_COLORS = {
     'Personal Development': 'from-violet-500 to-purple-500'
 };
 
+// Category grouping: Most Common on top, Other below — alpha within each
+const MOST_COMMON_CATEGORIES = [
+    'Arts & Crafts', 'Food and Drink', 'Games', 'Nature Related', 'Physical Activities'
+].sort();
+
+const OTHER_CATEGORIES = [
+    'Historical & Collecting', 'Performing', 'Personal Development', 'Technical Hobbies'
+].sort();
+
+const ORDERED_CATEGORIES = [...MOST_COMMON_CATEGORIES, ...OTHER_CATEGORIES];
+
 type InterestData = {
     existing: string[];
     exploring: string[];
@@ -419,7 +430,8 @@ export default function InterestsWorksheet() {
                                                         <p className="text-gray-700 text-sm">
                                                             <strong>Joy:</strong> ✓ Yes, he enjoys it<br />
                                                             <strong>Rejuvenation:</strong> ✗ Not really<br />
-                                                            <strong>Creativity/Helping Others:</strong> ✗ No
+                                                            <strong>Creativity:</strong> ✗ No<br />
+                                                            <strong>Help Others:</strong> ✗ No
                                                         </p>
                                                     </div>
                                                 </div>
@@ -431,7 +443,8 @@ export default function InterestsWorksheet() {
                                                         <p className="text-gray-700 text-sm">
                                                             <strong>Joy:</strong> ✓ Yes, loves the challenge<br />
                                                             <strong>Rejuvenation:</strong> ✓ Feels energized after<br />
-                                                            <strong>Creativity/Helping Others:</strong> ✗ No
+                                                            <strong>Creativity:</strong> ✗ No<br />
+                                                            <strong>Help Others:</strong> ✗ No
                                                         </p>
                                                     </div>
                                                 </div>
@@ -459,24 +472,36 @@ export default function InterestsWorksheet() {
                                         <div className="grid md:grid-cols-2 gap-5">
                                             <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow">
                                                 <h4 className="text-lg font-bold text-gray-900 mb-2">Jess - Art School Owner</h4>
-                                                <p className="text-gray-700 text-sm mb-1">
+                                                <p className="text-gray-700 text-sm mb-2">
                                                     <strong>Interests:</strong> Painting & Teaching
                                                 </p>
-                                                <p className="text-gray-600 text-sm">
-                                                    Turned her love of art into a business that addresses adult loneliness.
-                                                    She gets joy, uses creativity, AND helps others combat isolation.
+                                                <p className="text-gray-700 text-sm">
+                                                    <strong>Joy:</strong> ✓ Loves creating art and sharing it<br />
+                                                    <strong>Rejuvenation:</strong> ✓ Feels alive when painting<br />
+                                                    <strong>Creativity:</strong> ✓ Expresses herself through art<br />
+                                                    <strong>Help Others:</strong> ✓ Addresses adult loneliness through community art classes
                                                 </p>
+                                                <div className="flex items-center gap-1.5 mt-2">
+                                                    <span className="text-emerald-600">{IntIcons.target('w-4 h-4')}</span>
+                                                    <p className="text-emerald-700 font-semibold text-sm">The Sweet Spot!</p>
+                                                </div>
                                             </div>
 
                                             <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 hover:shadow-md transition-shadow">
                                                 <h4 className="text-lg font-bold text-gray-900 mb-2">Laura - Fitness Trainer, Group Class Instructor</h4>
-                                                <p className="text-gray-700 text-sm mb-1">
+                                                <p className="text-gray-700 text-sm mb-2">
                                                     <strong>Interests:</strong> Fitness, Nutrition
                                                 </p>
-                                                <p className="text-gray-600 text-sm">
-                                                    Loved HIIT classes so much she became an instructor. Now she gets rejuvenated
-                                                    by her work AND helps others achieve their health goals.
+                                                <p className="text-gray-700 text-sm">
+                                                    <strong>Joy:</strong> ✓ Loves the energy of group classes<br />
+                                                    <strong>Rejuvenation:</strong> ✓ Gets energized by teaching and working out<br />
+                                                    <strong>Creativity:</strong> ✓ Creates new workout routines and programs<br />
+                                                    <strong>Help Others:</strong> ✓ Helps others achieve their health goals
                                                 </p>
+                                                <div className="flex items-center gap-1.5 mt-2">
+                                                    <span className="text-emerald-600">{IntIcons.target('w-4 h-4')}</span>
+                                                    <p className="text-emerald-700 font-semibold text-sm">The Sweet Spot!</p>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -643,7 +668,7 @@ export default function InterestsWorksheet() {
                                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-sm font-bold text-gray-700">Your Progress</span>
-                                        <span className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">
+                                        <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                                             {selectedExisting.size + selectedExploring.size} / 10
                                         </span>
                                     </div>
@@ -659,7 +684,7 @@ export default function InterestsWorksheet() {
                                             </div>
                                             <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-gradient-to-r from-pink-500 to-orange-500 transition-all duration-500"
+                                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
                                                     style={{ width: `${Math.min(100, (selectedExisting.size / 5) * 100)}%` }}
                                                 />
                                             </div>
@@ -708,9 +733,12 @@ export default function InterestsWorksheet() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
-                                    <div className="flex-1 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                                        <p className="text-gray-700"><strong className="text-pink-600">✓ Existing:</strong> Things you currently enjoy</p>
-                                        <p className="text-gray-700"><strong className="text-blue-600">⭐ Explore:</strong> New things to try</p>
+                                    <div className="flex-1">
+                                        <p className="text-gray-700 text-sm"><strong>Select your Interests from the following 9 categories</strong>…you can also add your own!</p>
+                                        <div className="flex flex-wrap gap-x-6 gap-y-1 mt-1">
+                                            <p className="text-gray-700 text-xs"><strong className="text-green-600">✓ Existing:</strong> Things you currently enjoy</p>
+                                            <p className="text-gray-700 text-xs"><strong className="text-blue-600">⭐ Explore:</strong> New things to try</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -741,14 +769,47 @@ export default function InterestsWorksheet() {
                                 </div>
                             </div>
 
-                            {/* Category Tabs - All 9 Across */}
+                            {/* Category Tabs - Grouped: Most Common then Other */}
                             <div className="mb-4">
-                                <div className="flex flex-wrap gap-2">
-                                    {Object.entries(INTERESTS_BY_CATEGORY).map(([category]) => {
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">⭐ Most Common</p>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {MOST_COMMON_CATEGORIES.map((category) => {
                                         const existingCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExisting.has(i)).length;
                                         const exploringCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExploring.has(i)).length;
                                         const totalSelected = existingCount + exploringCount;
-                                        const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === Object.keys(INTERESTS_BY_CATEGORY)[0]);
+                                        const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === ORDERED_CATEGORIES[0]);
+
+                                        return (
+                                            <button
+                                                key={category}
+                                                onClick={() => {
+                                                    setExpandedCategories(new Set([category]));
+                                                }}
+                                                className={`
+                                                    px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap
+                                                    ${isActive
+                                                        ? `bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white shadow-lg scale-105`
+                                                        : 'bg-white/80 text-gray-700 border border-gray-200 hover:border-gray-400 hover:shadow-sm'
+                                                    }
+                                                `}
+                                            >
+                                                {category}
+                                                {totalSelected > 0 && (
+                                                    <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/30' : 'bg-gray-200'}`}>
+                                                        {totalSelected}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Other</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {OTHER_CATEGORIES.map((category) => {
+                                        const existingCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExisting.has(i)).length;
+                                        const exploringCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExploring.has(i)).length;
+                                        const totalSelected = existingCount + exploringCount;
+                                        const isActive = expandedCategories.has(category);
 
                                         return (
                                             <button
@@ -779,7 +840,7 @@ export default function InterestsWorksheet() {
                             {/* Active Category Interests */}
                             <div className="mb-6">
                                 {Object.entries(INTERESTS_BY_CATEGORY).map(([category, interests]) => {
-                                    const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === Object.keys(INTERESTS_BY_CATEGORY)[0]);
+                                    const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === ORDERED_CATEGORIES[0]);
                                     if (!isActive) return null;
 
                                     const filteredInterests = filterInterests(interests);
@@ -805,7 +866,7 @@ export default function InterestsWorksheet() {
                                                             className={`
                                                                 group relative rounded-xl p-3 transition-all duration-200 border-2 cursor-pointer
                                                                 ${isExisting
-                                                                    ? 'bg-gradient-to-br from-pink-500 to-orange-500 text-white shadow-md border-pink-600'
+                                                                    ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-md border-green-600'
                                                                     : isExploring
                                                                         ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-md border-blue-600'
                                                                         : 'bg-white/70 text-gray-800 hover:bg-white hover:shadow-sm border-gray-200'
@@ -830,7 +891,7 @@ export default function InterestsWorksheet() {
                                                                     <div className="grid grid-cols-2 gap-1">
                                                                         <button
                                                                             onClick={() => toggleInterest(interest, 'existing')}
-                                                                            className="px-2 py-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg text-[10px] font-bold hover:shadow-md transition"
+                                                                            className="px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-[10px] font-bold hover:shadow-md transition"
                                                                         >
                                                                             + Existing
                                                                         </button>

@@ -38,8 +38,24 @@ export function DailyFocusPanel({
     const [completedIndices, setCompletedIndices] = useState<number[]>([]);
     const [showMilestone, setShowMilestone] = useState(!!milestone);
     const [showConfetti, setShowConfetti] = useState(!!milestone);
+    const [trackingPaused, setTrackingPaused] = useState(false);
+    const [showCustomize, setShowCustomize] = useState(false);
+    const [excludedActivities, setExcludedActivities] = useState<Set<string>>(new Set());
 
-    const allDone = focusActivities.length > 0 && completedIndices.length >= focusActivities.length;
+    const visibleActivities = focusActivities.filter(a => !excludedActivities.has(`${a.itemId}-${a.activityId}`));
+    const allDone = visibleActivities.length > 0 && completedIndices.length >= visibleActivities.length;
+
+    const toggleExcludeActivity = (key: string) => {
+        setExcludedActivities(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(key)) {
+                newSet.delete(key);
+            } else {
+                newSet.add(key);
+            }
+            return newSet;
+        });
+    };
 
     const handleLog = (index: number) => {
         if (completedIndices.includes(index)) return;
@@ -154,22 +170,99 @@ export function DailyFocusPanel({
                         </div>
                     </div>
 
-                    {/* Today status */}
-                    <div className="mt-3 flex items-center gap-2">
-                        {streak.todayLogged ? (
-                            <span className="bg-green-500/30 text-green-100 px-3 py-1 rounded-full text-xs font-bold">
-                                ✓ Logged today
-                            </span>
-                        ) : (
-                            <span className="bg-white/20 text-white/90 px-3 py-1 rounded-full text-xs font-bold">
-                                ○ Not logged yet today
-                            </span>
-                        )}
+                    {/* Today status + controls */}
+                    <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            {streak.todayLogged ? (
+                                <span className="bg-green-500/30 text-green-100 px-3 py-1 rounded-full text-xs font-bold">
+                                    ✓ Logged today
+                                </span>
+                            ) : (
+                                <span className="bg-white/20 text-white/90 px-3 py-1 rounded-full text-xs font-bold">
+                                    ○ Not logged yet today
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowCustomize(!showCustomize)}
+                                className="bg-white/15 hover:bg-white/25 text-white/90 px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Customize
+                            </button>
+                            <button
+                                onClick={() => setTrackingPaused(!trackingPaused)}
+                                className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1 ${
+                                    trackingPaused
+                                        ? 'bg-amber-400/30 text-amber-200 hover:bg-amber-400/40'
+                                        : 'bg-white/15 hover:bg-white/25 text-white/90'
+                                }`}
+                            >
+                                {trackingPaused ? '▶ Resume' : '⏸ Pause'}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
+                {/* Customize Panel */}
+                {showCustomize && (
+                    <div className="px-5 py-4 bg-gray-50 border-b border-gray-200">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-bold text-gray-900">Choose Activities to Track</h4>
+                            <button
+                                onClick={() => setShowCustomize(false)}
+                                className="text-gray-400 hover:text-gray-600 text-sm"
+                            >
+                                Done
+                            </button>
+                        </div>
+                        <div className="space-y-2">
+                            {focusActivities.map((activity) => {
+                                const key = `${activity.itemId}-${activity.activityId}`;
+                                const isExcluded = excludedActivities.has(key);
+                                return (
+                                    <label key={key} className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={!isExcluded}
+                                            onChange={() => toggleExcludeActivity(key)}
+                                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <span className={`text-sm ${isExcluded ? 'text-gray-400 line-through' : 'text-gray-900 font-medium'}`}>
+                                                {activity.activityText}
+                                            </span>
+                                            <span className="text-xs text-gray-400 ml-2">{activity.category}</span>
+                                        </div>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* Focus Activities */}
                 <div className="p-5">
+                    {trackingPaused ? (
+                        <div className="text-center py-8">
+                            <div className="text-4xl mb-3">⏸️</div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Tracking Paused</h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Your daily focus tracking is currently paused. Resume anytime to keep your streak going!
+                            </p>
+                            <button
+                                onClick={() => setTrackingPaused(false)}
+                                className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition"
+                            >
+                                ▶ Resume Tracking
+                            </button>
+                        </div>
+                    ) : (
+                        <>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
                         {allDone ? '🎉 All done for today!' : "Today's Focus"}
                     </h3>
@@ -318,6 +411,8 @@ export function DailyFocusPanel({
                                 );
                             })}
                         </div>
+                    )}
+                        </>
                     )}
                 </div>
             </div>

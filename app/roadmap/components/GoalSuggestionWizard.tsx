@@ -36,6 +36,9 @@ export function GoalSuggestionWizard({
   const [allSelectedGoals, setAllSelectedGoals] = useState<SelectedGoal[]>([]);
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([]);
 
+  // Custom goal entries for each category
+  const [customGoals, setCustomGoals] = useState<{ goal: string; activities: string[] }[]>([{ goal: '', activities: ['', ''] }]);
+
   // Filtered list based on user's choice
   const activeCategories = Array.from(focusedCategories);
   const currentCategory = activeCategories[currentCategoryIndex];
@@ -70,19 +73,19 @@ export function GoalSuggestionWizard({
   };
 
   const handleNext = () => {
-    // Save current selections
-    const selectedForThisCategory = templates
-      .filter(t => selectedTemplateIds.includes(t.id))
-      .map(t => ({
+    // Save custom goals for this category
+    const goalsForThisCategory = customGoals
+      .filter(g => g.goal.trim() !== '')
+      .map((g, idx) => ({
         category: currentCategory,
-        templateId: t.id,
-        goal: t.goal,
-        activities: t.activities,
+        templateId: `custom-${currentCategory}-${idx}`,
+        goal: g.goal,
+        activities: g.activities.filter(a => a.trim() !== ''),
         connectedValues: undefined,
         connectedPurpose: undefined
       }));
 
-    const updatedSelections = [...allSelectedGoals, ...selectedForThisCategory];
+    const updatedSelections = [...allSelectedGoals, ...goalsForThisCategory];
     setAllSelectedGoals(updatedSelections);
 
     if (isLastCategory) {
@@ -90,6 +93,7 @@ export function GoalSuggestionWizard({
     } else {
       setCurrentCategoryIndex(currentCategoryIndex + 1);
       setSelectedTemplateIds([]);
+      setCustomGoals([{ goal: '', activities: ['', ''] }]);
     }
   };
 
@@ -99,7 +103,37 @@ export function GoalSuggestionWizard({
     } else {
       setCurrentCategoryIndex(currentCategoryIndex + 1);
       setSelectedTemplateIds([]);
+      setCustomGoals([{ goal: '', activities: ['', ''] }]);
     }
+  };
+
+  const addCustomGoal = () => {
+    setCustomGoals([...customGoals, { goal: '', activities: ['', ''] }]);
+  };
+
+  const updateCustomGoalName = (index: number, value: string) => {
+    setCustomGoals(prev => prev.map((g, i) => i === index ? { ...g, goal: value } : g));
+  };
+
+  const updateCustomActivity = (goalIndex: number, actIndex: number, value: string) => {
+    setCustomGoals(prev => prev.map((g, i) => {
+      if (i !== goalIndex) return g;
+      const activities = [...g.activities];
+      activities[actIndex] = value;
+      return { ...g, activities };
+    }));
+  };
+
+  const addActivityToGoal = (goalIndex: number) => {
+    setCustomGoals(prev => prev.map((g, i) => {
+      if (i !== goalIndex) return g;
+      return { ...g, activities: [...g.activities, ''] };
+    }));
+  };
+
+  const removeCustomGoal = (index: number) => {
+    if (customGoals.length <= 1) return;
+    setCustomGoals(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSkipAll = () => {
@@ -331,101 +365,152 @@ export function GoalSuggestionWizard({
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-8">
-          <div className="mb-6">
-            <p className="text-lg text-gray-700">
-              Select goals that resonate with you. You can customize them later!
-            </p>
-            <p className="text-sm text-gray-600 mt-2">
-              <strong>Tip:</strong> Choose 2-4 goals to start. You can always add more later.
-            </p>
-          </div>
+        {/* Content — Two Column Layout */}
+        <div className="p-6 md:p-8">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* LEFT COLUMN: User's Own Goals */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Your Goals</h3>
+                  <p className="text-xs text-gray-500">Write your own goals and activities</p>
+                </div>
+              </div>
 
-          {/* Goal Templates */}
-          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-            {templates.map(template => {
-              const isSelected = selectedTemplateIds.includes(template.id);
-
-              return (
-                <button
-                  key={template.id}
-                  onClick={() => toggleTemplate(template)}
-                  className={`
-                    w-full text-left p-5 rounded-xl border-2 transition-all
-                    ${isSelected
-                      ? 'border-indigo-500 bg-indigo-50 shadow-lg'
-                      : 'border-gray-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/50'
-                    }
-                  `}
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox */}
-                    <div className={`
-                      w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-1
-                      ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-gray-300 bg-white'}
-                    `}>
-                      {isSelected && (
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+              <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                {customGoals.map((cg, goalIdx) => (
+                  <div key={goalIdx} className="bg-indigo-50/50 border-2 border-indigo-200 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Goal {goalIdx + 1}</span>
+                      {customGoals.length > 1 && (
+                        <button
+                          onClick={() => removeCustomGoal(goalIdx)}
+                          className="text-gray-400 hover:text-red-500 transition"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       )}
                     </div>
-
-                    {/* Content */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-4 mb-2">
-                        <h3 className="text-lg font-bold text-gray-900">{template.goal}</h3>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <span className={`px-2 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(template.difficulty)}`}>
-                            {template.difficulty}
-                          </span>
-                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-300">
-                            {getTimeframeLabel(template.timeframe)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-sm text-gray-700 mb-3">{template.description}</p>
-
-                      {/* Activities Preview */}
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-xs font-semibold text-gray-600 mb-2">Activities (3-month window):</div>
-                        <ul className="space-y-1">
-                          {template.activities.map((activity, idx) => (
-                            <li key={idx} className="text-sm text-gray-800 flex items-start gap-2">
-                              <span className="text-indigo-600 flex-shrink-0">•</span>
-                              <span>{activity}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                    <input
+                      type="text"
+                      value={cg.goal}
+                      onChange={(e) => updateCustomGoalName(goalIdx, e.target.value)}
+                      placeholder="e.g., Run a 5K, Read 12 books this year..."
+                      className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg text-gray-900 text-sm focus:border-indigo-400 focus:outline-none mb-3 font-medium"
+                    />
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-600">Activities / Steps:</p>
+                      {cg.activities.map((act, actIdx) => (
+                        <input
+                          key={actIdx}
+                          type="text"
+                          value={act}
+                          onChange={(e) => updateCustomActivity(goalIdx, actIdx, e.target.value)}
+                          placeholder={`Activity ${actIdx + 1}...`}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900 text-sm focus:border-indigo-400 focus:outline-none"
+                        />
+                      ))}
+                      {cg.activities.length < 5 && (
+                        <button
+                          onClick={() => addActivityToGoal(goalIdx)}
+                          className="text-xs text-indigo-600 font-semibold hover:text-indigo-800 transition flex items-center gap-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          Add activity
+                        </button>
+                      )}
                     </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                ))}
 
-          {/* Empty State */}
-          {templates.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No templates available for {currentCategory} yet.</p>
-              <p className="text-sm text-gray-500 mt-2">Skip to add your own goals manually.</p>
+                <button
+                  onClick={addCustomGoal}
+                  className="w-full py-3 border-2 border-dashed border-indigo-300 rounded-xl text-indigo-600 font-semibold text-sm hover:bg-indigo-50 hover:border-indigo-400 transition flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Another Goal
+                </button>
+              </div>
             </div>
-          )}
+
+            {/* RIGHT COLUMN: Read-only Examples */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Examples to Check Out</h3>
+                  <p className="text-xs text-gray-500">For inspiration — use your own words on the left!</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                {templates.length > 0 ? templates.map(template => (
+                  <div
+                    key={template.id}
+                    className="bg-amber-50/60 border border-amber-200 rounded-xl p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h4 className="text-sm font-bold text-gray-900">{template.goal}</h4>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getDifficultyColor(template.difficulty)}`}>
+                          {template.difficulty}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-300">
+                          {getTimeframeLabel(template.timeframe)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-gray-600 mb-2">{template.description}</p>
+
+                    <div className="bg-white/60 rounded-lg p-2">
+                      <p className="text-[10px] font-semibold text-gray-500 mb-1">Example Activities:</p>
+                      <ul className="space-y-0.5">
+                        {template.activities.map((activity, idx) => (
+                          <li key={idx} className="text-xs text-gray-700 flex items-start gap-1.5">
+                            <span className="text-amber-500 flex-shrink-0">•</span>
+                            <span>{activity}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center py-12 bg-gray-50 rounded-xl">
+                    <p className="text-gray-500 text-sm">No examples available for {currentCategory} yet.</p>
+                    <p className="text-gray-400 text-xs mt-1">Create your own goals on the left!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
         <div className="border-t border-gray-200 p-6 bg-gray-50 rounded-b-3xl">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              {selectedTemplateIds.length > 0 ? (
+              {customGoals.filter(g => g.goal.trim()).length > 0 ? (
                 <span className="font-semibold text-indigo-600">
-                  {selectedTemplateIds.length} goal{selectedTemplateIds.length !== 1 ? 's' : ''} selected
+                  {customGoals.filter(g => g.goal.trim()).length} goal{customGoals.filter(g => g.goal.trim()).length !== 1 ? 's' : ''} entered
                 </span>
               ) : (
-                <span>Select at least one goal, or skip to add your own</span>
+                <span>Enter your goals on the left, or skip to add later</span>
               )}
             </div>
 

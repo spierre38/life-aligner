@@ -99,6 +99,47 @@ export default function YellowPadPage() {
     const [showCompleted, setShowCompleted] = useState(false);
     const [showHidden, setShowHidden] = useState(false);
 
+    // CSV Export
+    const exportToCSV = () => {
+        const headers = ['Priority', 'Task', 'Source', 'Status', 'Sub-Goals'];
+        const rows = todos.map((todo, idx) => {
+            const subGoals = (todo.sub_goals || []).map(sg => sg.text).join('; ');
+            return [
+                String(idx + 1),
+                todo.text,
+                todo.source || 'manual',
+                todo.completed ? 'Completed' : 'Active',
+                subGoals
+            ];
+        });
+        const csvContent = [headers, ...rows]
+            .map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `todo-list-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast.success('Exported to CSV!');
+    };
+
+    // Clear completed items
+    const clearCompleted = async () => {
+        const completedTodos = todos.filter(t => t.completed);
+        if (completedTodos.length === 0) return;
+        for (const todo of completedTodos) {
+            if (todo.source === 'manual' || !todo.source) {
+                await deleteManualTodo(todo.id);
+            } else {
+                await toggleTodoVisibility(todo.id, (todo.source as 'roadmap' | 'manual') || 'roadmap');
+            }
+        }
+        setTodos(prev => prev.filter(t => !t.completed));
+        showToast.success(`Cleared ${completedTodos.length} completed items`);
+    };
+
     useEffect(() => {
         loadUserAndTodos();
     }, []);
@@ -519,7 +560,7 @@ export default function YellowPadPage() {
                                 {userName}'s Pad
                             </h1>
                             <p className="font-semibold mb-1" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
-                                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                Ongoing To-Do List
                             </p>
                             <p style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
                                 <span className="font-bold" style={{ color: '#2563eb' }}>Blue</span> = Roadmap •
@@ -544,6 +585,25 @@ export default function YellowPadPage() {
                                     />
                                 ))}
                             </div>
+
+                            <button
+                                onClick={exportToCSV}
+                                className={`px-4 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
+                                style={{ fontFamily: 'Courier New, monospace' }}
+                                title="Export to CSV"
+                            >
+                                📥 CSV
+                            </button>
+
+                            {todos.filter(t => t.completed).length > 0 && (
+                                <button
+                                    onClick={clearCompleted}
+                                    className="px-4 py-3 border-2 border-red-300 rounded-lg font-bold shadow-md transition-all bg-red-100 hover:bg-red-200 text-red-700"
+                                    style={{ fontFamily: 'Courier New, monospace' }}
+                                >
+                                    🗑 Clear Done
+                                </button>
+                            )}
 
                             <button
                                 onClick={() => setShowAddModal(true)}

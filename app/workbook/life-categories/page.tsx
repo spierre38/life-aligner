@@ -485,6 +485,9 @@ export default function LifeCategoriesWorksheet() {
                                                 <ul className="space-y-1 text-gray-700">
                                                     <li>• What impact do I want to make?</li>
                                                     <li>• How can I help others?</li>
+                                                    <li>• What do I want my life to look like in 5 years?</li>
+                                                    <li>• Where am I spending most of my time and energy?</li>
+                                                    <li>• Which areas of my life feel neglected?</li>
                                                 </ul>
                                             </div>
                                             <div>
@@ -493,6 +496,9 @@ export default function LifeCategoriesWorksheet() {
                                                     <li>• Help Others</li>
                                                     <li>• Mentor Youth</li>
                                                     <li>• Address Loneliness</li>
+                                                    <li>• Environmental Justice</li>
+                                                    <li>• Support Veterans</li>
+                                                    <li>• Financial Literacy Education</li>
                                                 </ul>
                                             </div>
                                         </div>

@@ -148,6 +148,7 @@ export default function ValuesWorksheet() {
     const [dragOverItem, setDragOverItem] = useState<string | null>(null);
     const [editingPriority, setEditingPriority] = useState<{ name: string, value: string } | null>(null);
     const [showFewValuesConfirm, setShowFewValuesConfirm] = useState(false);
+    const [showTooManyValuesConfirm, setShowTooManyValuesConfirm] = useState(false);
     // Ref for auto-scroll during drag
     const scrollInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -213,6 +214,10 @@ export default function ValuesWorksheet() {
     const moveToPhase2 = () => {
         if (selectedValues.size < 5) {
             setShowFewValuesConfirm(true);
+            return;
+        }
+        if (selectedValues.size > 10) {
+            setShowTooManyValuesConfirm(true);
             return;
         }
         proceedToPhase2();
@@ -784,7 +789,7 @@ export default function ValuesWorksheet() {
                                                 </li>
                                                 <li className="flex items-start gap-2">
                                                     <span className="text-blue-600 font-bold">•</span>
-                                                    <span><strong>Aim for 10-15 values</strong> — the ones most important to who you want to be</span>
+                                                    <span><strong>Aim for 5 to 10 values</strong> — the ones most important to who you want to be</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
                                                     <span className="text-blue-600 font-bold">•</span>
@@ -1053,7 +1058,7 @@ export default function ValuesWorksheet() {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Only {selectedValues.size} {selectedValues.size === 1 ? 'Value' : 'Values'} Selected</h3>
                         <p className="text-gray-600 text-sm mb-6">
-                            We recommend selecting at least <strong>5 values</strong> to get the most out of your LifeFrame. More values give you a richer picture of what drives you.
+                            We recommend selecting <strong>5 to 10 values</strong> to get the most out of your LifeFrame. This range gives you a focused yet rich picture of what drives you.
                         </p>
                         <div className="flex gap-3">
                             <button
@@ -1067,6 +1072,37 @@ export default function ValuesWorksheet() {
                                 className="flex-1 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition"
                             >
                                 Continue Anyway
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Too Many Values Confirmation Dialog */}
+            {showTooManyValuesConfirm && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-8 text-center">
+                        <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Are You Sure?</h3>
+                        <p className="text-gray-600 text-sm mb-6">
+                            You've selected <strong>{selectedValues.size} values</strong>. We suggest narrowing to <strong>5 to 10</strong> for the most impact. Fewer values help you stay focused on what matters most.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowTooManyValuesConfirm(false)}
+                                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition"
+                            >
+                                Go Back & Refine
+                            </button>
+                            <button
+                                onClick={() => { setShowTooManyValuesConfirm(false); proceedToPhase2(); }}
+                                className="flex-1 py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition"
+                            >
+                                Continue with {selectedValues.size}
                             </button>
                         </div>
                     </div>
