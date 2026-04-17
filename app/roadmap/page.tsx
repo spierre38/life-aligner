@@ -1974,49 +1974,161 @@ export default function RoadmapPage() {
                         </div>
                     )}
 
-                    {/* Reflect & Learn Tab */}
+                    {/* Reflect & Learn Tab — Journey Journal */}
                     {activeTab === 'reflect' && (
-                        <div className="bg-white rounded-2xl shadow-lg p-8">
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2">Quarterly Reflection</h2>
-                            <p className="text-gray-800 mb-6">
-                                Learning from your experiences is how you grow. Reflect on what you've tried and what you've learned.
-                            </p>
+                        <div className="space-y-6">
+                            {/* Header card */}
+                            <div className="bg-white rounded-2xl shadow-lg p-6">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-1">Journey Journal</h2>
+                                        <p className="text-gray-500 text-sm">Reflect on milestones and active goals. Growth comes from looking back.</p>
+                                    </div>
+                                    <div className="flex gap-3 flex-shrink-0">
+                                        <div className="text-center px-4 py-2 bg-purple-50 rounded-xl">
+                                            <div className="text-xl font-bold text-purple-700">{archivedItems.length}</div>
+                                            <div className="text-xs text-purple-500 font-medium">Completed</div>
+                                        </div>
+                                        <div className="text-center px-4 py-2 bg-indigo-50 rounded-xl">
+                                            <div className="text-xl font-bold text-indigo-700">
+                                                {activeItems.reduce((sum, item) => sum + item.reflections.length, 0) + archivedItems.reduce((sum, item) => sum + item.reflections.length, 0)}
+                                            </div>
+                                            <div className="text-xs text-indigo-500 font-medium">Reflections</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                <div className="bg-green-50 rounded-xl p-6">
-                                    <h3 className="font-bold text-green-900 mb-2">✓ What's Working</h3>
-                                    <ul className="space-y-2 text-sm">
-                                        {activeItems.flatMap(item =>
-                                            item.reflections
-                                                .filter(r => r.what_worked)
-                                                .slice(-3)
-                                                .map(r => (
-                                                    <li key={r.id} className="text-gray-800">• {r.what_worked}</li>
-                                                ))
+                            {/* What's Working / Key Learnings */}
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="bg-green-50 rounded-xl p-4">
+                                    <h3 className="font-bold text-green-900 mb-2 text-sm">✓ What's Working</h3>
+                                    <ul className="space-y-1.5 text-sm">
+                                        {[...activeItems, ...archivedItems].flatMap(item =>
+                                            item.reflections.filter(r => r.what_worked).slice(-3).map(r => (
+                                                <li key={r.id} className="text-gray-700 flex items-start gap-1.5"><span className="text-green-500 flex-shrink-0">•</span>{r.what_worked}</li>
+                                            ))
+                                        )}
+                                        {[...activeItems, ...archivedItems].every(item => item.reflections.filter(r => r.what_worked).length === 0) && (
+                                            <li className="text-gray-400 italic text-xs">Add reflections to see highlights here</li>
                                         )}
                                     </ul>
                                 </div>
-                                <div className="bg-orange-50 rounded-xl p-6">
-                                    <h3 className="font-bold text-orange-900 mb-2">💡 Key Learnings</h3>
-                                    <ul className="space-y-2 text-sm">
-                                        {activeItems.flatMap(item =>
-                                            item.reflections
-                                                .slice(-3)
-                                                .map(r => (
-                                                    <li key={r.id} className="text-gray-800">• {r.learning}</li>
-                                                ))
+                                <div className="bg-amber-50 rounded-xl p-4">
+                                    <h3 className="font-bold text-amber-900 mb-2 text-sm">💡 Key Learnings</h3>
+                                    <ul className="space-y-1.5 text-sm">
+                                        {[...activeItems, ...archivedItems].flatMap(item =>
+                                            item.reflections.slice(-3).map(r => (
+                                                <li key={r.id} className="text-gray-700 flex items-start gap-1.5"><span className="text-amber-500 flex-shrink-0">•</span>{r.learning}</li>
+                                            ))
+                                        )}
+                                        {[...activeItems, ...archivedItems].every(item => item.reflections.length === 0) && (
+                                            <li className="text-gray-400 italic text-xs">Your key learnings will appear here</li>
                                         )}
                                     </ul>
                                 </div>
                             </div>
 
-                            <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
-                                <h3 className="font-bold text-purple-900 mb-4">Remember:</h3>
-                                <ul className="space-y-2 text-gray-800">
-                                    <li>✓ <strong>Multiple outcomes can be positive</strong> - Progress is success</li>
-                                    <li>✓ <strong>Negative outcomes can be positive</strong> - Learning is valuable</li>
-                                    <li>✓ <strong>It's about the journey</strong> - Not the destination</li>
-                                    <li>✓ <strong>Update every 3 months</strong> - Based on what you learned</li>
+                            {/* Completed Milestones */}
+                            {archivedItems.length > 0 && (
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2"><span className="text-2xl">🏆</span> Completed Milestones</h3>
+                                    <div className="space-y-4">
+                                        {archivedItems.map(item => (
+                                            <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
+                                                <div className="h-1 bg-gradient-to-r from-purple-400 to-indigo-500" />
+                                                <div className="p-5">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-lg">🏆</div>
+                                                        <div>
+                                                            <h4 className="font-bold text-gray-900">{item.title}</h4>
+                                                            <span className="text-xs font-semibold text-purple-600">{item.category}</span>
+                                                        </div>
+                                                    </div>
+                                                    {item.reflections.length > 0 && (
+                                                        <div className="space-y-2 mb-3">
+                                                            {item.reflections.map(r => (
+                                                                <div key={r.id} className="bg-purple-50 rounded-lg p-3 text-sm">
+                                                                    <div className="text-xs text-purple-500 font-semibold mb-1">{new Date(r.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                                                                    {r.what_worked && <p className="text-gray-700 mb-1"><strong className="text-green-700">✓ Worked:</strong> {r.what_worked}</p>}
+                                                                    {r.learning && <p className="text-gray-700"><strong className="text-amber-700">💡 Learned:</strong> {r.learning}</p>}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {reflectingOn !== item.id ? (
+                                                        <button onClick={() => setReflectingOn(item.id)} className="text-sm text-purple-600 hover:text-purple-800 font-semibold transition flex items-center gap-1">
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                                            {item.reflections.length === 0 ? 'Reflect on this milestone' : 'Add another reflection'}
+                                                        </button>
+                                                    ) : (
+                                                        <div className="mt-3 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+                                                            <p className="text-xs text-indigo-600 italic mb-3">💡 What did you learn from pursuing this goal? How did it change you?</p>
+                                                            <div className="space-y-3">
+                                                                <div>
+                                                                    <label className="block text-xs font-bold text-gray-700 mb-1">What worked well?</label>
+                                                                    <textarea rows={2} value={reflectionWhatWorked} onChange={(e) => setReflectionWhatWorked(e.target.value)} className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-400 focus:outline-none text-sm text-gray-900 resize-none" placeholder="Activities that were effective..." />
+                                                                </div>
+                                                                <div>
+                                                                    <label className="block text-xs font-bold text-gray-700 mb-1">What did you learn? *</label>
+                                                                    <textarea rows={2} value={reflectionLearning} onChange={(e) => setReflectionLearning(e.target.value)} className="w-full px-3 py-2 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm text-gray-900 resize-none" placeholder="Your most important insight..." />
+                                                                </div>
+                                                                <div className="flex gap-2">
+                                                                    <button onClick={() => addReflection(item.id)} disabled={!reflectionLearning.trim()} className={`flex-1 py-2 rounded-lg font-bold text-sm transition ${reflectionLearning.trim() ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}>Save Reflection</button>
+                                                                    <button onClick={() => { setReflectingOn(null); setReflectionWhatWorked(''); setReflectionLearning(''); }} className="px-4 py-2 border-2 border-gray-300 rounded-lg font-semibold text-gray-600 hover:bg-gray-50 text-sm">Cancel</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Active goals with reflections */}
+                            {activeItems.some(i => i.reflections.length > 0) && (
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2"><span className="text-2xl">📝</span> In-Progress Goal Reflections</h3>
+                                    <div className="space-y-3">
+                                        {activeItems.filter(i => i.reflections.length > 0).map(item => (
+                                            <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-amber-100 p-5">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center text-sm">🎯</div>
+                                                    <div><h4 className="font-bold text-gray-900 text-sm">{item.title}</h4><span className="text-xs text-amber-600 font-semibold">{item.category}</span></div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {item.reflections.map(r => (
+                                                        <div key={r.id} className="bg-amber-50 rounded-lg p-3 text-sm">
+                                                            <div className="text-xs text-amber-500 font-semibold mb-1">{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                                                            {r.what_worked && <p className="text-gray-700 mb-0.5"><strong className="text-green-700">✓</strong> {r.what_worked}</p>}
+                                                            {r.learning && <p className="text-gray-700"><strong className="text-amber-700">💡</strong> {r.learning}</p>}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Empty state */}
+                            {archivedItems.length === 0 && activeItems.every(i => i.reflections.length === 0) && (
+                                <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
+                                    <div className="text-5xl mb-4">📖</div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Your Journal Awaits</h3>
+                                    <p className="text-gray-500 text-sm max-w-sm mx-auto">Add reflections in the Trail tab, or archive a completed goal to start your milestone journal.</p>
+                                </div>
+                            )}
+
+                            <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-5">
+                                <h3 className="font-bold text-purple-900 mb-2 text-sm">Remember:</h3>
+                                <ul className="space-y-1.5 text-sm text-gray-700">
+                                    <li>✓ <strong>Progress is success</strong> — multiple outcomes can be positive</li>
+                                    <li>✓ <strong>Learning is valuable</strong> — even setbacks move you forward</li>
+                                    <li>✓ <strong>It's about the journey</strong> — not just the destination</li>
+                                    <li>✓ <strong>Reflect every 3 months</strong> — based on what you've learned</li>
                                 </ul>
                             </div>
                         </div>

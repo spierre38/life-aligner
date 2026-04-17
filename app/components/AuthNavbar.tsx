@@ -138,15 +138,6 @@ export default function AuthNavbar() {
                                 <span className="inline-flex items-center gap-1.5">{NavIcons.check('w-4 h-4')} To-Do</span>
                             </Link>
                             <Link
-                                href="/journal"
-                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/journal')
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                    }`}
-                            >
-                                <span className="inline-flex items-center gap-1.5">{NavIcons.book('w-4 h-4')} Journal</span>
-                            </Link>
-                            <Link
                                 href="/resources"
                                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${isActive('/resources')
                                     ? 'bg-indigo-50 text-indigo-600'
@@ -272,10 +263,6 @@ export default function AuthNavbar() {
                                                 <span className="text-green-500">{NavIcons.check('w-5 h-5')}</span>
                                                 <span className="text-sm font-medium text-gray-700">To-Do List</span>
                                             </Link>
-                                            <Link href="/journal" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
-                                                <span className="text-purple-500">{NavIcons.book('w-5 h-5')}</span>
-                                                <span className="text-sm font-medium text-gray-700">Journey Journal</span>
-                                            </Link>
                                             <Link href="/resources" onClick={() => setShowUserMenu(false)} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 transition">
                                                 <span className="text-amber-600">{NavIcons.book('w-5 h-5')}</span>
                                                 <span className="text-sm font-medium text-gray-700">Resources</span>
@@ -352,9 +339,6 @@ export default function AuthNavbar() {
                             </Link>
                             <Link href="/todo" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/todo') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 <span className="inline-flex items-center gap-1.5">{NavIcons.check('w-4 h-4')} To-Do</span>
-                            </Link>
-                            <Link href="/journal" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/journal') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
-                                <span className="inline-flex items-center gap-1.5">{NavIcons.book('w-4 h-4')} Journal</span>
                             </Link>
                             <Link href="/resources" onClick={() => setShowMobileMenu(false)} className={`block px-4 py-3 rounded-lg font-semibold transition ${isActive('/resources') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}>
                                 <span className="inline-flex items-center gap-1.5">{NavIcons.book('w-4 h-4')} Resources</span>
