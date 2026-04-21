@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { likePost, unlikePost } from '@/lib/social';
+import { likePost, unlikePost, reportPost } from '@/lib/social';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -39,6 +39,9 @@ export default function PostCard({ post, currentUserId, initialLiked = false, on
     const [liked, setLiked] = useState(initialLiked);
     const [likesCount, setLikesCount] = useState(post.likes_count);
     const [liking, setLiking] = useState(false);
+    const [showReportMenu, setShowReportMenu] = useState(false);
+    const [reporting, setReporting] = useState(false);
+    const [reported, setReported] = useState(false);
 
     const typeConfig = POST_TYPE_CONFIG[post.post_type];
     const isOwnPost = currentUserId ? currentUserId === post.author.id : false;
@@ -66,6 +69,15 @@ export default function PostCard({ post, currentUserId, initialLiked = false, on
         }
 
         setLiking(false);
+    };
+
+    const handleReport = async (reason: string) => {
+        if (reporting || reported) return;
+        setReporting(true);
+        await reportPost(post.id, reason);
+        setReporting(false);
+        setReported(true);
+        setShowReportMenu(false);
     };
 
     return (
@@ -157,23 +169,58 @@ export default function PostCard({ post, currentUserId, initialLiked = false, on
                     </button>
                 </div>
 
-                {/* Delete button (own posts only) */}
-                {isOwnPost && onDelete && (
-                    <button
-                        onClick={onDelete}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-2"
-                        title="Delete post"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                        </svg>
-                    </button>
-                )}
+                {/* Right side: report (other posts) or delete (own posts) */}
+                <div className="flex items-center gap-1">
+                    {!isOwnPost && currentUserId && (
+                        <div className="relative">
+                            {reported ? (
+                                <span className="text-xs text-gray-400 px-2">Reported</span>
+                            ) : (
+                                <button
+                                    onClick={() => setShowReportMenu(!showReportMenu)}
+                                    className="text-gray-400 hover:text-amber-500 transition-colors p-2"
+                                    title="Report post"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                                    </svg>
+                                </button>
+                            )}
+                            {showReportMenu && (
+                                <div className="absolute right-0 bottom-8 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-20 py-1 overflow-hidden">
+                                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-3 py-2">Report reason</p>
+                                    {[
+                                        'Hate speech or slur',
+                                        'Harassment or bullying',
+                                        'Spam or self-promotion',
+                                        'Inappropriate content',
+                                        'Other',
+                                    ].map(reason => (
+                                        <button
+                                            key={reason}
+                                            onClick={() => handleReport(reason)}
+                                            disabled={reporting}
+                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                        >
+                                            {reason}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    {isOwnPost && onDelete && (
+                        <button
+                            onClick={onDelete}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                            title="Delete post"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Visibility indicator */}

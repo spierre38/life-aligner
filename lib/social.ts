@@ -398,3 +398,58 @@ export async function deleteShareLink(linkId: string) {
 
     return { error };
 }
+
+
+// ===================================
+// MODERATION / REPORTING
+// ===================================
+
+/**
+ * Report a post for review (user-initiated)
+ */
+export async function reportPost(postId: string, reason: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: { message: 'Not authenticated' } };
+
+    // Fetch the post content to include in the report
+    const { data: post } = await supabase
+        .from('social_posts')
+        .select('content, user_id')
+        .eq('id', postId)
+        .single();
+
+    const { error } = await supabase
+        .from('flagged_content')
+        .insert({
+            post_id: postId,
+            reported_by: user.id,
+            reported_user_id: post?.user_id || null,
+            content: post?.content || '',
+            reason,
+            status: 'user_reported',
+            context: 'post',
+        });
+
+    return { error };
+}
+
+/**
+ * Flag content server-side (called after soft moderation hit)
+ */
+export async function flagContent(postId: string | null, content: string, reason: string, context: 'post' | 'comment' = 'post') {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+        .from('flagged_content')
+        .insert({
+            post_id: postId,
+            user_id: user?.id || null,
+            content,
+            reason,
+            status: 'auto_flagged',
+            context,
+        });
+
+    return { error };
+}
+

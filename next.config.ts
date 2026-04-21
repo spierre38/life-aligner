@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Turbopack crashes on this machine due to missing native SWC bindings
+  // (falls back to WASM which doesn't support turbo.createProject).
+  // Disable it so `npm run dev` uses the standard webpack bundler.
+  experimental: {
+    turbo: undefined,
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
   },
