@@ -42,7 +42,6 @@ export default function AuthNavbar() {
             setUser(currentUser);
 
             if (currentUser) {
-                // Load worksheets for LifeFrame completion state
                 const { data: worksheets } = await supabase
                     .from('workbook_entries')
                     .select('category, content')
@@ -95,8 +94,10 @@ export default function AuthNavbar() {
 
     // Shared class helper so desktop and mobile styles stay in sync.
     // Active state = soft gray pill (matches the PDF, not indigo).
+    // whitespace-nowrap prevents short labels like "To-Do" from wrapping
+    // when the centered nav column gets tight at smaller desktop widths.
     const linkClass = (active: boolean, muted = false) =>
-        `px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+        `px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
             muted
                 ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 : active
@@ -104,11 +105,34 @@ export default function AuthNavbar() {
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
         }`;
 
-    // Avatar: real photo if available, otherwise initials gradient
+    // Avatar: real photo if set, otherwise initials gradient
     const initials =
         user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
         user?.email?.[0]?.toUpperCase() ||
         'U';
+
+    function AvatarCircle({ size = 36 }: { size?: number }) {
+        return (
+            <div
+                className="rounded-full overflow-hidden flex-shrink-0"
+                style={{ width: size, height: size }}
+            >
+                {avatarUrl ? (
+                    <Image
+                        src={avatarUrl}
+                        alt="Profile photo"
+                        width={size}
+                        height={size}
+                        className="w-full h-full object-cover"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                        {initials}
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -163,24 +187,7 @@ export default function AuthNavbar() {
                                 <span className="text-sm font-medium text-gray-900 hidden lg:block">
                                     {user?.user_metadata?.full_name || 'User'}
                                 </span>
-
-                                {/* Avatar: photo or initials fallback */}
-                                <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-white shadow flex-shrink-0">
-                                    {avatarUrl ? (
-                                        <Image
-                                            src={avatarUrl}
-                                            alt="Profile photo"
-                                            width={36}
-                                            height={36}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                                            {initials}
-                                        </div>
-                                    )}
-                                </div>
-
+                                <AvatarCircle size={36} />
                                 <svg
                                     className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
                                     fill="none"
@@ -197,21 +204,7 @@ export default function AuthNavbar() {
                                     <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 z-50">
                                         {/* Dropdown header with avatar */}
                                         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
-                                                {avatarUrl ? (
-                                                    <Image
-                                                        src={avatarUrl}
-                                                        alt="Profile photo"
-                                                        width={36}
-                                                        height={36}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                                                        {initials}
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <AvatarCircle size={36} />
                                             <div className="min-w-0">
                                                 <div className="text-sm font-semibold text-gray-900 truncate">
                                                     {user?.user_metadata?.full_name || 'User'}
@@ -306,21 +299,7 @@ export default function AuthNavbar() {
                     <div className="md:hidden py-4 border-t border-gray-200">
                         {/* Mobile user info header */}
                         <div className="flex items-center gap-3 px-4 pb-4 mb-2 border-b border-gray-100">
-                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                                {avatarUrl ? (
-                                    <Image
-                                        src={avatarUrl}
-                                        alt="Profile photo"
-                                        width={40}
-                                        height={40}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                        {initials}
-                                    </div>
-                                )}
-                            </div>
+                            <AvatarCircle size={40} />
                             <div className="min-w-0">
                                 <div className="text-sm font-semibold text-gray-900 truncate">
                                     {user?.user_metadata?.full_name || 'User'}

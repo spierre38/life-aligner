@@ -315,7 +315,7 @@ export default function DashboardPage() {
                             className="absolute inset-0"
                             style={{
                                 background:
-                                    'linear-gradient(115deg, #2e1065 0%, #7c3aed 22%, #6b21a8 40%, #1e1b4b 62%, #0c4a6e 80%, #22d3ee 100%)',
+                                    'linear-gradient(110deg, #3b0764 0%, #7e22ce 20%, #6d28d9 35%, #1e1b4b 55%, #155e75 75%, #06b6d4 100%)',
                             }}
                         />
                         <div className="relative z-10 px-8 md:px-14 py-12 md:py-16">
@@ -365,7 +365,7 @@ export default function DashboardPage() {
                                     <Link
                                         key={card.key}
                                         href={card.href}
-                                        className={`group relative rounded-3xl bg-white border border-gray-200 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg ${muted ? 'opacity-60' : 'shadow-sm'
+                                        className={`group relative rounded-3xl bg-white border border-gray-200 transition-all hover:-translate-y-1 hover:shadow-lg ${muted ? 'opacity-60' : 'shadow-sm'
                                             }`}
                                         aria-label={`${card.title}: ${card.description}`}
                                     >
@@ -380,7 +380,7 @@ export default function DashboardPage() {
                                             <div className="flex items-baseline gap-3 mb-1">
                                                 <span
                                                     className={`inline-flex items-center justify-center w-8 h-8 rounded-full border text-base font-semibold ${muted
-                                                            ? 'border-gray-300 text-gray-400'
+                                                            ? 'border-gray-400 text-gray-600'
                                                             : 'border-gray-300 text-gray-500'
                                                         }`}
                                                 >
