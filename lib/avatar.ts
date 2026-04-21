@@ -48,7 +48,8 @@ export async function uploadAvatar(file: File): Promise<{ url: string | null; er
 
     try {
         const blob = await compressImage(file);
-        const path = `${user.id}.webp`;
+        // Store as {userId}/avatar.webp so the folder-based RLS policy matches
+        const path = `${user.id}/avatar.webp`;
 
         const { error: uploadError } = await supabase.storage
             .from(BUCKET)
@@ -80,7 +81,7 @@ export async function removeAvatar(): Promise<{ error: string | null }> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const path = `${user.id}.webp`;
+    const path = `${user.id}/avatar.webp`;
 
     await supabase.storage.from(BUCKET).remove([path]);
     await supabase.from('profiles').update({ avatar_url: null }).eq('id', user.id);
