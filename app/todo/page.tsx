@@ -169,10 +169,7 @@ export default function YellowPadPage() {
             showToast.error('Failed to load todos');
         } else {
             const sorted = (data || []).sort((a, b) => {
-                // 1. Active items first, completed items last
-                if (a.completed && !b.completed) return 1;
-                if (!a.completed && b.completed) return -1;
-                // 2. Within each group, sort by priority
+                // Sort only by priority — completed items stay in place
                 const aPriority = a.priority || 9999;
                 const bPriority = b.priority || 9999;
                 return aPriority - bPriority;
@@ -250,18 +247,18 @@ export default function YellowPadPage() {
     const handleDragEnd = (result: any) => {
         if (!result.destination) return;
 
-        // Only active items are in the drag context
-        const active = todos.filter(t => !t.completed);
-        const completed = todos.filter(t => t.completed);
-        const [reorderedItem] = active.splice(result.source.index, 1);
-        active.splice(result.destination.index, 0, reorderedItem);
+        // Drag over the full visible list (completed items stay in place)
+        const visible = todos.filter(t => !t.hidden);
+        const hidden = todos.filter(t => t.hidden);
+        const [reorderedItem] = visible.splice(result.source.index, 1);
+        visible.splice(result.destination.index, 0, reorderedItem);
 
-        const reorderedActive = active.map((item, index) => ({
+        const reordered = visible.map((item, index) => ({
             ...item,
             priority: index + 1
         }));
 
-        const merged = [...reorderedActive, ...completed];
+        const merged = [...reordered, ...hidden];
         setTodos(merged);
         updateTodoOrder(merged);
     };
@@ -516,10 +513,8 @@ export default function YellowPadPage() {
         );
     }
 
-    // Separate active, completed, and hidden for rendering
+    // All visible todos rendered together — completed items stay in place
     const visibleTodos = todos.filter(todo => !todo.hidden);
-    const activeTodos = visibleTodos.filter(todo => !todo.completed);
-    const completedTodos = visibleTodos.filter(todo => todo.completed);
     const hiddenTodos = todos.filter(todo => todo.hidden);
 
     return (
@@ -636,7 +631,7 @@ export default function YellowPadPage() {
                                         {...provided.droppableProps}
                                         ref={provided.innerRef}
                                     >
-                                        {activeTodos.map((todo, index) => (
+                                        {visibleTodos.map((todo, index) => (
                                             <Draggable key={todo.id} draggableId={todo.id} index={index}>
                                                 {(provided, snapshot) => (
                                                     <div
@@ -863,68 +858,6 @@ export default function YellowPadPage() {
                         </DragDropContext>
                     )}
 
-                    {/* Completed Section */}
-                    {completedTodos.length > 0 && (
-                        <div className="mt-8">
-                            <button
-                                onClick={() => setShowCompleted(!showCompleted)}
-                                className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity"
-                                style={{ fontFamily: 'Courier New, monospace' }}
-                            >
-                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
-                                <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: t.text }}>
-                                    {showCompleted ? '▼' : '▶'} {completedTodos.length} completed
-                                </span>
-                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
-                            </button>
-
-                            {showCompleted && (
-                                <div className="mt-4 space-y-0 opacity-50">
-                                    {completedTodos.map((todo) => (
-                                        <div
-                                            key={todo.id}
-                                            className="flex items-center gap-4 group"
-                                            style={{
-                                                minHeight: '32px',
-                                                lineHeight: '32px',
-                                            }}
-                                        >
-                                            {/* Spacer for drag handle */}
-                                            <div className="w-4" />
-
-                                            {/* Completed ✓ badge */}
-                                            <div
-                                                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 bg-green-500"
-                                            >
-                                                ✓
-                                            </div>
-
-                                            {/* Checkbox */}
-                                            <button
-                                                onClick={() => handleToggle(todo)}
-                                                className={`w-5 h-5 rounded border-2 flex-shrink-0 ${t.checkBorder}`}
-                                            >
-                                                <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
-
-                                            {/* Todo Text */}
-                                            <span
-                                                className="text-base flex-1 line-through"
-                                                style={{
-                                                    fontFamily: 'Courier New, monospace',
-                                                    color: theme === 'dark' ? '#475569' : '#9ca3af'
-                                                }}
-                                            >
-                                                {todo.text}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     {/* Hidden Section */}
                     {hiddenTodos.length > 0 && (
