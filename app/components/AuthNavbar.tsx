@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { evaluateLifeFrameCompletion, type LifeFrameCompletion } from '@/lib/lifeframe-completion';
 import Wordmark from '@/app/components/Wordmark';
@@ -76,6 +77,7 @@ export default function AuthNavbar() {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
@@ -99,6 +101,15 @@ export default function AuthNavbar() {
 
                 if (!mounted) return;
                 setCompletion(evaluateLifeFrameCompletion(worksheets ?? []));
+
+                // Load avatar
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('avatar_url')
+                    .eq('id', currentUser.id)
+                    .single();
+                if (!mounted) return;
+                if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
             }
         };
 
@@ -220,8 +231,14 @@ export default function AuthNavbar() {
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                                 className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-gray-50 transition-all"
                             >
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                    {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow flex items-center justify-center flex-shrink-0">
+                                    {avatarUrl ? (
+                                        <Image src={avatarUrl} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                            {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="text-left hidden lg:block">
                                     <div className="text-sm font-semibold text-gray-900">
