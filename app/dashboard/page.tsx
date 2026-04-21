@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
@@ -19,7 +20,6 @@ const OnboardingModal = dynamic(() => import('@/app/components/OnboardingModal')
 const VideoIntroStep = dynamic(() => import('@/app/components/VideoIntroStep'));
 
 // ─── State machine ──────────────────────────────────────────────────────────
-// Drives every piece of state-specific copy and every CTA destination.
 
 type DashState = 'new' | 'values_done' | 'interests_done' | 'complete';
 
@@ -31,25 +31,28 @@ function deriveState(c: LifeFrameCompletion): DashState {
 }
 
 // ─── Copy config ────────────────────────────────────────────────────────────
-// All state-specific copy lives here. Tweaking wording = editing this object.
+// All state-specific copy lives here so tweaking wording = editing this object.
+// The hero splits the subheader into a bold lead + rest, rendered as two spans
+// in JSX (no inline string replacement, no regex).
 
 type StateCopy = {
-    hero: { subheader: string; ctaLabel: string; ctaHref: string };
-    guide: { eyebrow: string; heading: string; ctaLabel: string; ctaHref: string };
-    // Journey card badges — which card shows "Start Here" / "Continue Here".
+    hero: { leadBold: string; rest: string; ctaLabel: string; ctaHref: string };
+    guide: { eyebrow: string; headingLine1: string; headingLine2: string; ctaLabel: string; ctaHref: string };
     badge: { values: string; interests: string; life_categories: string };
 };
 
 const COPY: Record<DashState, StateCopy> = {
     new: {
         hero: {
-            subheader: "Let's get started! First, we'll need to establish your values.",
+            leadBold: "Let's get started!",
+            rest: " First, we'll need to establish your values.",
             ctaLabel: 'Get Started',
             ctaHref: '/workbook/values',
         },
         guide: {
             eyebrow: "Let's build your foundation",
-            heading: 'The first step in your journey is to establish your Values',
+            headingLine1: 'The first step in your journey',
+            headingLine2: 'is to establish your Values',
             ctaLabel: 'Establish Your Values',
             ctaHref: '/workbook/values',
         },
@@ -57,13 +60,15 @@ const COPY: Record<DashState, StateCopy> = {
     },
     values_done: {
         hero: {
-            subheader: "Continue your LifeFrame journey! Next, we'll need to define your interests.",
+            leadBold: 'Continue your LifeFrame journey!',
+            rest: " Next, we'll need to define your interests.",
             ctaLabel: 'Define your Interests',
             ctaHref: '/workbook/interests',
         },
         guide: {
             eyebrow: "Let's build your foundation",
-            heading: 'The next step in your journey is to define your Interests',
+            headingLine1: 'The next step in your journey',
+            headingLine2: 'is to define your Interests',
             ctaLabel: 'Define your Interests',
             ctaHref: '/workbook/interests',
         },
@@ -71,13 +76,15 @@ const COPY: Record<DashState, StateCopy> = {
     },
     interests_done: {
         hero: {
-            subheader: "Complete your LifeFrame journey! Finally, we'll need to establish your Life Categories.",
+            leadBold: 'Complete your LifeFrame journey!',
+            rest: " Finally, we'll need to establish your Life Categories.",
             ctaLabel: 'Establish Your Life Categories',
             ctaHref: '/workbook/life-categories',
         },
         guide: {
             eyebrow: "Let's build your foundation",
-            heading: 'The next step in your journey is to establish your Life Categories',
+            headingLine1: 'The next step in your journey is',
+            headingLine2: 'to establish your Life Categories',
             ctaLabel: 'Establish your Life Categories',
             ctaHref: '/workbook/life-categories',
         },
@@ -85,13 +92,15 @@ const COPY: Record<DashState, StateCopy> = {
     },
     complete: {
         hero: {
-            subheader: "Your LifeFrame is complete! Now let's build your personalized Roadmap.",
+            leadBold: 'Your LifeFrame is complete!',
+            rest: " Now let's build your personalized Roadmap.",
             ctaLabel: 'Build Roadmap',
             ctaHref: '/roadmap',
         },
         guide: {
             eyebrow: 'Your foundation is now set!',
-            heading: 'You are now ready to build your Roadmap',
+            headingLine1: 'You are now ready',
+            headingLine2: 'to build your Roadmap',
             ctaLabel: 'Build Roadmap',
             ctaHref: '/roadmap',
         },
@@ -100,8 +109,6 @@ const COPY: Record<DashState, StateCopy> = {
 };
 
 // ─── Journey card definitions ───────────────────────────────────────────────
-// Each card's visual identity (gradient) and destination is static.
-// The pill label and active/muted styling come from the state above.
 
 const CARDS = [
     {
@@ -110,8 +117,8 @@ const CARDS = [
         title: 'Values',
         description: 'Define your guiding principles',
         href: '/workbook/values',
-        // Pastel gradient tile — matches the PDF's teal/green card.
-        tileClass: 'bg-gradient-to-br from-teal-200 via-cyan-200 to-emerald-200',
+        // Pastel gradient tiles matching the PDF mockup.
+        tileClass: 'bg-gradient-to-br from-teal-200 via-cyan-200 to-emerald-300',
     },
     {
         key: 'interests' as const,
@@ -125,28 +132,26 @@ const CARDS = [
         key: 'life_categories' as const,
         step: 3,
         title: 'Life Categories',
-        description: 'Your focus areas & purpose',
+        description: 'Your focus areas and purpose',
         href: '/workbook/life-categories',
-        tileClass: 'bg-gradient-to-br from-purple-200 via-fuchsia-200 to-orange-200',
+        tileClass: 'bg-gradient-to-br from-purple-300 via-fuchsia-300 to-orange-300',
     },
 ];
 
-// Helper: pill styling per badge label.
+// Pill styling per badge label.
 function badgeClass(label: string): string {
     switch (label) {
         case 'Start Here':
         case 'Continue Here':
-            // Solid black pill — this is the "active" state the PDF uses.
-            return 'bg-gray-900 text-white';
+            // Solid black pill with white text — the PDF's "active" treatment.
+            return 'bg-gray-900 text-white shadow-md';
         case 'Complete':
-            return 'bg-green-100 text-green-700 border border-green-200';
+            return 'bg-green-500 text-white shadow-sm';
         case 'Incomplete':
         default:
-            return 'bg-gray-100 text-gray-400 border border-gray-200';
+            return 'bg-gray-200 text-gray-500';
     }
 }
-
-// ─── Time-of-day greeting ───────────────────────────────────────────────────
 
 function getGreeting(): string {
     const hour = new Date().getHours();
@@ -172,8 +177,6 @@ export default function DashboardPage() {
 
         const load = async () => {
             try {
-                // Middleware should have caught unauth already, but keep the
-                // client-side guard as belt-and-suspenders.
                 const userWithProfile = await getUserWithProfile();
                 if (!mounted) return;
 
@@ -182,7 +185,6 @@ export default function DashboardPage() {
                     return;
                 }
 
-                // Admins have their own dashboard.
                 if (userWithProfile.profile?.role === 'admin') {
                     router.push('/dashboard/admin');
                     return;
@@ -190,7 +192,6 @@ export default function DashboardPage() {
 
                 setUser(userWithProfile);
 
-                // First-time users see the onboarding flow before the dashboard.
                 if (!userWithProfile.profile?.welcome_seen) {
                     setShowWelcome(true);
                 }
@@ -203,7 +204,6 @@ export default function DashboardPage() {
                 if (!mounted) return;
 
                 if (error) {
-                    // Log for ourselves; show a gentle error card to the user.
                     console.error('Dashboard worksheets fetch failed:', error);
                     setLoadError(true);
                     return;
@@ -219,18 +219,15 @@ export default function DashboardPage() {
         };
 
         load();
-        return () => {
-            mounted = false;
-        };
+        return () => { mounted = false; };
     }, [router]);
 
-    // ── Loading skeleton ────────────────────────────────────────────────────
     if (loading) {
         return (
             <>
                 <AuthNavbar />
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16">
-                    <div className="max-w-7xl mx-auto px-4 py-12">
+                <div className="min-h-screen bg-gray-50 pt-16">
+                    <div className="max-w-6xl mx-auto px-4 py-12">
                         <SkeletonCard />
                     </div>
                 </div>
@@ -238,7 +235,6 @@ export default function DashboardPage() {
         );
     }
 
-    // ── Welcome flow gate (first-time users) ────────────────────────────────
     if (showWelcome) {
         return (
             <OnboardingJourney
@@ -262,12 +258,11 @@ export default function DashboardPage() {
         );
     }
 
-    // ── Load error fallback ────────────────────────────────────────────────
     if (loadError || !completion) {
         return (
             <>
                 <AuthNavbar />
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16">
+                <div className="min-h-screen bg-gray-50 pt-16">
                     <div className="max-w-3xl mx-auto px-4 py-24">
                         <div className="bg-white rounded-3xl p-8 md:p-12 shadow-lg text-center">
                             <h2 className="text-2xl font-bold text-gray-900 mb-3">
@@ -289,7 +284,6 @@ export default function DashboardPage() {
         );
     }
 
-    // ── Main render ─────────────────────────────────────────────────────────
     const state = deriveState(completion);
     const copy = COPY[state];
     const firstName = user?.profile?.full_name?.split(' ')[0] || 'friend';
@@ -298,7 +292,6 @@ export default function DashboardPage() {
         <>
             <AuthNavbar />
 
-            {/* Onboarding modal gets rendered on top once the video intro completes. */}
             {user?.user?.id && showOnboarding && (
                 <OnboardingModal
                     userId={user.user.id}
@@ -306,54 +299,54 @@ export default function DashboardPage() {
                 />
             )}
 
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 pt-16">
-                <div className="max-w-6xl mx-auto px-4 py-10">
+            <div className="min-h-screen bg-gray-50 pt-16">
+                <div className="max-w-6xl mx-auto px-4 py-8 md:py-10">
 
-                    {/* ── Hero ─────────────────────────────────────────── */}
+                    {/* ── Hero ─────────────────────────────────────────────
+                        Dramatic gradient matching the PDF: deep purple on the
+                        left through magenta/indigo into cyan on the right.
+                        Using arbitrary color stops for fidelity.
+                    */}
                     <section
-                        className="relative rounded-3xl overflow-hidden mb-12 shadow-xl"
+                        className="relative rounded-3xl overflow-hidden mb-14 shadow-xl"
                         aria-label="Greeting"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-700 via-indigo-600 to-cyan-500" />
-                        <div className="relative z-10 px-8 md:px-12 py-10 md:py-14">
-                            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
+                        <div
+                            className="absolute inset-0"
+                            style={{
+                                background:
+                                    'linear-gradient(115deg, #2e1065 0%, #7c3aed 22%, #6b21a8 40%, #1e1b4b 62%, #0c4a6e 80%, #22d3ee 100%)',
+                            }}
+                        />
+                        <div className="relative z-10 px-8 md:px-14 py-12 md:py-16">
+                            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
                                 {getGreeting()}, {firstName}.
                             </h1>
-                            <p className="text-base md:text-lg text-white/90 mb-6 max-w-2xl">
-                                <strong>
-                                    {state === 'new' && "Let's get started! "}
-                                    {state === 'values_done' && 'Continue your LifeFrame journey! '}
-                                    {state === 'interests_done' && 'Complete your LifeFrame journey! '}
-                                    {state === 'complete' && '✓ Your LifeFrame is complete! '}
-                                </strong>
-                                {/* Strip the leading status phrase from subheader for visual rhythm */}
-                                {copy.hero.subheader
-                                    .replace(/^Let's get started! /, '')
-                                    .replace(/^Continue your LifeFrame journey! /, '')
-                                    .replace(/^Complete your LifeFrame journey! /, '')
-                                    .replace(/^Your LifeFrame is complete! /, '')}
+                            <p className="text-base md:text-lg text-white/95 mb-7 max-w-2xl">
+                                <span className="font-semibold">{copy.hero.leadBold}</span>
+                                <span className="text-white/80">{copy.hero.rest}</span>
                             </p>
-                            <button
-                                onClick={() => router.push(copy.hero.ctaHref)}
-                                className="inline-flex items-center gap-2 bg-white text-gray-900 px-6 py-3 rounded-full font-semibold hover:shadow-2xl transition-transform hover:scale-105"
+                            <Link
+                                href={copy.hero.ctaHref}
+                                className="inline-flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition"
                             >
                                 {copy.hero.ctaLabel}
                                 <span aria-hidden>→</span>
-                            </button>
+                            </Link>
                         </div>
                     </section>
 
-                    {/* ── Journey section ──────────────────────────────── */}
-                    <section className="mb-12" aria-labelledby="journey-heading">
-                        <div className="text-center mb-8">
-                            <p className="text-xs font-semibold text-gray-500 tracking-wider uppercase mb-2">
+                    {/* ── Journey section ────────────────────────────────── */}
+                    <section className="mb-14" aria-labelledby="journey-heading">
+                        <div className="text-center mb-10">
+                            <p className="text-xs font-medium text-gray-600 mb-2">
                                 Three steps to build your foundation
                             </p>
                             <h2 id="journey-heading" className="text-3xl md:text-4xl font-bold text-gray-900">
                                 Your LifeFrame Journey
                             </h2>
                             {state === 'new' && (
-                                <p className="max-w-2xl mx-auto mt-4 text-gray-600 text-sm md:text-base">
+                                <p className="max-w-xl mx-auto mt-5 text-gray-600 text-sm md:text-base leading-relaxed">
                                     Your LifeFrame is the bridge that will get you to your Roadmap.
                                     The 3 steps below should take anywhere from 30 minutes to an hour to complete.
                                     Once you have your LifeFrame, the rest becomes much clearer, you'll see!
@@ -361,76 +354,90 @@ export default function DashboardPage() {
                             )}
                         </div>
 
-                        {/* Three journey cards */}
-                        <div className="grid md:grid-cols-3 gap-5">
+                        {/* Three journey cards — entire card is a clickable Link.
+                            Pill overlaps the top edge of the card (half above, half below).
+                            Step number sits inside a thin gray ring. */}
+                        <div className="grid md:grid-cols-3 gap-5 pt-4">
                             {CARDS.map(card => {
                                 const pill = copy.badge[card.key];
-                                // "Incomplete" gets a muted, lower-opacity card body.
                                 const muted = pill === 'Incomplete';
                                 return (
-                                    <div
+                                    <Link
                                         key={card.key}
-                                        className={`rounded-3xl bg-white border border-gray-100 shadow-sm overflow-hidden ${
-                                            muted ? 'opacity-70' : ''
-                                        }`}
+                                        href={card.href}
+                                        className={`group relative rounded-3xl bg-white border border-gray-200 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg ${muted ? 'opacity-60' : 'shadow-sm'
+                                            }`}
+                                        aria-label={`${card.title}: ${card.description}`}
                                     >
-                                        <div className="p-6">
-                                            <span
-                                                className={`inline-block text-xs font-semibold px-3 py-1 rounded-full mb-4 ${badgeClass(pill)}`}
-                                            >
-                                                {pill}
-                                            </span>
+                                        {/* Pill — overlaps the top edge of the card */}
+                                        <span
+                                            className={`absolute left-6 -top-3 text-xs font-semibold px-3 py-1 rounded-full ${badgeClass(pill)}`}
+                                        >
+                                            {pill}
+                                        </span>
+
+                                        <div className="p-6 pt-8">
                                             <div className="flex items-baseline gap-3 mb-1">
-                                                <span className={`text-2xl font-bold ${muted ? 'text-gray-400' : 'text-gray-300'}`}>
+                                                <span
+                                                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full border text-base font-semibold ${muted
+                                                            ? 'border-gray-300 text-gray-400'
+                                                            : 'border-gray-300 text-gray-500'
+                                                        }`}
+                                                >
                                                     {card.step}
                                                 </span>
                                                 <h3 className={`text-xl md:text-2xl font-bold ${muted ? 'text-gray-500' : 'text-gray-900'}`}>
                                                     {card.title}
                                                 </h3>
                                             </div>
-                                            <p className={`text-sm ${muted ? 'text-gray-500' : 'text-gray-600'}`}>
+                                            <p className={`text-sm ml-11 ${muted ? 'text-gray-500' : 'text-gray-600'}`}>
                                                 {card.description}
                                             </p>
                                         </div>
-                                        <div className={`h-40 ${card.tileClass}`} aria-hidden />
-                                    </div>
+
+                                        {/* Gradient tile with matching rounded bottom corners */}
+                                        <div className={`mx-3 mb-3 h-40 rounded-2xl ${card.tileClass}`} aria-hidden />
+                                    </Link>
                                 );
                             })}
                         </div>
                     </section>
 
-                    {/* ── At-a-Glance (complete state only) ────────────── */}
+                    {/* ── At-a-Glance (complete state only) ──────────────── */}
                     {state === 'complete' && (
                         <AtAGlance completion={completion} userId={user?.user?.id} />
                     )}
 
-                    {/* ── Inline guide / Next step CTA ─────────────────── */}
-                    <section className="mb-12 text-center" aria-labelledby="guide-heading">
-                        <p className="text-xs font-semibold text-gray-500 tracking-wider uppercase mb-3">
+                    {/* ── Inline guide / Next step CTA ───────────────────── */}
+                    <section className="mb-16 text-center" aria-labelledby="guide-heading">
+                        <p className="text-xs font-medium text-gray-600 mb-3">
                             {copy.guide.eyebrow}
                         </p>
-                        <h2 id="guide-heading" className="text-2xl md:text-3xl font-bold text-gray-900 max-w-2xl mx-auto mb-6">
-                            {copy.guide.heading}
+                        {/* Heading on two explicit lines to match PDF composition */}
+                        <h2 id="guide-heading" className="text-2xl md:text-4xl font-semibold text-gray-900 mb-8 leading-tight">
+                            {copy.guide.headingLine1}
+                            <br />
+                            {copy.guide.headingLine2}
                         </h2>
-                        <button
-                            onClick={() => router.push(copy.guide.ctaHref)}
-                            className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-800 transition"
+                        <Link
+                            href={copy.guide.ctaHref}
+                            className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition"
                         >
                             {copy.guide.ctaLabel}
                             <span aria-hidden>→</span>
-                        </button>
+                        </Link>
                     </section>
 
-                    <hr className="border-gray-200 mb-12" />
+                    <hr className="border-gray-200 mb-14" />
 
-                    {/* ── Resources / Community / Get Help ─────────────── */}
+                    {/* ── Resources / Community / Get Help ───────────────── */}
                     <section aria-labelledby="resources-heading">
-                        <div className="text-center mb-8">
-                            <p className="text-xs font-semibold text-gray-500 tracking-wider uppercase mb-2">
+                        <div className="text-center mb-10">
+                            <p className="text-xs font-medium text-gray-600 mb-2">
                                 Need some inspiration or help?
                             </p>
                             <h2 id="resources-heading" className="text-3xl md:text-4xl font-bold text-gray-900">
-                                Resources, Community and More
+                                Resources, community and More
                             </h2>
                         </div>
 
@@ -439,22 +446,22 @@ export default function DashboardPage() {
                                 title="Resources"
                                 description="Videos, Guides and Downloads"
                                 href="/resources"
-                                gradient="from-amber-400 via-orange-400 to-yellow-300"
-                                icon="📚"
+                                tileGradient="from-orange-400 via-amber-400 to-lime-400"
+                                Icon={BookIcon}
                             />
                             <QuickLinkCard
                                 title="Community"
                                 description="Connect with Others"
                                 href="/community"
-                                gradient="from-sky-500 via-blue-600 to-indigo-700"
-                                icon="👥"
+                                tileGradient="from-cyan-500 via-blue-700 to-indigo-900"
+                                Icon={PeopleIcon}
                             />
                             <QuickLinkCard
                                 title="Get Help"
                                 description="Support and Guidance"
                                 href="/resources"
-                                gradient="from-orange-400 via-red-400 to-pink-500"
-                                icon="❓"
+                                tileGradient="from-orange-400 via-red-500 to-pink-500"
+                                Icon={QuestionIcon}
                             />
                         </div>
                     </section>
@@ -471,7 +478,7 @@ function AtAGlance({ completion, userId }: { completion: LifeFrameCompletion; us
     const router = useRouter();
     const [data, setData] = useState<{
         topValues: string[];
-        interests: { existing: string[]; exploring: string[] };
+        interests: string[];
         categories: string[];
     } | null>(null);
 
@@ -492,15 +499,15 @@ function AtAGlance({ completion, userId }: { completion: LifeFrameCompletion; us
             const interestsRow = rows.find(r => r.category === 'interests');
             const categoriesRow = rows.find(r => r.category === 'life_categories');
 
+            const interestsExisting: string[] = (interestsRow?.content?.existing ?? []).slice(0, 4);
+            const interestsExploring: string[] = (interestsRow?.content?.exploring ?? []).slice(0, 2);
+
             setData({
                 topValues: (valuesRow?.content?.selected_values ?? [])
                     .slice(0, 3)
                     .map((v: any) => v?.name)
                     .filter(Boolean),
-                interests: {
-                    existing: (interestsRow?.content?.existing ?? []).slice(0, 4),
-                    exploring: (interestsRow?.content?.exploring ?? []).slice(0, 4),
-                },
+                interests: [...interestsExisting, ...interestsExploring],
                 categories: (categoriesRow?.content?.categories ?? [])
                     .slice(0, 6)
                     .map((c: any) => (typeof c === 'string' ? c : c?.name))
@@ -509,15 +516,13 @@ function AtAGlance({ completion, userId }: { completion: LifeFrameCompletion; us
         };
 
         load();
-        return () => {
-            mounted = false;
-        };
+        return () => { mounted = false; };
     }, [userId]);
 
     if (!data) return null;
 
     return (
-        <section className="mb-12 bg-white rounded-3xl border border-gray-100 shadow-sm p-6 md:p-8" aria-labelledby="glance-heading">
+        <section className="mb-14 bg-white rounded-3xl border border-gray-200 shadow-sm p-6 md:p-8" aria-labelledby="glance-heading">
             <div className="flex items-start justify-between flex-wrap gap-4 mb-6">
                 <h2 id="glance-heading" className="text-xl md:text-2xl font-bold text-gray-900">
                     Your LifeFrame at a Glance
@@ -533,31 +538,20 @@ function AtAGlance({ completion, userId }: { completion: LifeFrameCompletion; us
                     items={data.topValues.map((v, i) => `${i + 1}. ${v}`)}
                     tint="purple"
                 />
-                <GlanceColumn
-                    label="Interests"
-                    items={[
-                        ...data.interests.existing,
-                        ...data.interests.exploring,
-                    ]}
-                    tint="pink"
-                />
-                <GlanceColumn
-                    label="Life Categories"
-                    items={data.categories}
-                    tint="green"
-                />
+                <GlanceColumn label="Interests" items={data.interests} tint="pink" />
+                <GlanceColumn label="Life Categories" items={data.categories} tint="green" />
             </div>
 
             <div className="flex flex-wrap gap-3 justify-center">
                 <button
                     onClick={() => router.push('/workbook/lifeframe')}
-                    className="bg-gray-100 text-gray-900 px-5 py-2.5 rounded-full font-semibold hover:bg-gray-200 transition"
+                    className="bg-gray-100 text-gray-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-gray-200 transition"
                 >
                     View LifeFrame →
                 </button>
                 <button
                     onClick={() => window.open('/lifeframe/print', '_blank')}
-                    className="bg-gray-100 text-gray-900 px-5 py-2.5 rounded-full font-semibold hover:bg-gray-200 transition inline-flex items-center gap-2"
+                    className="bg-gray-100 text-gray-900 px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-gray-200 transition inline-flex items-center gap-2"
                 >
                     <span aria-hidden>🖨</span>
                     Print LifeFrame
@@ -605,40 +599,69 @@ function GlanceColumn({
     );
 }
 
-// ─── Quick link card (bottom of dashboard) ──────────────────────────────────
+// ─── Bottom quick-link cards ────────────────────────────────────────────────
+// Two-zone layout: colored gradient tile on the LEFT with a white line icon,
+// white area on the RIGHT with title + description. Matches the PDF.
+
+type IconProps = { className?: string };
+
+function BookIcon({ className = 'w-7 h-7' }: IconProps) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+        </svg>
+    );
+}
+
+function PeopleIcon({ className = 'w-7 h-7' }: IconProps) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="8" r="3" />
+            <circle cx="17" cy="9" r="2.5" />
+            <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+            <path d="M14.5 20c0-2.5 1.5-5 5-5" />
+        </svg>
+    );
+}
+
+function QuestionIcon({ className = 'w-7 h-7' }: IconProps) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.9.4-1.5 1.3-1.5 2.2v.5" />
+            <circle cx="11.75" cy="17.25" r="0.6" fill="currentColor" stroke="none" />
+        </svg>
+    );
+}
 
 function QuickLinkCard({
     title,
     description,
     href,
-    gradient,
-    icon,
+    tileGradient,
+    Icon,
 }: {
     title: string;
     description: string;
     href: string;
-    gradient: string;
-    icon: string;
+    tileGradient: string;
+    Icon: React.FC<IconProps>;
 }) {
-    const router = useRouter();
     return (
-        <button
-            onClick={() => router.push(href)}
-            className="group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all text-left"
+        <Link
+            href={href}
+            className="group flex items-stretch rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-md transition overflow-hidden"
             aria-label={`${title}: ${description}`}
         >
-            <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
-            <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-3xl m-[2px] p-6 h-full">
-                <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-2xl shadow-sm`}>
-                        {icon}
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-                        <p className="text-sm text-gray-600">{description}</p>
-                    </div>
-                </div>
+            {/* Left: gradient tile with white line-icon */}
+            <div className={`shrink-0 w-24 flex items-center justify-center bg-gradient-to-br ${tileGradient} text-white`}>
+                <Icon className="w-8 h-8" />
             </div>
-        </button>
+            {/* Right: text zone */}
+            <div className="flex-1 px-5 py-4">
+                <h3 className="text-base font-bold text-gray-900 mb-0.5">{title}</h3>
+                <p className="text-xs text-gray-600">{description}</p>
+            </div>
+        </Link>
     );
 }
