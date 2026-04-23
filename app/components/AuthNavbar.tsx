@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { evaluateLifeFrameCompletion, type LifeFrameCompletion } from '@/lib/lifeframe-completion';
 import Wordmark from '@/app/components/Wordmark';
@@ -28,7 +27,6 @@ export default function AuthNavbar() {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
@@ -49,16 +47,6 @@ export default function AuthNavbar() {
 
                 if (!mounted) return;
                 setCompletion(evaluateLifeFrameCompletion(worksheets ?? []));
-
-                // Load avatar from profiles table
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('avatar_url')
-                    .eq('id', currentUser.id)
-                    .single();
-
-                if (!mounted) return;
-                if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
             }
         };
 
@@ -67,10 +55,7 @@ export default function AuthNavbar() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (!mounted) return;
             setUser(session?.user ?? null);
-            if (!session?.user) {
-                setCompletion(null);
-                setAvatarUrl(null);
-            }
+            if (!session?.user) setCompletion(null);
         });
 
         return () => {
@@ -104,35 +89,6 @@ export default function AuthNavbar() {
                     ? 'bg-gray-100 text-gray-900'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
         }`;
-
-    // Avatar: real photo if set, otherwise initials gradient
-    const initials =
-        user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
-        user?.email?.[0]?.toUpperCase() ||
-        'U';
-
-    function AvatarCircle({ size = 36 }: { size?: number }) {
-        return (
-            <div
-                className="rounded-full overflow-hidden flex-shrink-0"
-                style={{ width: size, height: size }}
-            >
-                {avatarUrl ? (
-                    <Image
-                        src={avatarUrl}
-                        alt="Profile photo"
-                        width={size}
-                        height={size}
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                        {initials}
-                    </div>
-                )}
-            </div>
-        );
-    }
 
     return (
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -187,7 +143,10 @@ export default function AuthNavbar() {
                                 <span className="text-sm font-medium text-gray-900 hidden lg:block">
                                     {user?.user_metadata?.full_name || 'User'}
                                 </span>
-                                <AvatarCircle size={36} />
+                                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    {user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
+                                        user?.email?.[0]?.toUpperCase() || 'U'}
+                                </div>
                                 <svg
                                     className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
                                     fill="none"
@@ -202,16 +161,12 @@ export default function AuthNavbar() {
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
                                     <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 z-50">
-                                        {/* Dropdown header with avatar */}
-                                        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-                                            <AvatarCircle size={36} />
-                                            <div className="min-w-0">
-                                                <div className="text-sm font-semibold text-gray-900 truncate">
-                                                    {user?.user_metadata?.full_name || 'User'}
-                                                </div>
-                                                <div className="text-xs text-gray-500 truncate">
-                                                    {user?.email}
-                                                </div>
+                                        <div className="px-4 py-3 border-b border-gray-100">
+                                            <div className="text-sm font-semibold text-gray-900">
+                                                {user?.user_metadata?.full_name || 'User'}
+                                            </div>
+                                            <div className="text-xs text-gray-500 truncate">
+                                                {user?.email}
                                             </div>
                                         </div>
                                         <div className="py-1">
@@ -297,17 +252,6 @@ export default function AuthNavbar() {
                 {/* Mobile menu */}
                 {showMobileMenu && (
                     <div className="md:hidden py-4 border-t border-gray-200">
-                        {/* Mobile user info header */}
-                        <div className="flex items-center gap-3 px-4 pb-4 mb-2 border-b border-gray-100">
-                            <AvatarCircle size={40} />
-                            <div className="min-w-0">
-                                <div className="text-sm font-semibold text-gray-900 truncate">
-                                    {user?.user_metadata?.full_name || 'User'}
-                                </div>
-                                <div className="text-xs text-gray-500 truncate">{user?.email}</div>
-                            </div>
-                        </div>
-
                         <div className="space-y-1">
                             <Link href="/dashboard" onClick={() => setShowMobileMenu(false)} className={`block ${linkClass(isActive('/dashboard'))}`}>
                                 Dashboard
