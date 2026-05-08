@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import dynamic from 'next/dynamic';
 import Wordmark from '@/app/components/Wordmark';
+import Reveal from '@/app/components/Reveal';
 
 // Heavy below-the-fold components — loaded as separate chunks
 const InteractiveToolsSection = dynamic(() => import('./components/InteractiveToolsSection').then(m => ({ default: m.InteractiveToolsSection })));
@@ -150,6 +151,13 @@ export default function Home() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('hero');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -233,13 +241,13 @@ export default function Home() {
             <div className="hidden md:flex gap-2 items-center">
               <Link
                 href="#preview"
-                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition"
+                className="link-underline px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 transition"
               >
                 Preview
               </Link>
               <Link
                 href="/login"
-                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition"
+                className="link-underline px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 transition"
               >
                 Sign In
               </Link>
@@ -272,7 +280,7 @@ export default function Home() {
       {/* Hero Section */}
       <section
         id="hero"
-        className="min-h-screen flex items-center justify-center bg-gray-50 pt-16 relative"
+        className="min-h-screen flex items-center justify-center bg-[#FAFAF7] pt-16 relative"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
@@ -317,8 +325,11 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right column — preserved mockup visual */}
-            <div className="relative animate-fade-in animation-delay-500">
+            {/* Right column — preserved mockup visual, parallax depth effect */}
+            <div
+              className="relative animate-fade-in animation-delay-500"
+              style={{ transform: `translateY(${scrollY * 0.3}px)` }}
+            >
               <div className="bg-white rounded-3xl shadow-2xl p-4 transform hover:scale-105 transition-transform duration-300">
                 <Image
                   src="/lifeAligner-mockup.png"
@@ -360,50 +371,56 @@ export default function Home() {
           className="absolute top-8 right-8 w-32 h-32 opacity-80 pointer-events-none hidden md:block"
         />
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
-                What is Contentment?
-              </h2>
-              <blockquote className="text-lg sm:text-xl md:text-2xl text-blue-100 italic border-l-4 border-blue-400 pl-4 sm:pl-6">
-                "Feeling good about yourself and your life because you are engaging in activities
-                that you enjoy, that cause you to experience Happiness and Fulfillment."
-              </blockquote>
-              <p className="text-base sm:text-lg text-blue-200 leading-relaxed">
-                <strong className="text-white">Happiness</strong> comes from activities that
-                rejuvenate you. But contentment also requires <strong className="text-white">sustained
-                  fulfillment</strong> from pursuing goals aligned with your values and purpose.
-              </p>
+          <Reveal>
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
+                  What is Contentment?
+                </h2>
+                <blockquote className="text-lg sm:text-xl md:text-2xl text-blue-100 italic border-l-4 border-blue-400 pl-4 sm:pl-6">
+                  "Feeling good about yourself and your life because you are engaging in activities
+                  that you enjoy, that cause you to experience Happiness and Fulfillment."
+                </blockquote>
+                <p className="text-base sm:text-lg text-blue-200 leading-relaxed">
+                  <strong className="text-white">Happiness</strong> comes from activities that
+                  rejuvenate you. But contentment also requires <strong className="text-white">sustained
+                    fulfillment</strong> from pursuing goals aligned with your values and purpose.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <Reveal delay={0}>
+                  <div className="bg-gradient-to-br from-blue-700 to-blue-800 p-5 sm:p-8 rounded-2xl border border-blue-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <h3 className="text-xl sm:text-2xl font-bold text-blue-100 mb-3 sm:mb-4">Your Values</h3>
+                    <p className="text-blue-200">
+                      The principles and standards of behavior that guide your life decisions
+                      and bring you deep satisfaction.
+                    </p>
+                  </div>
+                </Reveal>
+
+                <Reveal delay={100}>
+                  <div className="bg-gradient-to-br from-pink-700 to-pink-800 p-5 sm:p-8 rounded-2xl border border-pink-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <h3 className="text-xl sm:text-2xl font-bold text-pink-100 mb-3 sm:mb-4">Your Interests</h3>
+                    <p className="text-pink-200">
+                      Activities that bring you joy, rejuvenation, and allow you to deploy
+                      your creativity to benefit others.
+                    </p>
+                  </div>
+                </Reveal>
+
+                <Reveal delay={200}>
+                  <div className="bg-gradient-to-br from-purple-700 to-purple-800 p-5 sm:p-8 rounded-2xl border border-purple-600 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <h3 className="text-xl sm:text-2xl font-bold text-purple-100 mb-3 sm:mb-4">Your Purpose</h3>
+                    <p className="text-purple-200">
+                      Long-term goals that are both meaningful to you and beneficial to others,
+                      driven by your deeply held beliefs.
+                    </p>
+                  </div>
+                </Reveal>
+              </div>
             </div>
-
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-blue-700 to-blue-800 p-5 sm:p-8 rounded-2xl animate-fade-in border border-blue-600">
-                <h3 className="text-xl sm:text-2xl font-bold text-blue-100 mb-3 sm:mb-4">Your Values</h3>
-                <p className="text-blue-200">
-                  The principles and standards of behavior that guide your life decisions
-                  and bring you deep satisfaction.
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-pink-700 to-pink-800 p-5 sm:p-8 rounded-2xl animate-fade-in border border-pink-600">
-                <h3 className="text-xl sm:text-2xl font-bold text-pink-100 mb-3 sm:mb-4">Your Interests</h3>
-                <p className="text-pink-200">
-                  Activities that bring you joy, rejuvenation, and allow you to deploy
-                  your creativity to benefit others.
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-700 to-purple-800 p-5 sm:p-8 rounded-2xl animate-fade-in border border-purple-600">
-                <h3 className="text-xl sm:text-2xl font-bold text-purple-100 mb-3 sm:mb-4">Your Purpose</h3>
-                <p className="text-purple-200">
-                  Long-term goals that are both meaningful to you and beneficial to others,
-                  driven by your deeply held beliefs.
-                </p>
-              </div>
-
-
-            </div>
-          </div>
+          </Reveal>
         </div>
 
         {/* Wave Divider - matches next section's background */}
@@ -434,26 +451,30 @@ export default function Home() {
           className="absolute bottom-256 left-8 w-32 h-32 opacity-100 pointer-events-none hidden md:block"
         />
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
-              Contentment is a Process
-            </h2>
-            <p className="text-base sm:text-xl text-purple-100 max-w-3xl mx-auto px-4">
-              Not a destination. Not about crossing finish lines. It&apos;s about enjoying the journey
-              of continuous growth and making an impact in areas important to you.
-            </p>
-          </div>
+          <Reveal>
+            <div className="text-center mb-10 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
+                Contentment is a Process
+              </h2>
+              <p className="text-base sm:text-xl text-purple-100 max-w-3xl mx-auto px-4">
+                Not a destination. Not about crossing finish lines. It&apos;s about enjoying the journey
+                of continuous growth and making an impact in areas important to you.
+              </p>
+            </div>
+          </Reveal>
 
           {/* Animated Circular Flow Diagram */}
           <OrbitingSteps />
 
-          <div className="mt-10 sm:mt-16 bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-8 shadow-lg max-w-2xl mx-auto text-center border border-white/20">
-            <p className="text-base sm:text-lg md:text-xl text-white italic">
-              "You define what contentment means for you. You define your Interests, Values,
-              and Purpose. The challenge—and the opportunity—is coming up with the right
-              definitions for <em>you</em>."
-            </p>
-          </div>
+          <Reveal>
+            <div className="mt-10 sm:mt-16 bg-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-8 shadow-lg max-w-2xl mx-auto text-center border border-white/20">
+              <p className="text-base sm:text-lg md:text-xl text-white italic">
+                "You define what contentment means for you. You define your Interests, Values,
+                and Purpose. The challenge—and the opportunity—is coming up with the right
+                definitions for <em>you</em>."
+              </p>
+            </div>
+          </Reveal>
           {/* Decorative illustration - values thinking */}
           <Image
             src="/illustrations/values-person.png"
@@ -476,47 +497,49 @@ export default function Home() {
       </section >
 
       {/* The Tools Section */}
-      < InteractiveToolsSection />
+      <Reveal><InteractiveToolsSection /></Reveal>
 
       {/* Social Proof - TEDx & Real Stats */}
-      < RealSocialProof />
+      <Reveal><RealSocialProof /></Reveal>
 
       {/* Testimonial Carousel */}
-      < WorkingTestimonialCarousel />
+      <Reveal><WorkingTestimonialCarousel /></Reveal>
 
-      {/* CTA Section - FIXED: Changed text color from white to dark */}
+      {/* CTA Section */}
       <section id="cta" className="min-h-screen flex items-center py-12 sm:py-20 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden" >
-        <div className="max-w-4xl mx-auto px-4 text-center text-white">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
-            Ready to Start Your Journey?
-          </h2>
-          <p className="text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 opacity-90">
-            Join thousands discovering their path to contentment
-          </p>
+        <Reveal className="w-full">
+          <div className="max-w-4xl mx-auto px-4 text-center text-white">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
+              Ready to Start Your Journey?
+            </h2>
+            <p className="text-lg sm:text-xl md:text-2xl mb-8 sm:mb-12 opacity-90">
+              Join thousands discovering their path to contentment
+            </p>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 mb-8 sm:mb-12 animate-fade-in border border-white/20">
-            <blockquote className="text-base sm:text-lg md:text-xl lg:text-2xl italic mb-3 sm:mb-4">
-              "When I created my first Roadmap at age 19, I had no idea I would be using it
-              for the next 40 years or that doing so would enable me to find contentment."
-            </blockquote>
-            <p className="text-sm sm:text-base md:text-lg font-semibold">&mdash; Tim Collins, Founder</p>
-          </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 mb-8 sm:mb-12 border border-white/20">
+              <blockquote className="text-base sm:text-lg md:text-xl lg:text-2xl italic mb-3 sm:mb-4">
+                "When I created my first Roadmap at age 19, I had no idea I would be using it
+                for the next 40 years or that doing so would enable me to find contentment."
+              </blockquote>
+              <p className="text-sm sm:text-base md:text-lg font-semibold">&mdash; Tim Collins, Founder</p>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <Link
-              href="/signup"
-              className="bg-white text-purple-600 px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl hover:shadow-2xl transition transform hover:scale-105 min-h-[56px] flex items-center justify-center"
-            >
-              Get Started
-            </Link>
-            <Link
-              href="#preview"
-              className="border-2 border-white text-white px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl hover:bg-white/10 transition min-h-[56px] flex items-center justify-center"
-            >
-              See a Preview
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+              <Link
+                href="/signup"
+                className="bg-white text-purple-600 px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl hover:shadow-2xl transition transform hover:scale-105 min-h-[56px] flex items-center justify-center"
+              >
+                Get Started
+              </Link>
+              <Link
+                href="#preview"
+                className="border-2 border-white text-white px-8 sm:px-10 py-4 sm:py-5 rounded-full font-bold text-lg sm:text-xl hover:bg-white/10 transition min-h-[56px] flex items-center justify-center"
+              >
+                See a Preview
+              </Link>
+            </div>
           </div>
-        </div>
+        </Reveal>
       </section >
 
       {/* Footer */}
@@ -535,9 +558,9 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-gray-400">
-            <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
-            <Link href="/terms" className="hover:text-white transition">Terms</Link>
-            <Link href="/contact" className="hover:text-white transition">Contact</Link>
+            <Link href="/privacy" className="link-underline hover:text-white transition">Privacy</Link>
+            <Link href="/terms" className="link-underline hover:text-white transition">Terms</Link>
+            <Link href="/contact" className="link-underline hover:text-white transition">Contact</Link>
           </div>
         </div>
       </footer >
