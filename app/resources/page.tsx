@@ -10,7 +10,7 @@ export default function ResourcesPage() {
     const videos = [
         {
             id: 'intro',
-            title: 'Introduction to LifeAligner',
+            title: 'Introduction to the Tim Collins Framework',
             duration: '11:31',
             description: 'Tim Collins TEDx talk on redefining contentment',
             thumbnail: '/video-thumbnails/tedx.jpg',
@@ -66,7 +66,7 @@ export default function ResourcesPage() {
 
     const downloads = [
         {
-            title: 'The LifeAligner Framework',
+            title: 'The Tim Collins Framework',
             description: 'Complete book by Tim Collins (PDF)',
             icon: '📖',
             size: '2.5 MB',
@@ -106,7 +106,7 @@ export default function ResourcesPage() {
     const supportLinks = [
         {
             title: 'Community Forum',
-            description: 'Connect with other LifeAligner users',
+            description: 'Connect with other Tim Collins Framework users',
             icon: '💬',
             url: '/community',
             available: false
@@ -146,7 +146,7 @@ export default function ResourcesPage() {
                         </div>
                         <h1 className="text-5xl font-bold text-gray-900 mb-4">Resources & Learning</h1>
                         <p className="text-xl text-gray-800">
-                            Everything you need to master the LifeAligner framework
+                            Everything you need to master the Tim Collins Framework
                         </p>
                     </div>
 

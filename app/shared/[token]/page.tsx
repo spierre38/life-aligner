@@ -55,7 +55,7 @@ export default function SharedRoadmapPage() {
                         href="/"
                         className="inline-block px-8 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors"
                     >
-                        Go to LifeAligner
+                        Go to Tim Collins Framework
                     </a>
                 </div>
             </div>
@@ -172,7 +172,7 @@ export default function SharedRoadmapPage() {
                 <div className="mt-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-center text-white">
                     <h3 className="text-3xl font-bold mb-4">Create Your Own Roadmap</h3>
                     <p className="text-xl text-white/90 mb-8">
-                        Start your journey to contentment with LifeAligner
+                        Start your journey to contentment with the Tim Collins Framework
                     </p>
                     <a
                         href="/signup"

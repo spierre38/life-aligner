@@ -167,7 +167,7 @@ export function InteractiveToolsSection() {
             <div className="max-w-6xl mx-auto px-4 w-full relative z-10">
                 <div className="text-center mb-8 sm:mb-12">
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
-                        The LifeAligner Tools
+                        The Tim Collins Framework Tools
                     </h2>
                     <p className="text-base sm:text-xl text-gray-800">
                         Interactive frameworks that evolve with you

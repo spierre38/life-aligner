@@ -177,8 +177,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </svg>
                         </div>
                         <div>
-                            <p className="font-bold text-white text-sm">LifeAligner</p>
-                            <p className="text-xs text-purple-400 font-medium">Admin Panel</p>
+                            <p className="font-bold text-white text-sm">Tim Collins</p>
+                            <p className="text-xs text-purple-400 font-medium">Framework · Admin</p>
                         </div>
                     </div>
                 </div>

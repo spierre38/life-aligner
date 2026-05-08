@@ -3,6 +3,7 @@
 import { useState, useEffect, JSX } from 'react';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
+import Wordmark from '@/app/components/Wordmark';
 
 // ── Animation CSS ─────────────────────────────────────────────
 const ANIM_STYLES = `
@@ -24,18 +25,35 @@ const ANIM_STYLES = `
   @keyframes twinkle{
     0%,100%{opacity:.12}50%{opacity:.55}
   }
+  @keyframes pageFlipIn{
+    from{transform:perspective(1200px) rotateY(-12deg) translateX(-16px);opacity:0}
+    to  {transform:perspective(1200px) rotateY(0deg)   translateX(0);    opacity:1}
+  }
+  @keyframes fadeIn{
+    from{opacity:0;transform:translateY(8px)}
+    to  {opacity:1;transform:translateY(0)}
+  }
   .blur-reveal{animation:blurReveal .85s cubic-bezier(.16,1,.3,1) both}
   .slide-up   {animation:slideUp .65s cubic-bezier(.16,1,.3,1) both}
   .float-plane{animation:floatPlane 5s ease-in-out infinite}
   .fly-across {animation:flyAcross 1.5s cubic-bezier(.22,1,.36,1) both}
+  .page-flip  {animation:pageFlipIn 480ms cubic-bezier(.16,1,.3,1) both}
+  .fade-in    {animation:fadeIn 350ms cubic-bezier(.16,1,.3,1) both}
   .opt-item{
-    opacity:.7;color:rgba(203,213,225,.85);
-    background:rgba(255,255,255,.03);
-    border:1px solid rgba(255,255,255,.06);
-    transition:opacity .22s ease,color .22s ease,transform .22s cubic-bezier(.34,1.56,.64,1),background .22s ease,border-color .22s ease;
-    cursor:pointer;
+    display:block;width:100%;text-align:left;
+    padding:12px 16px;border-radius:12px;
+    border:1.5px solid #e5e7eb;
+    background:white;color:#374151;
+    font-size:15px;font-weight:500;
+    transition:all 180ms ease;cursor:pointer;
   }
-  .opt-item:hover{opacity:1;color:#fff;transform:scale(1.02) translateX(4px);background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.15)}
+  .opt-item:hover{
+    border-color:#111827;background:#f9fafb;color:#111827;
+    transform:translateX(4px);
+  }
+  @media(prefers-reduced-motion:reduce){
+    .blur-reveal,.slide-up,.float-plane,.fly-across,.page-flip,.fade-in{animation:fadeIn 300ms ease both}
+  }
 `;
 
 // ── Airplane SVG (purple-tinted, inspired by reference) ───────
@@ -81,6 +99,26 @@ function DarkStage({ children, fadeOut, accent }: {
             </svg>
             <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse 80% 60% at 50% 100%, rgba(139,92,246,.07), transparent)' }} />
+            {children}
+        </div>
+    );
+}
+
+// ── Light stage for post-welcome slides ───────────────────────
+function LightStage({ children, planeFlying }: { children: React.ReactNode; planeFlying: boolean }) {
+    return (
+        <div className="fixed inset-0 z-50 bg-[#FAFAF7] overflow-hidden">
+            <style dangerouslySetInnerHTML={{ __html: ANIM_STYLES }} />
+            <div className="absolute top-5 left-6 z-10">
+                <Wordmark size="sm" />
+            </div>
+            {planeFlying && (
+                <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
+                    <div className="absolute" style={{ top: '43%' }}>
+                        <div className="fly-across"><PlaneSVG width={110} /></div>
+                    </div>
+                </div>
+            )}
             {children}
         </div>
     );
@@ -309,7 +347,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
 
     // Reusable skip button
     const SkipBtn = () => (
-        <button onClick={handleSkip} className="absolute top-5 right-5 z-10 px-5 py-2 rounded-xl text-xs font-bold text-slate-400 border border-white/10 backdrop-blur-sm hover:bg-white/8 hover:text-white transition-all">
+        <button onClick={handleSkip} className="absolute top-5 right-5 z-10 px-5 py-2 rounded-xl text-xs font-bold text-gray-600 border border-gray-300 bg-white/90 hover:bg-white hover:text-gray-900 transition-all backdrop-blur-sm">
             Skip →
         </button>
     );
@@ -395,134 +433,76 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     // SLIDE: THANK TIM
     // ==========================================
     if (currentStep === 'thank-tim') return (
-        <DarkStage fadeOut={fadeOut} accent="#3b82f6">
-            <PlaneOverlay />
+        <LightStage planeFlying={planeFlying}>
             <div className="absolute inset-0 flex items-center justify-center p-6">
-                <div className="w-full max-w-3xl rounded-3xl overflow-hidden slide-up border border-white/8"
-                    style={{ background: 'rgba(8,8,24,.9)', backdropFilter: 'blur(20px)', boxShadow: '0 0 80px rgba(59,130,246,.1)' }}>
-                    <div className="flex flex-col md:flex-row">
-                        <div className="relative md:w-60 h-52 md:h-auto flex-shrink-0">
-                            <Image src="/illustrations/tim-collins.webp" alt="Tim Collins" fill className="object-cover" priority />
-                            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg,transparent 50%,rgba(8,8,24,.95))' }} />
-                        </div>
-                        <div className="p-8 md:p-10 flex flex-col justify-center gap-4">
-                            <span className="self-start px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase text-blue-400 border border-blue-400/25 bg-blue-400/8">
-                                Your Guide
-                            </span>
-                            <h2 className="text-4xl font-bold text-white blur-reveal">Tim Collins</h2>
-                            <p className="text-slate-300 text-base leading-relaxed">
-                                Built a <span className="text-blue-400 font-semibold">$2B company</span> using 9 core principles.
-                                Now he&apos;s sharing the complete roadmap — with you.
-                            </p>
-                            <button onClick={() => fadeAndAdvance('map')}
-                                className="self-start px-8 py-3 rounded-xl text-white font-bold text-sm flex items-center gap-2 mt-1 transition-all hover:scale-105"
-                                style={{ background: 'linear-gradient(135deg,#2563eb,#4f46e5)', boxShadow: '0 0 28px rgba(79,70,229,.4)' }}>
-                                See the Journey Map
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7l5 5-5 5" />
-                                </svg>
-                            </button>
+                <div className="w-full max-w-2xl page-flip">
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="flex flex-col md:flex-row">
+                            <div className="relative md:w-56 h-48 md:h-auto flex-shrink-0 bg-gray-100">
+                                <Image src="/timmyC.webp" alt="Tim Collins" fill className="object-cover" priority />
+                            </div>
+                            <div className="p-8 md:p-10 flex flex-col justify-center gap-5">
+                                <span className="self-start px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase text-gray-500 border border-gray-200">Your Guide</span>
+                                <div>
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Tim Collins</h2>
+                                    <p className="text-sm text-gray-500">Founder EBSCO Publishing · TEDx Speaker</p>
+                                </div>
+                                <blockquote className="text-base text-gray-600 leading-relaxed border-l-2 border-gray-200 pl-4 italic">
+                                    Built a <span className="text-gray-900 font-semibold not-italic">$2B company</span> using 9 core principles.
+                                    Now he&apos;s sharing the complete roadmap — with you.
+                                </blockquote>
+                                <button onClick={() => fadeAndAdvance('map')}
+                                    className="self-start px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm hover:bg-gray-800 transition flex items-center gap-2">
+                                    See the Journey Map
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7l5 5-5 5" /></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             <SkipBtn />
-        </DarkStage>
+        </LightStage>
     );
 
     // ==========================================
     // SLIDE: JOURNEY MAP
     // ==========================================
     if (currentStep === 'map') {
-        const leftCol = JOURNEY_STOPS.filter((_, i) => i % 2 === 0); // 1,3,5,7,9
-        const rightCol = JOURNEY_STOPS.filter((_, i) => i % 2 === 1); // 2,4,6,8
-
         return (
-            <div className={`fixed inset-0 z-50 overflow-hidden transition-opacity duration-700 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}
-                style={{ background: 'radial-gradient(ellipse at 20% 50%, #1e1b4b 0%, #0f0c29 40%, #000000 100%)' }}>
-
-                {/* Star field */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    {[...Array(80)].map((_, i) => (
-                        <circle key={i} cx={`${(i * 137.5) % 100}%`} cy={`${(i * 97.3) % 100}%`}
-                            r={i % 5 === 0 ? 1.5 : 0.7} fill="white"
-                            opacity={0.1 + (i % 4) * 0.15} />
-                    ))}
-                </svg>
-
-                {/* Ambient glow blobs */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full pointer-events-none"
-                    style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' }} />
-                <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full pointer-events-none"
-                    style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%)' }} />
-
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 overflow-y-auto">
-
-                    {/* Header */}
-                    <div className="text-center mb-8 animate-fade-in">
-                        <p className="text-xs font-bold tracking-[0.3em] uppercase text-purple-400 mb-2">Your Path Forward</p>
-                        <h2 className="text-4xl sm:text-5xl font-bold text-white mb-2"
-                            style={{ textShadow: '0 0 40px rgba(139,92,246,0.5)' }}>
-                            Journey to Contentment
-                        </h2>
-                        <p className="text-slate-400 text-base">9 principles. One transformed life.</p>
-                    </div>
-
-                    {/* Two-column grid of trait cards */}
-                    <div className="w-full max-w-3xl grid grid-cols-2 gap-3 mb-8 px-2">
-                        {JOURNEY_STOPS.map((stop, i) => (
-                            <div
-                                key={stop.num}
-                                className="flex items-center gap-3 rounded-2xl px-4 py-3 border border-white/10 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:scale-[1.02]"
-                                style={{
-                                    background: `linear-gradient(135deg, ${stop.color}18 0%, ${stop.color}08 100%)`,
-                                    animationDelay: `${i * 60}ms`,
-                                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06)`
-                                }}
-                            >
-                                {/* Glowing orb */}
-                                <div className="relative flex-shrink-0">
-                                    <div className="absolute inset-0 rounded-full blur-md opacity-60"
-                                        style={{ backgroundColor: stop.color }} />
-                                    <div className="relative w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg border border-white/20"
-                                        style={{ backgroundColor: stop.color }}>
-                                        {stop.num}
-                                    </div>
+            <LightStage planeFlying={planeFlying}>
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 pt-20 overflow-y-auto">
+                    <div className="w-full max-w-2xl page-flip">
+                        <div className="text-center mb-8">
+                            <p className="text-xs font-bold tracking-[0.3em] uppercase text-gray-400 mb-2">Your Path Forward</p>
+                            <h2 className="text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Journey to Contentment</h2>
+                            <p className="text-gray-500 text-sm">9 principles. One transformed life.</p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 mb-8">
+                            {JOURNEY_STOPS.map((stop, i) => (
+                                <div key={stop.num}
+                                    className="bg-white rounded-2xl p-4 border border-gray-200 flex flex-col items-center text-center gap-2 fade-in"
+                                    style={{ animationDelay: `${i * 40}ms` }}>
+                                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                        style={{ backgroundColor: stop.color }}>{stop.num}</div>
+                                    <p className="text-sm font-semibold text-gray-900">{stop.trait}</p>
+                                    <p className="text-xs text-gray-400 leading-tight">{stop.desc}</p>
                                 </div>
-
-                                {/* Text */}
-                                <div className="min-w-0">
-                                    <p className="text-white text-sm font-semibold leading-tight truncate">{stop.trait}</p>
-                                    <p className="text-slate-400 text-xs leading-tight truncate">{stop.desc}</p>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => { setTraitIndex(0); fadeAndAdvance('trait'); }}
+                            className="w-full py-4 bg-gray-900 text-white rounded-xl font-semibold text-base hover:bg-gray-800 transition flex items-center justify-center gap-2">
+                            Begin Your Journey
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                        </button>
                     </div>
-
-                    {/* CTA */}
-                    <button
-                        onClick={() => { setTraitIndex(0); fadeAndAdvance('trait'); }}
-                        className="group relative px-10 py-4 rounded-2xl text-white font-bold text-lg shadow-2xl transition-all duration-300 hover:scale-105 flex items-center gap-3"
-                        style={{
-                            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)',
-                            boxShadow: '0 0 32px rgba(124,58,237,0.45), 0 4px 24px rgba(0,0,0,0.4)'
-                        }}
-                    >
-                        <span>Begin Your Journey</span>
-                        <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                    </button>
                 </div>
-
-                {/* Skip */}
-                <button onClick={handleSkip}
-                    className="absolute top-6 right-6 px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-300 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all z-10">
-                    Skip →
-                </button>
-            </div>
+                <SkipBtn />
+            </LightStage>
         );
     }
+
 
     // ==========================================
     // SLIDES: TRAIT STOPS
@@ -531,74 +511,49 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
         const stop = JOURNEY_STOPS[traitIndex];
         const hasQuestion = !!(stop.question && stop.options);
         return (
-            <DarkStage fadeOut={fadeOut} accent={stop.color}>
-                <PlaneOverlay />
-                {/* Top progress line */}
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/8">
-                    <div className="h-full transition-all duration-700"
-                        style={{ width: `${(stop.num / 9) * 100}%`, background: `linear-gradient(90deg,#7c3aed,${stop.color})` }} />
+            <LightStage planeFlying={planeFlying}>
+                {/* Progress bar */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gray-200">
+                    <div className="h-full bg-gray-900 transition-all duration-700" style={{ width: `${(stop.num / 9) * 100}%` }} />
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center p-5 pt-8">
-                    <div key={traitIndex} className="w-full max-w-md slide-up">
-                        <div className="rounded-3xl border border-white/10 overflow-hidden"
-                            style={{ background: 'rgba(8,8,24,.92)', backdropFilter: 'blur(24px)', boxShadow: `0 0 60px ${stop.color}1a, inset 0 1px 0 rgba(255,255,255,0.06)` }}>
-                            {/* Card header */}
-                            <div className="px-7 py-5 border-b border-white/6"
-                                style={{ background: `linear-gradient(135deg,${stop.color}18,transparent)` }}>
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: stop.color }}>
-                                        Stop {stop.num} &middot; of 9
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                        {JOURNEY_STOPS.map((_, i) => (
-                                            <div key={i} className="rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: i === traitIndex ? 16 : 5, height: 5,
-                                                    backgroundColor: i < traitIndex ? stop.color : i === traitIndex ? 'white' : 'rgba(255,255,255,.2)'
-                                                }} />
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border border-white/15"
-                                        style={{ background: `${stop.color}28`, color: stop.color }}>
-                                        <TraitIcon trait={stop.trait} size={26} color={stop.color} />
+                <div className="absolute inset-0 flex items-center justify-center p-6 pt-16">
+                    <div key={traitIndex} className="w-full max-w-md page-flip">
+                        <p className="text-xs font-semibold text-gray-400 tracking-widest uppercase mb-4 text-center">Stop {stop.num} of 9</p>
+                        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div className="h-1" style={{ backgroundColor: stop.color }} />
+                            <div className="p-8">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                                        style={{ backgroundColor: `${stop.color}18`, color: stop.color }}>
+                                        <TraitIcon trait={stop.trait} size={22} color={stop.color} />
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-bold text-white blur-reveal">{stop.trait}</h2>
-                                        <p className="text-slate-400 text-xs mt-0.5">{stop.desc}</p>
+                                        <h2 className="text-xl font-bold text-gray-900">{stop.trait}</h2>
+                                        <p className="text-sm text-gray-400">{stop.desc}</p>
                                     </div>
                                 </div>
-                            </div>
-                            {/* Card body */}
-                            <div className="px-7 py-6">
                                 {hasQuestion ? (
                                     <>
-                                        <p className="text-slate-300 text-sm font-medium mb-4">{stop.question}</p>
-                                        <div className="space-y-0.5 mb-5">
-                                            {stop.options!.map((opt) => (
+                                        <p className="text-sm font-medium text-gray-700 mb-4">{stop.question}</p>
+                                        <div className="space-y-2 mb-4">
+                                            {stop.options!.map(opt => (
                                                 <button key={opt.value}
                                                     onClick={() => handleDemographicAnswer(stop.field!, opt.value)}
-                                                    className="opt-item w-full text-left px-4 py-2.5 rounded-xl text-base font-semibold">
-                                                    {opt.label}
-                                                </button>
+                                                    className="opt-item">{opt.label}</button>
                                             ))}
                                         </div>
-                                        <button onClick={advanceToNextTrait} className="text-slate-600 text-xs hover:text-slate-300 transition-colors">
-                                            Prefer not to say
-                                        </button>
+                                        <button onClick={advanceToNextTrait}
+                                            className="text-gray-400 text-xs hover:text-gray-600 transition-colors">Prefer not to say →</button>
                                     </>
                                 ) : (
                                     <div className="text-center py-2">
-                                        <p className="text-slate-300 text-lg italic leading-relaxed mb-6">&ldquo;{stop.message}&rdquo;</p>
+                                        <blockquote className="text-gray-600 italic leading-relaxed mb-6"
+                                            style={{ fontFamily: 'var(--font-cormorant), Georgia, serif', fontSize: '1.15rem' }}>
+                                            &ldquo;{stop.message}&rdquo;
+                                        </blockquote>
                                         <button onClick={advanceToNextTrait}
-                                            className="px-8 py-3 rounded-xl font-bold text-white text-sm flex items-center gap-2 mx-auto transition-all hover:scale-105"
-                                            style={{ background: `linear-gradient(135deg,${stop.color},${stop.color}99)`, boxShadow: `0 0 22px ${stop.color}44` }}>
-                                            Continue
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                            </svg>
-                                        </button>
+                                            className="px-8 py-3 rounded-xl font-semibold text-white text-sm hover:opacity-90 transition"
+                                            style={{ backgroundColor: stop.color }}>Continue →</button>
                                     </div>
                                 )}
                             </div>
@@ -606,9 +561,25 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                     </div>
                 </div>
                 <SkipBtn />
-            </DarkStage>
+            </LightStage>
         );
     }
+
+    if (currentStep === 'ready') return (
+        <LightStage planeFlying={planeFlying}>
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+                <div className="text-center page-flip">
+                    <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-8">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h2 className="text-5xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>You&apos;re all set.</h2>
+                    <p className="text-gray-500 text-lg">Let&apos;s begin your journey to contentment.</p>
+                </div>
+            </div>
+        </LightStage>
+    );
 
     return null;
 }

@@ -123,7 +123,7 @@ export default function InstallPromptBanner() {
                             {[
                                 { step: '1', icon: '⬆️', text: 'Tap the Share button at the bottom of Safari' },
                                 { step: '2', icon: '➕', text: 'Scroll down and tap "Add to Home Screen"' },
-                                { step: '3', icon: '✅', text: 'Tap "Add" — LifeAligner will appear on your home screen!' },
+                                { step: '3', icon: '✅', text: 'Tap "Add" — the Tim Collins Framework app will appear on your home screen!' },
                             ].map(s => (
                                 <div key={s.step} className="flex items-start gap-3">
                                     <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">

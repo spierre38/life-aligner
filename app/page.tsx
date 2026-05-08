@@ -333,7 +333,7 @@ export default function Home() {
               <div className="bg-white rounded-3xl shadow-2xl p-4 transform hover:scale-105 transition-transform duration-300">
                 <Image
                   src="/lifeAligner-mockup.png"
-                  alt="LifeAligner Framework Mockup"
+                  alt="Tim Collins Framework Mockup"
                   width={800}
                   height={600}
                   sizes="(max-width: 768px) 100vw, 50vw"

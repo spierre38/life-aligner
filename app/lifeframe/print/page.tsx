@@ -127,7 +127,7 @@ export default function LifeFramePrintView() {
             <div className="max-w-4xl mx-auto p-8 print:p-0 bg-white">
                 {/* Header */}
                 <div className="mb-12 text-center print:mb-8">
-                    <div className="text-sm text-gray-500 mb-2">LifeAligner</div>
+                    <div className="text-sm text-gray-500 mb-2">Tim Collins Framework</div>
                     <h1 className="text-4xl font-bold text-gray-900 mb-2 print:text-3xl">YOUR LIFEFRAME</h1>
                     <div className="text-lg text-gray-700">{userName}</div>
                     <div className="text-sm text-gray-500">{currentDate}</div>
@@ -290,7 +290,7 @@ export default function LifeFramePrintView() {
 
                 {/* Footer */}
                 <div className="border-t-2 border-gray-300 pt-6 mt-12 text-center text-sm text-gray-500 print:mt-8">
-                    <p>LifeAligner • Your path to contentment</p>
+                    <p>Tim Collins Framework • Your path to contentment</p>
                     <p className="mt-1">Visit lifealigner.com to update your LifeFrame</p>
                 </div>
             </div>
