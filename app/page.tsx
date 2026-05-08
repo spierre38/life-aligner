@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession } from '@/lib/auth';
 import dynamic from 'next/dynamic';
+import Wordmark from '@/app/components/Wordmark';
 
 // Heavy below-the-fold components — loaded as separate chunks
 const InteractiveToolsSection = dynamic(() => import('./components/InteractiveToolsSection').then(m => ({ default: m.InteractiveToolsSection })));
@@ -210,40 +211,58 @@ export default function Home() {
           </svg>
         </button>
         <div className="p-6 border-b border-gray-200">
-          <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            LifeAligner
-          </div>
+          <Wordmark size="sm" />
         </div>
         <nav className="p-6 space-y-4">
-          <Link href="#preview" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-purple-600 transition py-2">Preview</Link>
-          <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-purple-600 transition py-2">Pricing</Link>
-          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-purple-600 transition py-2">Sign In</Link>
-          <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center px-6 py-3 rounded-full font-bold hover:shadow-lg transition">Get Started</Link>
+          <Link href="#preview" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-gray-900 transition py-2">Preview</Link>
+          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-lg text-gray-800 hover:text-gray-900 transition py-2">Sign In</Link>
+          <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block bg-gray-900 text-white text-center px-6 py-3 rounded-xl font-semibold hover:bg-gray-800 transition">Get Started</Link>
         </nav>
       </div>
 
       {/* Sticky Navigation */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-sm border-b border-gray-200 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              LifeAligner
+            {/* Wordmark — same component used in the authenticated app */}
+            <Link href="/" className="flex items-center" aria-label="Tim Collins Framework — home">
+              <Wordmark size="sm" />
+            </Link>
+
+            {/* Desktop links */}
+            <div className="hidden md:flex gap-2 items-center">
+              <Link
+                href="#preview"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition"
+              >
+                Preview
+              </Link>
+              <Link
+                href="/login"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/signup"
+                className="bg-gray-900 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-gray-800 transition"
+              >
+                Get Started
+              </Link>
             </div>
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex gap-6 items-center">
-              <Link href="#preview" className="text-gray-800 hover:text-gray-900 transition">Preview</Link>
-              <Link href="#pricing" className="text-gray-800 hover:text-gray-900 transition">Pricing</Link>
-              <Link href="/login" className="text-gray-800 hover:text-gray-900 transition">Sign In</Link>
-              <Link href="/signup" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full hover:shadow-lg transition transform hover:scale-105">Get Started</Link>
-            </div>
-            {/* Mobile Hamburger */}
+
+            {/* Mobile hamburger — uses your existing mobileMenuOpen state */}
             <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 text-gray-600 hover:text-gray-900 transition"
-              aria-label="Open menu"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+              aria-label="Toggle navigation menu"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
             </button>
           </div>
@@ -253,45 +272,52 @@ export default function Home() {
       {/* Hero Section */}
       <section
         id="hero"
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16 relative overflow-hidden"
+        className="min-h-screen flex items-center justify-center bg-gray-50 pt-16 relative"
       >
-        {/* Soft background illustrations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-          <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
-            {/* Left column - Text content */}
+
+            {/* Left column — text */}
             <div className="text-center lg:text-left animate-fade-in">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              {/* Brand eyebrow — establishes whose framework this is */}
+              <p
+                className="text-xs sm:text-sm font-semibold tracking-[0.3em] text-gray-500 uppercase mb-5"
+                style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}
+              >
+                Tim Collins Framework
+              </p>
+
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
                 Your Path to Contentment
               </h1>
+
               <p className="text-xl sm:text-2xl md:text-3xl text-gray-700 mb-6 sm:mb-8">
                 Define what contentment means for <em>you</em> and create a roadmap to live it.
               </p>
-              <p className="text-base sm:text-xl text-gray-800 mb-8 sm:mb-12 max-w-2xl mx-auto lg:mx-0">
-                A personal growth platform for <em>all ages</em>, built around the tools and frameworks that helped create billion-dollar success.
+
+              <p className="text-base sm:text-lg text-gray-600 mb-8 sm:mb-12 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                A personal growth platform for <em>all ages</em>, built around the tools and frameworks
+                that helped create billion-dollar success.
               </p>
+
               <div className="flex gap-3 sm:gap-4 justify-center lg:justify-start flex-wrap">
                 <Link
                   href="/signup"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:shadow-xl transition transform hover:scale-105 min-h-[48px] flex items-center justify-center"
+                  className="bg-gray-900 text-white px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl font-semibold text-base hover:bg-gray-800 transition min-h-[48px] flex items-center justify-center"
                 >
                   Start Your Journey
+                  <span aria-hidden className="ml-2">→</span>
                 </Link>
                 <button
                   onClick={() => document.getElementById('contentment')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="border-2 border-gray-300 text-gray-700 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-semibold text-base sm:text-lg hover:border-purple-600 hover:text-purple-600 transition min-h-[48px] flex items-center justify-center"
+                  className="border border-gray-300 text-gray-700 px-6 sm:px-7 py-3 sm:py-3.5 rounded-xl font-semibold text-base hover:border-gray-900 hover:text-gray-900 transition min-h-[48px] flex items-center justify-center"
                 >
                   Learn More
                 </button>
               </div>
             </div>
 
-            {/* Right column - Visual mockup */}
+            {/* Right column — preserved mockup visual */}
             <div className="relative animate-fade-in animation-delay-500">
               <div className="bg-white rounded-3xl shadow-2xl p-4 transform hover:scale-105 transition-transform duration-300">
                 <Image
