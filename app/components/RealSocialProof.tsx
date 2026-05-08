@@ -11,20 +11,20 @@ export function RealSocialProof() {
                         Watch Tim Collins&apos; talk: &quot;Redefining Contentment&quot;
                     </p>
 
-                    {/* Video Embed Placeholder */}
+                    {/* TEDx Video */}
                     <div className="max-w-3xl mx-auto">
-                        <div className="aspect-video bg-gray-900 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden relative group cursor-pointer">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition">
-                                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white ml-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            {/* Thumbnail image would go here */}
-                            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-black/70 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
+                        <div className="aspect-video rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden relative bg-gray-900">
+                            <video
+                                className="w-full h-full object-cover"
+                                src="/timvideo.mp4"
+                                controls
+                                playsInline
+                                preload="metadata"
+                                aria-label="Tim Collins TEDx talk: Redefining Contentment"
+                            />
+                            {/* Badge */}
+                            <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 bg-black/70 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg pointer-events-none">
                                 <div className="text-xs sm:text-sm font-semibold">TEDx Endicott College</div>
-                                <div className="text-xs opacity-80">11:31</div>
                             </div>
                         </div>
                     </div>

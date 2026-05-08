@@ -19,7 +19,7 @@ export default function VideoIntroStep({ onComplete }: VideoIntroStepProps) {
                         Quick Intro Videos
                     </h1>
                     <p className="text-slate-400 text-lg max-w-md mx-auto">
-                        Two short videos from Tim to help you get the most out of LifeAligner.
+                        Two short videos from Tim to help you get the most out of the Tim Collins Framework.
                     </p>
                 </div>
 
@@ -45,9 +45,9 @@ export default function VideoIntroStep({ onComplete }: VideoIntroStepProps) {
                             </div>
                         </div>
                         <div className="p-6">
-                            <h3 className="text-xl font-bold text-white mb-2">Welcome to LifeAligner</h3>
+                            <h3 className="text-xl font-bold text-white mb-2">Welcome to the Tim Collins Framework</h3>
                             <p className="text-slate-400 text-sm leading-relaxed">
-                                Tim introduces the LifeAligner framework and explains how defining your values, interests,
+                                Tim introduces the Tim Collins Framework and explains how defining your values, interests,
                                 and purpose creates a foundation for lasting contentment.
                             </p>
                         </div>

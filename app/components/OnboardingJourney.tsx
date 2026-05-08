@@ -376,8 +376,8 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                 <div className="blur-reveal" style={{ animationDelay: '0.1s' }}>
                     <p className="text-xs font-bold tracking-[0.4em] uppercase text-purple-400 mb-3">Welcome to</p>
                     <h1 className="font-bold text-white leading-none"
-                        style={{ fontSize: 'clamp(3.5rem,10vw,7rem)', textShadow: '0 0 80px rgba(139,92,246,.8)' }}>
-                        LifeAligner
+                        style={{ fontSize: 'clamp(2.5rem,7vw,5rem)', textShadow: '0 0 80px rgba(139,92,246,.8)' }}>
+                        Tim Collins<br/>Framework
                     </h1>
                 </div>
                 <p className="text-slate-400 text-lg slide-up" style={{ animationDelay: '0.4s' }}>

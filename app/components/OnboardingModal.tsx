@@ -58,7 +58,7 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
     const steps: OnboardingStep[] = [
         {
             title: 'Welcome to Your Guided Tour',
-            description: 'This quick walkthrough will show you exactly how LifeAligner works — so you can hit the ground running.',
+            description: 'This quick walkthrough will show you exactly how the Tim Collins Framework works — so you can hit the ground running.',
             details: 'You\'ll complete a 3-part workbook (Values → Interests → Life Categories), then build a personalized Roadmap with goals and daily actions. Let\'s see how it all fits together.',
             illustration: (
                 <div className="w-32 h-32 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl">
@@ -323,7 +323,7 @@ export function OnboardingModal({ userId, onComplete }: OnboardingModalProps) {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Skip the Tutorial?</h3>
                         <p className="text-gray-600 text-sm mb-6">
-                            Are you sure? This walkthrough helps you understand how LifeAligner works. You can always restart it from Settings.
+                            Are you sure? This walkthrough helps you understand how the Tim Collins Framework works. You can always restart it from Settings.
                         </p>
                         <div className="flex gap-3">
                             <button

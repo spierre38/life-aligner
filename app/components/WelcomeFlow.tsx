@@ -67,7 +67,7 @@ export default function WelcomeFlow({ onComplete, userName }: WelcomeFlowProps) 
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                         </svg>
                     </div>
-                    <h1 className="text-7xl font-bold text-white drop-shadow-2xl mb-3">LifeAligner</h1>
+                    <h1 className="text-5xl font-bold text-white drop-shadow-2xl mb-3 leading-tight">Tim Collins<br/>Framework</h1>
                     <p className="text-2xl text-white/95 drop-shadow-md">Welcome{userName ? `, ${userName}` : ''}!</p>
                 </div>
             </div>

@@ -16,7 +16,7 @@ export function TimCollinsStory() {
                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-10"></div>
                                 <Image
                                     src="/timmyC.webp"
-                                    alt="Tim Collins, Creator of LifeAligner"
+                                    alt="Tim Collins, Creator of the Tim Collins Framework"
                                     width={320}
                                     height={320}
                                     className="rounded-full object-cover shadow-2xl border-4 border-white"
@@ -58,7 +58,7 @@ export function TimCollinsStory() {
                         <div className="pt-4 border-t border-gray-200">
                             <p className="font-semibold text-gray-900 text-lg">Tim Collins</p>
                             <p className="text-gray-800">Founder EBSCO Publishing, Former CEO </p>
-                            <p className="text-gray-800">TEDx Speaker • LifeAligner Framework Creator</p>
+                            <p className="text-gray-800">TEDx Speaker • Tim Collins Framework Creator</p>
                         </div>
                     </div>
                 </div>
