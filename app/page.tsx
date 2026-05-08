@@ -545,8 +545,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 sm:py-12" >
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <div className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            LifeAligner
+          <div className="flex justify-center mb-3 sm:mb-4">
+            <Wordmark size="sm" colorClassName="text-white" />
           </div>
           <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">Your path to contentment.</p>
 
