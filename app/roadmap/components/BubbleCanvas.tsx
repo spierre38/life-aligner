@@ -27,6 +27,7 @@ interface BubbleCanvasProps {
   onEditGoal: (goal: Goal) => void;
   onDeleteGoal: (goalId: string) => void;
   onPositionChange: (goalId: string, position: { x: number; y: number }) => void;
+  onOpenGoal: (goalId: string) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ export default function BubbleCanvas({
   onEditGoal,
   onDeleteGoal,
   onPositionChange,
+  onOpenGoal,
 }: BubbleCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 800 });
@@ -355,7 +357,7 @@ export default function BubbleCanvas({
                 position={pos}
                 animIndex={i}
                 reducedMotion={reducedMotion}
-                onOpen={(id) => console.log('[Phase 3] Open detail for goal:', id)}
+                onOpen={onOpenGoal}
                 onEdit={onEditGoal}
                 onDelete={onDeleteGoal}
                 onPositionChange={onPositionChange}

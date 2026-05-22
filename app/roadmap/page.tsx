@@ -1,15 +1,15 @@
 'use client';
 
 /**
- * app/roadmap/page.tsx — Phase 2.1 (refined)
+ * app/roadmap/page.tsx — Phase 3: Goal Detail View
  *
- * Changes from Phase 2:
- *   - ActivitiesDrawer removed (per "turn off DASH maybe" note)
- *   - savedValues and savedInterests passed to BubbleCanvas for ambient display
- *   - FTUECategoryPicker gets onAskTim prop (stub alert for now, Phase 4)
+ * Additions:
+ *   - GoalDetailView overlay when a goal bubble is clicked
+ *   - AddNodeModal for adding sub-goals/activities to a goal
+ *   - Handlers for node operations (add, complete, delete, includeToday)
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
@@ -25,9 +25,12 @@ import FTUECategoryPicker from './components/FTUECategoryPicker';
 import BubbleCanvas from './components/BubbleCanvas';
 import AddGoalModal from './components/AddGoalModal';
 import EditGoalModal from './components/EditGoalModal';
+import GoalDetailView from './components/GoalDetailView';
+import AddNodeModal from './components/AddNodeModal';
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
 
+/** Recursively update a node by id in a tree. Returns new tree. */
 function updateNodeInTree(
   nodes: GoalNode[],
   nodeId: string,
@@ -40,6 +43,50 @@ function updateNodeInTree(
     }
     return node;
   });
+}
+
+/** Recursively remove a node by id from a tree. Returns new tree. */
+function removeNodeFromTree(nodes: GoalNode[], nodeId: string): GoalNode[] {
+  return nodes
+    .filter(node => node.id !== nodeId)
+    .map(node => {
+      if (node.children) {
+        return { ...node, children: removeNodeFromTree(node.children, nodeId) };
+      }
+      return node;
+    });
+}
+
+/** Add a child node to a specific parent (or at root level if parentId is null). */
+function addNodeToTree(
+  nodes: GoalNode[],
+  parentId: string | null,
+  newNode: GoalNode
+): GoalNode[] {
+  if (parentId === null) {
+    return [...nodes, newNode];
+  }
+  return nodes.map(node => {
+    if (node.id === parentId) {
+      return { ...node, children: [...(node.children ?? []), newNode] };
+    }
+    if (node.children) {
+      return { ...node, children: addNodeToTree(node.children, parentId, newNode) };
+    }
+    return node;
+  });
+}
+
+/** Find a node's title by id for display purposes. */
+function findNodeTitle(nodes: GoalNode[], nodeId: string): string | null {
+  for (const node of nodes) {
+    if (node.id === nodeId) return node.title;
+    if (node.children) {
+      const found = findNodeTitle(node.children, nodeId);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -55,11 +102,14 @@ export default function RoadmapPage() {
   const [savedValues, setSavedValues] = useState<string[]>([]);
   const [savedInterests, setSavedInterests] = useState<string[]>([]);
   const [roadmap, setRoadmap] = useState<RoadmapData>(emptyRoadmapData());
+  const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Modal state
+  // Modal / view state
   const [ftueCategory, setFtueCategory] = useState<string | null>(null);
   const [addGoalOpen, setAddGoalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [detailGoalId, setDetailGoalId] = useState<string | null>(null);
+  const [addNodeTarget, setAddNodeTarget] = useState<{ goalId: string; parentNodeId: string | null } | null>(null);
 
   const saveSeq = useRef(0);
 
@@ -83,34 +133,29 @@ export default function RoadmapPage() {
         if (!mounted) return;
         if (error) { setLoadError(true); return; }
 
-        // LifeFrame gate
         const completion = evaluateLifeFrameCompletion(worksheets ?? []);
         if (!completion.life_categories.isComplete) {
           router.push('/workbook/life-categories');
           return;
         }
 
-        // Category names
         const catRow = worksheets?.find(w => w.category === 'life_categories');
         const rawCats = (catRow?.content as any)?.categories ?? [];
         const categoryNames: string[] = rawCats
           .map((c: any) => (typeof c === 'string' ? c : c?.name))
           .filter((n: any): n is string => typeof n === 'string' && n.length > 0);
 
-        // Value names
         const valRow = worksheets?.find(w => w.category === 'values');
         const valueNames: string[] = ((valRow?.content as any)?.selected_values ?? [])
           .map((v: any) => v?.name)
           .filter((n: any): n is string => typeof n === 'string' && n.length > 0);
 
-        // Interest names
         const intRow = worksheets?.find(w => w.category === 'interests');
         const existing: string[] = (intRow?.content as any)?.existing ?? [];
         const exploring: string[] = (intRow?.content as any)?.exploring ?? [];
         const interestNames = [...existing, ...exploring]
           .filter((n): n is string => typeof n === 'string' && n.length > 0);
 
-        // Load roadmap
         const result = await loadRoadmap(supabase, userWithProfile.user.id);
         if (!mounted) return;
 
@@ -137,35 +182,45 @@ export default function RoadmapPage() {
     return () => { mounted = false; };
   }, [router]);
 
+  // Reduced motion
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mq.matches);
+    const h = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, []);
+
   // ── Save helper ─────────────────────────────────────────────────────────────
 
-  const persist = async (next: RoadmapData) => {
+  const persist = useCallback(async (next: RoadmapData) => {
     if (!userId) return;
     setRoadmap(next);
     const result = await saveRoadmap(supabase, userId, next, saveSeq);
     if (!result.ok) {
       showToast.error(result.error ?? 'Failed to save. Please try again.');
     }
-  };
+  }, [userId]);
 
-  // ── Goal handlers ───────────────────────────────────────────────────────────
+  // ── Goal-level handlers ─────────────────────────────────────────────────────
 
-  const handleAddGoal = async (goal: Goal) => {
+  const handleAddGoal = useCallback(async (goal: Goal) => {
     setFtueCategory(null);
     setAddGoalOpen(false);
     await persist({ ...roadmap, goals: [...roadmap.goals, goal] });
-  };
+  }, [roadmap, persist]);
 
-  const handleEditGoal = async (updated: Goal) => {
+  const handleEditGoal = useCallback(async (updated: Goal) => {
     setEditingGoal(null);
     await persist({
       ...roadmap,
       goals: roadmap.goals.map(g => g.id === updated.id ? updated : g),
     });
-  };
+  }, [roadmap, persist]);
 
-  const handleDeleteGoal = async (goalId: string) => {
+  const handleDeleteGoal = useCallback(async (goalId: string) => {
     setEditingGoal(null);
+    setDetailGoalId(null);
     await persist({
       ...roadmap,
       goals: roadmap.goals.map(g =>
@@ -174,9 +229,9 @@ export default function RoadmapPage() {
           : g
       ),
     });
-  };
+  }, [roadmap, persist]);
 
-  const handlePositionChange = async (
+  const handlePositionChange = useCallback(async (
     goalId: string,
     position: { x: number; y: number }
   ) => {
@@ -184,13 +239,86 @@ export default function RoadmapPage() {
       ...roadmap,
       goals: roadmap.goals.map(g => g.id === goalId ? { ...g, position } : g),
     });
-  };
+  }, [roadmap, persist]);
+
+  // ── Node-level handlers (for detail view) ───────────────────────────────────
+
+  const handleToggleComplete = useCallback(async (
+    goalId: string,
+    nodeId: string,
+    completed: boolean
+  ) => {
+    const now = new Date().toISOString();
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, children: updateNodeInTree(g.children, nodeId, { completed, completedAt: completed ? now : undefined }) }
+          : g
+      ),
+    });
+  }, [roadmap, persist]);
+
+  const handleToggleIncludeToday = useCallback(async (
+    goalId: string,
+    nodeId: string,
+    includeToday: boolean
+  ) => {
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, children: updateNodeInTree(g.children, nodeId, { includeToday }) }
+          : g
+      ),
+    });
+  }, [roadmap, persist]);
+
+  const handleDeleteNode = useCallback(async (goalId: string, nodeId: string) => {
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, children: removeNodeFromTree(g.children, nodeId) }
+          : g
+      ),
+    });
+  }, [roadmap, persist]);
+
+  const handleAddNode = useCallback(async (node: GoalNode) => {
+    if (!addNodeTarget) return;
+    const { goalId, parentNodeId } = addNodeTarget;
+    setAddNodeTarget(null);
+
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, children: addNodeToTree(g.children, parentNodeId, node) }
+          : g
+      ),
+    });
+  }, [roadmap, persist, addNodeTarget]);
 
   // ── Ask Tim stub ────────────────────────────────────────────────────────────
 
-  const handleAskTim = () => {
+  const handleAskTim = useCallback(() => {
     showToast.info('AI coaching is coming in Phase 4! For now, pick a category to start.');
-  };
+  }, []);
+
+  // ── Derived state ───────────────────────────────────────────────────────────
+
+  const detailGoal = detailGoalId
+    ? roadmap.goals.find(g => g.id === detailGoalId) ?? null
+    : null;
+
+  const addNodeGoal = addNodeTarget
+    ? roadmap.goals.find(g => g.id === addNodeTarget.goalId) ?? null
+    : null;
+
+  const addNodeParentTitle = addNodeTarget?.parentNodeId && addNodeGoal
+    ? findNodeTitle(addNodeGoal.children, addNodeTarget.parentNodeId) ?? undefined
+    : undefined;
 
   // ── Render states ───────────────────────────────────────────────────────────
 
@@ -256,6 +384,21 @@ export default function RoadmapPage() {
           onEditGoal={setEditingGoal}
           onDeleteGoal={handleDeleteGoal}
           onPositionChange={handlePositionChange}
+          onOpenGoal={setDetailGoalId}
+        />
+      )}
+
+      {/* Goal Detail View overlay */}
+      {detailGoal && (
+        <GoalDetailView
+          goal={detailGoal}
+          reducedMotion={reducedMotion}
+          onClose={() => setDetailGoalId(null)}
+          onToggleComplete={handleToggleComplete}
+          onToggleIncludeToday={handleToggleIncludeToday}
+          onDeleteNode={handleDeleteNode}
+          onAddNode={(goalId, parentNodeId) => setAddNodeTarget({ goalId, parentNodeId })}
+          onEditGoal={(g) => { setDetailGoalId(null); setEditingGoal(g); }}
         />
       )}
 
@@ -281,6 +424,16 @@ export default function RoadmapPage() {
           onClose={() => setEditingGoal(null)}
           onSave={handleEditGoal}
           onDelete={handleDeleteGoal}
+        />
+      )}
+
+      {/* Add Node modal */}
+      {addNodeTarget !== null && addNodeGoal && (
+        <AddNodeModal
+          goalTitle={addNodeGoal.title}
+          parentTitle={addNodeParentTitle}
+          onClose={() => setAddNodeTarget(null)}
+          onSave={handleAddNode}
         />
       )}
     </>
