@@ -73,7 +73,8 @@ function AiCoachPanel({ goal }: { goal: Goal }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setErrorMsg(data.error || 'Something went wrong.');
+        const errDetail = data.debug ? `\n\nDebug: ${data.debug}` : '';
+        setErrorMsg((data.error || 'Something went wrong.') + errDetail);
         setStatus('error');
         return;
       }

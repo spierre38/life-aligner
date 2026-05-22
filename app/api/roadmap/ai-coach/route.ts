@@ -230,7 +230,7 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
     } catch (parseErr) {
       console.error('[AI Coach] Failed to parse Gemini response:', rawText);
       return NextResponse.json(
-        { error: 'AI response was not in the expected format. Please try again.' },
+        { error: 'AI response was not in the expected format. Please try again.', debug: rawText?.substring(0, 300) },
         { status: 502 }
       );
     }
