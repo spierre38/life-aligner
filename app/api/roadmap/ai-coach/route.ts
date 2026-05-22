@@ -1,64 +1,253 @@
 /**
- * app/api/roadmap/ai-coach/route.ts
+ * app/api/roadmap/ai-coach/route.ts — Phase 4
  *
- * STUB — Phase 0 only.
+ * AI coaching endpoint. Reads the user's full LifeFrame profile
+ * (values, interests, categories) plus the specific goal, then
+ * generates personalized coaching via Google Gemini.
  *
- * This file establishes the route so Phase 4 only needs to edit rather
- * than create. Right now it:
- *   1. Verifies the caller is authenticated (returns 401 if not)
- *   2. Returns 501 Not Implemented with a JSON body (if authenticated)
+ * Features:
+ *   - Profile-hash caching: if the user's profile hasn't changed since
+ *     the last generation, return the cached content (skip API call)
+ *   - Rate limiting: 10 AI calls per user per day (uses profile columns)
+ *   - Graceful degradation: if GEMINI_API_KEY is missing, returns 503
+ *     with a helpful message instead of crashing
  *
- * Phase 4 will replace the 501 block with the real Anthropic call,
- * rate-limiting logic, and profile-hash caching.
- *
- * ── Vercel env var checklist for Phase 4 ────────────────────────────────────
- * Before Phase 4 ships you will need to add ANTHROPIC_API_KEY to Vercel:
- *   1. Go to vercel.com → your project → Settings → Environment Variables
- *   2. Add ANTHROPIC_API_KEY for Production, Preview, and Development
- *   3. Confirm your Anthropic account has billing configured
- *   4. Set a monthly spend alert in the Anthropic dashboard
- * This key must NEVER be added to .env.local or committed to git.
- * ────────────────────────────────────────────────────────────────────────────
+ * Request body: { goalId: string, forceRefresh?: boolean }
+ * Response: { coaching: Goal['aiContent'] } or { error: string }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { computeProfileHash, type ProfileSnapshot } from '@/lib/profile-hash';
+
+const DAILY_CAP = 10;
 
 export async function POST(req: NextRequest) {
-  // Use the server-side Supabase client which reads the session from cookies.
-  // This is the same pattern used throughout the rest of the app's API routes.
   const supabase = await createClient();
 
-  // Verify the caller is authenticated.
-  // getUser() hits the Supabase auth server to validate the JWT —
-  // it's more secure than getSession() which only reads from the cookie.
+  // ── Auth ────────────────────────────────────────────────────────────────────
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-
   if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
+  // ── API key check ───────────────────────────────────────────────────────────
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     return NextResponse.json(
-      { error: 'Unauthorized. Please sign in and try again.' },
-      { status: 401 }
+      { error: 'AI coaching is not configured yet. Add GEMINI_API_KEY to your environment.' },
+      { status: 503 }
     );
   }
 
-  // ── Phase 4 will replace everything below this line ──────────────────────
-  //
-  // Expected Phase 4 flow:
-  //   1. Parse and validate { goalId, action } from req.json()
-  //   2. Read profile → check ai_calls_today against cap (10/day)
-  //   3. If reset_at is from yesterday → reset counter to 0
-  //   4. If over cap → return 429 with friendly message
-  //   5. Read roadmap → find goal by goalId → verify ownership
-  //   6. Read user's values, interests, life_categories
-  //   7. computeProfileHash() and compare against goal.aiContent.profileHash
-  //   8. If cache is fresh and action === 'generate' → return cached content
-  //   9. Otherwise → call Claude Haiku, parse, save, increment counter, return
-  //
-  // See roadmap-overhaul plan (Phase 4) for full prompt structure and
-  // rate-limiting details.
+  // ── Parse request ───────────────────────────────────────────────────────────
+  let goalId: string;
+  let forceRefresh = false;
+  try {
+    const body = await req.json();
+    goalId = body.goalId;
+    forceRefresh = body.forceRefresh === true;
+    if (!goalId || typeof goalId !== 'string') throw new Error('Missing goalId');
+  } catch {
+    return NextResponse.json({ error: 'Invalid request. Send { goalId: string }.' }, { status: 400 });
+  }
 
-  return NextResponse.json(
-    { error: 'AI coaching is not yet implemented. Coming in Phase 4.' },
-    { status: 501 }
-  );
+  // ── Rate limiting ───────────────────────────────────────────────────────────
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('ai_calls_today, ai_calls_reset_at')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return NextResponse.json({ error: 'Could not load profile.' }, { status: 500 });
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const resetDay = profile.ai_calls_reset_at
+    ? new Date(profile.ai_calls_reset_at).toISOString().slice(0, 10)
+    : '';
+
+  let callsToday = profile.ai_calls_today ?? 0;
+  if (resetDay !== today) {
+    callsToday = 0;
+    await supabase
+      .from('profiles')
+      .update({ ai_calls_today: 0, ai_calls_reset_at: new Date().toISOString() })
+      .eq('id', user.id);
+  }
+
+  if (callsToday >= DAILY_CAP) {
+    return NextResponse.json(
+      { error: `You've reached your daily limit of ${DAILY_CAP} AI coaching calls. Try again tomorrow!` },
+      { status: 429 }
+    );
+  }
+
+  // ── Load workbook data ──────────────────────────────────────────────────────
+  const { data: worksheets, error: wsError } = await supabase
+    .from('workbook_entries')
+    .select('category, content')
+    .eq('user_id', user.id);
+
+  if (wsError || !worksheets) {
+    return NextResponse.json({ error: 'Could not load your LifeFrame data.' }, { status: 500 });
+  }
+
+  const valRow = worksheets.find(w => w.category === 'values');
+  const intRow = worksheets.find(w => w.category === 'interests');
+  const catRow = worksheets.find(w => w.category === 'life_categories');
+
+  const snapshot: ProfileSnapshot = {
+    values: (valRow?.content as any)?.selected_values ?? [],
+    interests: {
+      existing: (intRow?.content as any)?.existing ?? [],
+      exploring: (intRow?.content as any)?.exploring ?? [],
+    },
+    life_categories: (catRow?.content as any)?.categories ?? [],
+  };
+
+  const profileHash = await computeProfileHash(snapshot);
+
+  // ── Load roadmap & find goal ────────────────────────────────────────────────
+  const { data: roadmapRow, error: rmError } = await supabase
+    .from('workbook_entries')
+    .select('content')
+    .eq('user_id', user.id)
+    .eq('category', 'roadmap')
+    .single();
+
+  if (rmError || !roadmapRow) {
+    return NextResponse.json({ error: 'Could not load your roadmap.' }, { status: 500 });
+  }
+
+  const roadmapContent = roadmapRow.content as any;
+  const goals = roadmapContent?.goals ?? [];
+  const goal = goals.find((g: any) => g.id === goalId);
+
+  if (!goal) {
+    return NextResponse.json({ error: 'Goal not found.' }, { status: 404 });
+  }
+
+  // ── Cache check ─────────────────────────────────────────────────────────────
+  if (!forceRefresh && goal.aiContent?.profileHash === profileHash && goal.aiContent?.whyItHelps) {
+    return NextResponse.json({ coaching: goal.aiContent, cached: true });
+  }
+
+  // ── Build prompt ────────────────────────────────────────────────────────────
+  const valueNames = ((valRow?.content as any)?.selected_values ?? [])
+    .map((v: any) => v?.name).filter(Boolean).join(', ');
+  const existingInterests = ((intRow?.content as any)?.existing ?? []).join(', ');
+  const exploringInterests = ((intRow?.content as any)?.exploring ?? []).join(', ');
+  const categoryNames = ((catRow?.content as any)?.categories ?? [])
+    .map((c: any) => typeof c === 'string' ? c : c?.name).filter(Boolean).join(', ');
+
+  const prompt = `You are Tim, a warm, insightful life coach inside the Life Aligner app. A user has created a goal and you need to give them personalized coaching.
+
+USER'S PROFILE:
+- Core values: ${valueNames || 'Not yet specified'}
+- Current interests: ${existingInterests || 'None listed'}
+- Exploring interests: ${exploringInterests || 'None listed'}
+- Life categories they focus on: ${categoryNames || 'Not specified'}
+
+THEIR GOAL:
+- Title: "${goal.title}"
+- Why it matters to them: "${goal.why || 'Not specified'}"
+- Connected categories: ${goal.connectedCategories?.join(', ') || 'None'}
+- Connected values: ${goal.connectedValues?.join(', ') || 'None'}
+- Connected interests: ${goal.connectedInterests?.join(', ') || 'None'}
+
+INSTRUCTIONS:
+Respond with a JSON object containing exactly two fields:
+1. "whyItHelps" — A warm, personalized paragraph (2-4 sentences) explaining how this goal connects to their values and interests. Reference specific values/interests by name. Be encouraging but genuine, not generic. Speak directly to them using "you" and "your".
+2. "dailyIdeas" — An array of 3-4 concrete, actionable daily activities they could do toward this goal. Each should be specific enough to start today, and when possible, tie back to their interests. Keep each under 60 characters.
+
+Respond ONLY with valid JSON, no markdown, no code fences.`;
+
+  // ── Call Gemini ──────────────────────────────────────────────────────────────
+  try {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    const geminiRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 600,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      console.error('[AI Coach] Gemini error:', geminiRes.status, errText);
+      return NextResponse.json(
+        { error: 'AI service returned an error. Please try again later.' },
+        { status: 502 }
+      );
+    }
+
+    const geminiData = await geminiRes.json();
+    const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!rawText) {
+      console.error('[AI Coach] Empty Gemini response:', JSON.stringify(geminiData));
+      return NextResponse.json({ error: 'AI returned an empty response.' }, { status: 502 });
+    }
+
+    // Parse the JSON response
+    let parsed: { whyItHelps: string; dailyIdeas: string[] };
+    try {
+      // Strip code fences if the model added them despite instructions
+      const cleaned = rawText.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      parsed = JSON.parse(cleaned);
+      if (!parsed.whyItHelps || !Array.isArray(parsed.dailyIdeas)) {
+        throw new Error('Missing required fields');
+      }
+    } catch (parseErr) {
+      console.error('[AI Coach] Failed to parse Gemini response:', rawText);
+      return NextResponse.json(
+        { error: 'AI response was not in the expected format. Please try again.' },
+        { status: 502 }
+      );
+    }
+
+    // ── Save to goal & increment counter ────────────────────────────────────
+    const aiContent = {
+      whyItHelps: parsed.whyItHelps,
+      dailyIdeas: parsed.dailyIdeas.slice(0, 4),
+      generatedAt: new Date().toISOString(),
+      profileHash,
+    };
+
+    // Update the goal's aiContent in the roadmap
+    const updatedGoals = goals.map((g: any) =>
+      g.id === goalId ? { ...g, aiContent } : g
+    );
+
+    await supabase
+      .from('workbook_entries')
+      .update({
+        content: { ...roadmapContent, goals: updatedGoals, updated_at: new Date().toISOString() },
+      })
+      .eq('user_id', user.id)
+      .eq('category', 'roadmap');
+
+    // Increment daily counter
+    await supabase
+      .from('profiles')
+      .update({ ai_calls_today: callsToday + 1 })
+      .eq('id', user.id);
+
+    return NextResponse.json({ coaching: aiContent, cached: false });
+  } catch (err) {
+    console.error('[AI Coach] Unexpected error:', err);
+    return NextResponse.json(
+      { error: 'Something went wrong with the AI service. Please try again.' },
+      { status: 500 }
+    );
+  }
 }

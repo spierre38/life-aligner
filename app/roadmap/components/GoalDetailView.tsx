@@ -22,7 +22,7 @@
  *   - Right sidebar stub with "AI coaching coming soon" (Phase 4 fills this)
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Goal, GoalNode } from '@/lib/roadmap-types';
 import NodeBubble from './NodeBubble';
 
@@ -35,11 +35,196 @@ const GRANDCHILD_SIZE = 70;
 const ROOT_BLOB = 'M 52,9 C 76,6 94,24 91,50 C 88,76 68,95 44,91 C 20,87 6,67 9,43 C 12,19 31,12 52,9 Z';
 const WHY_BLOB = 'M 50,12 C 72,8 90,28 86,52 C 82,76 60,90 40,84 C 20,78 8,58 14,38 C 20,18 32,16 50,12 Z';
 
+const SPARKLE_ICON = (
+  <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+  </svg>
+);
+
 function stringToHue(s: string): number {
   let h = 5381;
   for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
   return Math.abs(h) % 360;
 }
+
+// ─── AI Coach Panel ───────────────────────────────────────────────────────────
+
+interface AiCoachContent {
+  whyItHelps: string;
+  dailyIdeas: string[];
+  generatedAt: string;
+  profileHash: string;
+}
+
+function AiCoachPanel({ goal }: { goal: Goal }) {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [content, setContent] = useState<AiCoachContent | null>(goal.aiContent ?? null);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [cached, setCached] = useState(false);
+
+  const fetchCoaching = useCallback(async (forceRefresh = false) => {
+    setStatus('loading');
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/roadmap/ai-coach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goalId: goal.id, forceRefresh }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || 'Something went wrong.');
+        setStatus('error');
+        return;
+      }
+      setContent(data.coaching);
+      setCached(data.cached === true);
+      setStatus('done');
+    } catch (err) {
+      setErrorMsg('Network error. Check your connection.');
+      setStatus('error');
+    }
+  }, [goal.id]);
+
+  // Auto-fetch on mount if no cached content
+  useEffect(() => {
+    if (!content) {
+      fetchCoaching(false);
+    } else {
+      setStatus('done');
+    }
+  }, [goal.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="hidden lg:flex w-80 flex-shrink-0 flex-col border-l border-white/5 bg-slate-950/50 backdrop-blur-sm">
+      <div className="px-6 py-8 flex-1 flex flex-col overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            {SPARKLE_ICON}
+            <h3 className="text-white font-bold text-sm">Tim's Coaching</h3>
+          </div>
+          {status === 'done' && (
+            <button
+              onClick={() => fetchCoaching(true)}
+              aria-label="Refresh coaching"
+              className="text-white/30 hover:text-white/60 text-xs font-medium transition flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          )}
+        </div>
+
+        {/* Loading state */}
+        {status === 'loading' && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-4 animate-pulse">
+              {SPARKLE_ICON}
+            </div>
+            <p className="text-white/60 text-xs">Tim is reading your profile...</p>
+            <div className="mt-3 flex gap-1">
+              <span className="w-1.5 h-1.5 bg-amber-400/60 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+              <span className="w-1.5 h-1.5 bg-amber-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+              <span className="w-1.5 h-1.5 bg-amber-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {status === 'error' && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-400/20 flex items-center justify-center mb-4">
+              <span className="text-red-400 text-lg">!</span>
+            </div>
+            <p className="text-white/60 text-xs mb-3">{errorMsg}</p>
+            <button
+              onClick={() => fetchCoaching(false)}
+              className="text-amber-400 text-xs font-semibold hover:text-amber-300 transition"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* Idle (no content yet, initial load not triggered) */}
+        {status === 'idle' && !content && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+            <button
+              onClick={() => fetchCoaching(false)}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:from-amber-600 hover:to-amber-700 transition shadow-lg"
+            >
+              Ask Tim for coaching
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        {status === 'done' && content && (
+          <div className="space-y-5">
+            {/* Why it helps */}
+            <div>
+              <p className="text-amber-300/60 text-[10px] font-bold uppercase tracking-wider mb-2">Why this goal matters for you</p>
+              <p className="text-white/80 text-sm leading-relaxed">{content.whyItHelps}</p>
+            </div>
+
+            {/* Daily ideas */}
+            {content.dailyIdeas.length > 0 && (
+              <div>
+                <p className="text-amber-300/60 text-[10px] font-bold uppercase tracking-wider mb-2">Ideas for today</p>
+                <ul className="space-y-2">
+                  {content.dailyIdeas.map((idea, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 bg-amber-400/50 rounded-full mt-1.5 flex-shrink-0" />
+                      <span className="text-white/70 text-sm leading-relaxed">{idea}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Timestamp & cache indicator */}
+            <div className="pt-2 border-t border-white/5">
+              <p className="text-white/20 text-[10px]">
+                {cached ? 'Cached result' : 'Fresh result'} · {new Date(content.generatedAt).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Connected values/interests — always visible */}
+        {(goal.connectedValues.length > 0 || goal.connectedInterests.length > 0) && (
+          <div className="border-t border-white/5 pt-4 mt-auto">
+            {goal.connectedValues.length > 0 && (
+              <div className="mb-3">
+                <p className="text-blue-300/50 text-[10px] font-bold uppercase tracking-wider mb-1">Connected Values</p>
+                <div className="flex flex-wrap gap-1">
+                  {goal.connectedValues.map(v => (
+                    <span key={v} className="bg-blue-500/15 text-blue-300/70 text-[10px] font-medium px-2 py-0.5 rounded-full">{v}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {goal.connectedInterests.length > 0 && (
+              <div>
+                <p className="text-rose-300/50 text-[10px] font-bold uppercase tracking-wider mb-1">Connected Interests</p>
+                <div className="flex flex-wrap gap-1">
+                  {goal.connectedInterests.map(v => (
+                    <span key={v} className="bg-rose-500/15 text-rose-300/70 text-[10px] font-medium px-2 py-0.5 rounded-full">{v}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -437,55 +622,8 @@ export default function GoalDetailView({
           )}
         </div>
 
-        {/* ── AI panel placeholder (right sidebar) ─────────────────── */}
-        <div className="hidden lg:flex w-80 flex-shrink-0 flex-col border-l border-white/5 bg-slate-950/50 backdrop-blur-sm">
-          <div className="px-6 py-8 flex-1 flex flex-col">
-            <div className="flex items-center gap-2 mb-6">
-              <svg className="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-              </svg>
-              <h3 className="text-white font-bold text-sm">AI Coaching</h3>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-4">
-                <svg className="w-7 h-7 text-amber-400/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                </svg>
-              </div>
-              <h4 className="text-white/80 font-semibold text-sm mb-2">Coming in Phase 4</h4>
-              <p className="text-white/40 text-xs leading-relaxed">
-                Tim will read your full profile — values, interests, and goals — to generate personalized coaching, suggest daily activities, and help you reflect on your progress.
-              </p>
-            </div>
-
-            {/* Connected values/interests preview */}
-            {(goal.connectedValues.length > 0 || goal.connectedInterests.length > 0) && (
-              <div className="border-t border-white/5 pt-4 mt-4">
-                {goal.connectedValues.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-blue-300/50 text-[10px] font-bold uppercase tracking-wider mb-1">Connected Values</p>
-                    <div className="flex flex-wrap gap-1">
-                      {goal.connectedValues.map(v => (
-                        <span key={v} className="bg-blue-500/15 text-blue-300/70 text-[10px] font-medium px-2 py-0.5 rounded-full">{v}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {goal.connectedInterests.length > 0 && (
-                  <div>
-                    <p className="text-rose-300/50 text-[10px] font-bold uppercase tracking-wider mb-1">Connected Interests</p>
-                    <div className="flex flex-wrap gap-1">
-                      {goal.connectedInterests.map(v => (
-                        <span key={v} className="bg-rose-500/15 text-rose-300/70 text-[10px] font-medium px-2 py-0.5 rounded-full">{v}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* ── AI Coaching sidebar ─────────────────────────────────── */}
+        <AiCoachPanel goal={goal} />
       </div>
     </div>
   );
