@@ -17,7 +17,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { emptyRoadmapData, type Goal, type GoalNode, type RoadmapData } from './roadmap-types';
+import { emptyRoadmapData, type Goal, type GoalNode, type PersonalActivity, type RoadmapData } from './roadmap-types';
 
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
@@ -99,8 +99,27 @@ function normalizeGoalNode(raw: unknown, depth = 0): GoalNode | null {
     title: asString(field(raw, 'title')),
     completed: asBool(field(raw, 'completed')),
     completedAt: asString(field(raw, 'completedAt')) || undefined,
+    includeToday: asBool(field(raw, 'includeToday'), false),
     // Only include children key when there are children to keep the object lean.
     ...(children.length > 0 ? { children } : {}),
+  };
+}
+
+// ─── normalizePersonalActivity ────────────────────────────────────────────
+
+/**
+ * Normalizes a personal activity from unknown JSONB input.
+ * Returns null if the input is not an object.
+ */
+function normalizePersonalActivity(raw: unknown): PersonalActivity | null {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  return {
+    id: asString(field(raw, 'id')) || crypto.randomUUID(),
+    title: asString(field(raw, 'title')),
+    completed: asBool(field(raw, 'completed')),
+    completedAt: asString(field(raw, 'completedAt')) || undefined,
+    includeToday: asBool(field(raw, 'includeToday'), true),
+    createdAt: asString(field(raw, 'createdAt')) || new Date().toISOString(),
   };
 }
 
@@ -223,11 +242,16 @@ export async function loadRoadmap(
       ? (rawGoals.map(normalizeGoal).filter(Boolean) as Goal[])
       : [];
 
+    const rawPersonalActivities = field(raw, 'personalActivities');
+    const personalActivities: PersonalActivity[] = Array.isArray(rawPersonalActivities)
+      ? (rawPersonalActivities.map(normalizePersonalActivity).filter(Boolean) as PersonalActivity[])
+      : [];
+
     const updatedAt = asString(field(raw, 'updated_at')) || new Date().toISOString();
 
     return {
       ok: true,
-      data: { schema_version: 2, goals, updated_at: updatedAt },
+      data: { schema_version: 2, goals, personalActivities, updated_at: updatedAt },
       migrated: false,
     };
   } catch (err) {

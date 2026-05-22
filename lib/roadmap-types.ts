@@ -43,6 +43,13 @@ export interface GoalNode {
    * May be undefined (treated the same as empty array).
    */
   children?: GoalNode[];
+
+  /**
+   * If true, this activity appears in the "Your Activities" daily drawer.
+   * Only meaningful on nodes where type === 'activity'.
+   * Defaults to false — users opt in per-activity (John's favourite feature).
+   */
+  includeToday?: boolean;
 }
 
 // ─── Goal ────────────────────────────────────────────────────────────────────
@@ -149,6 +156,23 @@ export interface Goal {
   updatedAt: string;
 }
 
+// ─── Personal activity ──────────────────────────────────────────────────────
+
+/**
+ * A stand-alone activity not attached to any goal.
+ * Shown in the amber "Personal" section of the Activities drawer.
+ * Always appears in the drawer (includeToday is always true for these).
+ */
+export interface PersonalActivity {
+  id: string;
+  title: string;
+  completed: boolean;
+  completedAt?: string;
+  /** Always true — personal activities are added directly to the drawer. */
+  includeToday: boolean;
+  createdAt: string;
+}
+
 // ─── Top-level container ─────────────────────────────────────────────────────
 
 /**
@@ -166,6 +190,13 @@ export interface RoadmapData {
   /** All goals — active, completed, and deleted. Filter in the UI. */
   goals: Goal[];
 
+  /**
+   * Stand-alone activities not attached to any goal.
+   * Shown in the amber 'Personal' section of the Activities drawer.
+   * Always shown in today's list when present.
+   */
+  personalActivities: PersonalActivity[];
+
   /** ISO-8601 timestamp of the most recent save. */
   updated_at: string;
 }
@@ -181,6 +212,7 @@ export function emptyRoadmapData(): RoadmapData {
   return {
     schema_version: 2,
     goals: [],
+    personalActivities: [],
     updated_at: new Date().toISOString(),
   };
 }

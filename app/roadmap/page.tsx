@@ -1,26 +1,20 @@
 'use client';
 
 /**
- * app/roadmap/page.tsx — Phase 1: FTUE + routing
+ * app/roadmap/page.tsx — Phase 2: Bubble Canvas
  *
- * Replaces the old tabbed (Update / Plan / Activities) roadmap UI.
+ * Routing logic (unchanged from Phase 1):
+ *   1. LifeFrame incomplete → redirect to next incomplete worksheet
+ *   2. No active goals       → FTUECategoryPicker
+ *   3. Goals exist           → BubbleCanvas  ← NEW (replaces CanvasComingSoon)
  *
- * Routing logic:
- *   1. LifeFrame incomplete → redirect to next incomplete worksheet (same as before)
- *   2. No active goals yet  → render <FTUECategoryPicker />
- *   3. Goals exist          → "Coming soon" placeholder (Phase 2 ships BubbleCanvas)
- *
- * Data flow:
- *   - loadRoadmap() handles schema migration transparently on read
- *   - saveRoadmap() uses a seqRef for race protection (same pattern as old page)
- *   - If migration happened (old data wiped), shows an info toast
- *
- * What changed from the old page:
- *   - All of UpdateRoadmapView, YourPlanView, YourActivitiesView removed
- *   - Old local types (RoadmapItem, Activity, ManualActivity) removed
- *   - Storage now goes through lib/roadmap-storage.ts (schema_version 2)
- *   - Old components (RoadmapCanvas, RoadmapLane, etc.) still on disk but unused here
- *     → they will be deleted in Phase 2
+ * New in Phase 2:
+ *   - BubbleCanvas replaces the placeholder
+ *   - EditGoalModal for editing existing goals
+ *   - ActivitiesDrawer fixed to bottom
+ *   - Handlers for edit, delete, position change, activity completion,
+ *     personal activity add/toggle
+ *   - savedValues + savedInterests extracted and passed to modals
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -33,12 +27,35 @@ import { showToast } from '@/lib/toast';
 import { evaluateLifeFrameCompletion } from '@/lib/lifeframe-completion';
 import { loadRoadmap, saveRoadmap } from '@/lib/roadmap-storage';
 import { emptyRoadmapData } from '@/lib/roadmap-types';
-import type { RoadmapData, Goal } from '@/lib/roadmap-types';
+import type { Goal, GoalNode, PersonalActivity, RoadmapData } from '@/lib/roadmap-types';
 
 import FTUECategoryPicker from './components/FTUECategoryPicker';
+import BubbleCanvas from './components/BubbleCanvas';
 import AddGoalModal from './components/AddGoalModal';
+import EditGoalModal from './components/EditGoalModal';
+import ActivitiesDrawer from './components/ActivitiesDrawer';
 
-// ─── Main component ──────────────────────────────────────────────────────────
+// ─── Tree helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Recursively updates a GoalNode by id anywhere in the tree.
+ * Returns a new tree — never mutates the original.
+ */
+function updateNodeInTree(
+  nodes: GoalNode[],
+  nodeId: string,
+  update: Partial<GoalNode>
+): GoalNode[] {
+  return nodes.map(node => {
+    if (node.id === nodeId) return { ...node, ...update };
+    if (node.children) {
+      return { ...node, children: updateNodeInTree(node.children, nodeId, update) };
+    }
+    return node;
+  });
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function RoadmapPage() {
   const router = useRouter();
@@ -46,23 +63,20 @@ export default function RoadmapPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+
   const [categories, setCategories] = useState<string[]>([]);
+  const [savedValues, setSavedValues] = useState<string[]>([]);
+  const [savedInterests, setSavedInterests] = useState<string[]>([]);
   const [roadmap, setRoadmap] = useState<RoadmapData>(emptyRoadmapData());
 
-  /**
-   * Which category was tapped in FTUECategoryPicker.
-   * Non-null means AddGoalModal is open with this category pre-selected.
-   */
+  // Modal state
   const [ftueCategory, setFtueCategory] = useState<string | null>(null);
+  const [addGoalOpen, setAddGoalOpen] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
-  /**
-   * Race protection for saves. Each save call increments this before awaiting;
-   * stale responses are discarded if the counter has moved past their seq.
-   * Same pattern as the old page.tsx — see roadmap-storage.ts for details.
-   */
   const saveSeq = useRef(0);
 
-  // ── Data loading ──────────────────────────────────────────────────────────
+  // ── Data loading ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     let mounted = true;
@@ -72,66 +86,57 @@ export default function RoadmapPage() {
         const userWithProfile = await getUserWithProfile();
         if (!mounted) return;
 
-        if (!userWithProfile) {
-          router.push('/login');
-          return;
-        }
+        if (!userWithProfile) { router.push('/login'); return; }
 
-        // Fetch all workbook entries so we can check LifeFrame completion
-        // AND extract category names in one round trip.
         const { data: worksheets, error } = await supabase
           .from('workbook_entries')
           .select('category, content')
           .eq('user_id', userWithProfile.user.id);
 
         if (!mounted) return;
+        if (error) { setLoadError(true); return; }
 
-        if (error) {
-          console.error('[RoadmapPage] worksheets fetch failed:', error);
-          setLoadError(true);
-          return;
-        }
-
-        // Hard gate: Life Categories must be complete.
-        // Middleware should already enforce this, but we defensively redirect
-        // in case the user navigates here directly.
+        // LifeFrame gate
         const completion = evaluateLifeFrameCompletion(worksheets ?? []);
         if (!completion.life_categories.isComplete) {
           router.push('/workbook/life-categories');
           return;
         }
 
-        // Extract category names from the user's LifeFrame.
-        // Categories can be stored as plain strings OR as objects with a `name` field
-        // depending on which version of the worksheet saved them.
-        const categoriesRow = worksheets?.find(w => w.category === 'life_categories');
-        const rawCategories = (categoriesRow?.content as any)?.categories ?? [];
-        const categoryNames: string[] = rawCategories
+        // Category names
+        const catRow = worksheets?.find(w => w.category === 'life_categories');
+        const rawCats = (catRow?.content as any)?.categories ?? [];
+        const categoryNames: string[] = rawCats
           .map((c: any) => (typeof c === 'string' ? c : c?.name))
           .filter((n: any): n is string => typeof n === 'string' && n.length > 0);
 
-        // Load the roadmap with automatic schema migration.
+        // Value names
+        const valRow = worksheets?.find(w => w.category === 'values');
+        const valueNames: string[] = ((valRow?.content as any)?.selected_values ?? [])
+          .map((v: any) => v?.name)
+          .filter((n: any): n is string => typeof n === 'string' && n.length > 0);
+
+        // Interest names
+        const intRow = worksheets?.find(w => w.category === 'interests');
+        const existing: string[] = (intRow?.content as any)?.existing ?? [];
+        const exploring: string[] = (intRow?.content as any)?.exploring ?? [];
+        const interestNames = [...existing, ...exploring]
+          .filter((n): n is string => typeof n === 'string' && n.length > 0);
+
+        // Load roadmap
         const result = await loadRoadmap(supabase, userWithProfile.user.id);
         if (!mounted) return;
 
-        if (!result.ok) {
-          setLoadError(true);
-          return;
-        }
+        if (!result.ok) { setLoadError(true); return; }
 
-        // If old data was wiped during migration, let the user know.
-        // We do this after setLoading(false) so the toast appears over the loaded UI.
         if (result.migrated) {
-          // Defer slightly so the toast renders after the page is visible.
-          setTimeout(() => {
-            showToast.info(
-              'We updated your Roadmap. Your previous test data was cleared.'
-            );
-          }, 500);
+          setTimeout(() => showToast.info('We updated your Roadmap. Previous test data was cleared.'), 500);
         }
 
         setUserId(userWithProfile.user.id);
         setCategories(categoryNames);
+        setSavedValues(valueNames);
+        setSavedInterests(interestNames);
         setRoadmap(result.data);
       } catch (err) {
         console.error('[RoadmapPage] load error:', err);
@@ -142,47 +147,118 @@ export default function RoadmapPage() {
     };
 
     load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [router]);
 
-  // ── Save handler ──────────────────────────────────────────────────────────
+  // ── Save helper ─────────────────────────────────────────────────────────────
 
-  /**
-   * Adds a new goal, optimistically updates local state, then persists.
-   * Called by AddGoalModal's onSave prop.
-   */
-  const handleAddGoal = async (goal: Goal) => {
+  const persist = async (next: RoadmapData) => {
     if (!userId) return;
-
-    const next: RoadmapData = {
-      ...roadmap,
-      goals: [...roadmap.goals, goal],
-    };
-
-    // Optimistic update — UI feels instant.
     setRoadmap(next);
-    setFtueCategory(null);
-
     const result = await saveRoadmap(supabase, userId, next, saveSeq);
     if (!result.ok) {
       showToast.error(result.error ?? 'Failed to save. Please try again.');
-      // Roll back the optimistic update if the save failed.
-      setRoadmap(roadmap);
+      // Don't roll back — optimistic update stays, user can retry
     }
   };
 
-  // ── Render states ─────────────────────────────────────────────────────────
+  // ── Goal handlers ───────────────────────────────────────────────────────────
+
+  const handleAddGoal = async (goal: Goal) => {
+    setFtueCategory(null);
+    setAddGoalOpen(false);
+    await persist({ ...roadmap, goals: [...roadmap.goals, goal] });
+  };
+
+  const handleEditGoal = async (updated: Goal) => {
+    setEditingGoal(null);
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g => g.id === updated.id ? updated : g),
+    });
+  };
+
+  const handleDeleteGoal = async (goalId: string) => {
+    setEditingGoal(null);
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, status: 'deleted', deletedAt: new Date().toISOString() }
+          : g
+      ),
+    });
+  };
+
+  const handlePositionChange = async (
+    goalId: string,
+    position: { x: number; y: number }
+  ) => {
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g => g.id === goalId ? { ...g, position } : g),
+    });
+  };
+
+  // ── Activity handlers ───────────────────────────────────────────────────────
+
+  const handleCompleteActivity = async (
+    goalId: string,
+    nodeId: string,
+    completed: boolean
+  ) => {
+    const now = new Date().toISOString();
+    const update: Partial<GoalNode> = {
+      completed,
+      completedAt: completed ? now : undefined,
+    };
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, children: updateNodeInTree(g.children, nodeId, update) }
+          : g
+      ),
+    });
+  };
+
+  const handleTogglePersonalActivity = async (
+    activityId: string,
+    completed: boolean
+  ) => {
+    const now = new Date().toISOString();
+    await persist({
+      ...roadmap,
+      personalActivities: roadmap.personalActivities.map(a =>
+        a.id === activityId
+          ? { ...a, completed, completedAt: completed ? now : undefined }
+          : a
+      ),
+    });
+  };
+
+  const handleAddPersonalActivity = async (title: string) => {
+    const newActivity: PersonalActivity = {
+      id: crypto.randomUUID(),
+      title,
+      completed: false,
+      includeToday: true,
+      createdAt: new Date().toISOString(),
+    };
+    await persist({
+      ...roadmap,
+      personalActivities: [...roadmap.personalActivities, newActivity],
+    });
+  };
+
+  // ── Render states ───────────────────────────────────────────────────────────
 
   if (loading) {
     return (
       <>
         <AuthNavbar />
         <div className="min-h-screen bg-gray-50 pt-16">
-          <div className="max-w-6xl mx-auto px-4 py-12">
-            <SkeletonCard />
-          </div>
+          <div className="max-w-6xl mx-auto px-4 py-12"><SkeletonCard /></div>
         </div>
       </>
     );
@@ -214,16 +290,13 @@ export default function RoadmapPage() {
     );
   }
 
-  // Only count active goals for the FTUE check.
-  // Completed and deleted goals don't count — a user who completed everything
-  // should see the canvas, not the picker.
   const activeGoals = roadmap.goals.filter(g => g.status === 'active');
 
   return (
     <>
       <AuthNavbar />
 
-      {/* FTUE: no active goals yet — show the category picker */}
+      {/* FTUE: no active goals */}
       {activeGoals.length === 0 && (
         <FTUECategoryPicker
           categories={categories}
@@ -231,50 +304,49 @@ export default function RoadmapPage() {
         />
       )}
 
-      {/* Canvas placeholder: goals exist but BubbleCanvas ships in Phase 2 */}
+      {/* Bubble Canvas */}
       {activeGoals.length > 0 && (
-        <CanvasComingSoon goalCount={activeGoals.length} />
+        <>
+          <BubbleCanvas
+            roadmap={roadmap}
+            onAddGoal={() => setAddGoalOpen(true)}
+            onEditGoal={setEditingGoal}
+            onDeleteGoal={handleDeleteGoal}
+            onPositionChange={handlePositionChange}
+          />
+          <ActivitiesDrawer
+            roadmap={roadmap}
+            onCompleteActivity={handleCompleteActivity}
+            onTogglePersonalActivity={handleTogglePersonalActivity}
+            onAddPersonalActivity={handleAddPersonalActivity}
+          />
+        </>
       )}
 
-      {/* Add Goal modal — opened when user taps a category bubble */}
-      {ftueCategory !== null && (
+      {/* Add Goal modal — FTUE or canvas button */}
+      {(ftueCategory !== null || addGoalOpen) && (
         <AddGoalModal
-          preselectedCategory={ftueCategory}
+          preselectedCategory={ftueCategory ?? undefined}
           allCategories={categories}
-          onClose={() => setFtueCategory(null)}
+          savedValues={savedValues}
+          savedInterests={savedInterests}
+          onClose={() => { setFtueCategory(null); setAddGoalOpen(false); }}
           onSave={handleAddGoal}
         />
       )}
+
+      {/* Edit Goal modal */}
+      {editingGoal !== null && (
+        <EditGoalModal
+          goal={editingGoal}
+          allCategories={categories}
+          savedValues={savedValues}
+          savedInterests={savedInterests}
+          onClose={() => setEditingGoal(null)}
+          onSave={handleEditGoal}
+          onDelete={handleDeleteGoal}
+        />
+      )}
     </>
-  );
-}
-
-// ─── Canvas placeholder (removed in Phase 2) ─────────────────────────────────
-
-/**
- * Temporary holding screen shown when a user has goals but BubbleCanvas
- * isn't built yet. Removed entirely in Phase 2 when BubbleCanvas lands.
- */
-function CanvasComingSoon({ goalCount }: { goalCount: number }) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pt-16 flex items-center justify-center">
-      <div className="text-center px-6 max-w-lg">
-        <div className="inline-flex items-center gap-2 bg-white/10 text-white/70 text-sm font-medium px-4 py-2 rounded-full mb-8">
-          <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-          Phase 2 in progress
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-          Your canvas is coming
-        </h1>
-        <p className="text-slate-300 text-lg mb-2">
-          {goalCount === 1
-            ? 'You have 1 goal ready to display.'
-            : `You have ${goalCount} goals ready to display.`}
-        </p>
-        <p className="text-slate-500 text-sm">
-          The bubble canvas ships in Phase 2.
-        </p>
-      </div>
-    </div>
   );
 }

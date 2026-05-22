@@ -1,19 +1,16 @@
 'use client';
 
 /**
- * AddGoalModal.tsx — Phase 2 (expanded from Phase 1 stub)
+ * EditGoalModal.tsx — Phase 2
  *
- * Full goal creation form with:
- *   - Title (required)
- *   - "Why this matters" (optional)
- *   - Multi-select chip pickers for life categories, values, and interests
+ * Edit an existing goal's title, why, and connections (categories, values,
+ * interests). Pre-populated from the goal's current data.
  *
- * The pre-selected FTUE category (if provided) starts as selected
- * but the user can deselect it if they change their mind.
+ * Also provides a "Delete this goal" soft-delete action (sets status to
+ * 'deleted', does not remove from DB — keeps data for analytics).
  *
- * Used from two entry points:
- *   1. FTUECategoryPicker (preselectedCategory provided)
- *   2. BubbleCanvas "Add goal" button (no preselectedCategory)
+ * Same visual design language as AddGoalModal, so the two feel like
+ * the same component family.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -21,13 +18,14 @@ import type { Goal } from '@/lib/roadmap-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface AddGoalModalProps {
-  preselectedCategory?: string; // Optional — from FTUE picker
+interface EditGoalModalProps {
+  goal: Goal;
   allCategories: string[];
   savedValues: string[];
   savedInterests: string[];
   onClose: () => void;
-  onSave: (goal: Goal) => void;
+  onSave: (updated: Goal) => void;
+  onDelete: (goalId: string) => void;
 }
 
 // ─── Chip picker ──────────────────────────────────────────────────────────────
@@ -62,9 +60,7 @@ function ChipPicker({
             key={item}
             type="button"
             onClick={() => onToggle(item)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              selected.includes(item) ? filled : outlined
-            }`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${selected.includes(item) ? filled : outlined}`}
           >
             {item}
           </button>
@@ -76,21 +72,20 @@ function ChipPicker({
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function AddGoalModal({
-  preselectedCategory,
+export default function EditGoalModal({
+  goal,
   allCategories,
   savedValues,
   savedInterests,
   onClose,
   onSave,
-}: AddGoalModalProps) {
-  const [title, setTitle] = useState('');
-  const [why, setWhy] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    preselectedCategory ? [preselectedCategory] : []
-  );
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  onDelete,
+}: EditGoalModalProps) {
+  const [title, setTitle] = useState(goal.title);
+  const [why, setWhy] = useState(goal.why ?? '');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(goal.connectedCategories);
+  const [selectedValues, setSelectedValues] = useState<string[]>(goal.connectedValues);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(goal.connectedInterests);
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -105,11 +100,7 @@ export default function AddGoalModal({
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  function toggle(
-    list: string[],
-    setList: (v: string[]) => void,
-    item: string
-  ) {
+  function toggle(list: string[], setList: (v: string[]) => void, item: string) {
     setList(list.includes(item) ? list.filter(x => x !== item) : [...list, item]);
   }
 
@@ -119,23 +110,22 @@ export default function AddGoalModal({
     e.preventDefault();
     if (!canSubmit) return;
     setSaving(true);
-
-    const newGoal: Goal = {
-      id: crypto.randomUUID(),
+    const updated: Goal = {
+      ...goal,
       title: title.trim(),
       why: why.trim() || undefined,
       connectedCategories: selectedCategories,
       connectedValues: selectedValues,
       connectedInterests: selectedInterests,
-      children: [],
-      blobVariant: (Math.floor(Math.random() * 4) as 0 | 1 | 2 | 3),
-      status: 'active',
-      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    onSave(updated);
+  };
 
-    onSave(newGoal);
-    // Modal unmounts after onSave — no need to reset saving state.
+  const handleDelete = () => {
+    if (window.confirm(`Delete "${goal.title}"? This cannot be undone.`)) {
+      onDelete(goal.id);
+    }
   };
 
   return (
@@ -144,61 +134,50 @@ export default function AddGoalModal({
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
-      aria-label="Add a goal"
+      aria-label="Edit goal"
     >
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden my-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-6">
-          <p className="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">
-            New Goal
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+          <p className="text-indigo-200 text-xs font-semibold uppercase tracking-widest mb-1">
+            Edit Goal
           </p>
-          <h2 className="text-2xl font-bold text-white">
-            What do you want to achieve?
-          </h2>
-          {/* Pre-selected category chip */}
-          {preselectedCategory && (
-            <div className="mt-3 inline-flex items-center gap-2 bg-white/20 text-white text-sm font-medium px-3 py-1.5 rounded-full">
-              <span className="w-2 h-2 bg-white rounded-full opacity-80" />
-              {preselectedCategory}
-            </div>
-          )}
+          <h2 className="text-2xl font-bold text-white">Update your goal</h2>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-8 py-7 space-y-5">
           {/* Title */}
           <div>
-            <label htmlFor="goal-title" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="edit-goal-title" className="block text-sm font-semibold text-gray-700 mb-2">
               Goal title <span className="text-red-500">*</span>
             </label>
             <input
               ref={titleRef}
-              id="goal-title"
+              id="edit-goal-title"
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Run a half marathon"
               maxLength={140}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
-            <p className="text-xs text-gray-400 mt-1.5 text-right">{title.length}/140</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/140</p>
           </div>
 
           {/* Why */}
           <div>
-            <label htmlFor="goal-why" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="edit-goal-why" className="block text-sm font-semibold text-gray-700 mb-2">
               Why does this matter?{' '}
               <span className="text-gray-400 font-normal">(optional)</span>
             </label>
             <textarea
-              id="goal-why"
+              id="edit-goal-why"
               value={why}
               onChange={e => setWhy(e.target.value)}
-              placeholder="The deeper reason behind this goal…"
               maxLength={500}
               rows={3}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
           </div>
 
@@ -226,7 +205,7 @@ export default function AddGoalModal({
           />
 
           {/* Actions */}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
@@ -238,9 +217,20 @@ export default function AddGoalModal({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 shadow-lg shadow-purple-200"
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold hover:from-indigo-700 hover:to-purple-700 transition disabled:opacity-50 shadow-lg shadow-indigo-200"
             >
-              {saving ? 'Saving…' : 'Add Goal'}
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+
+          {/* Delete */}
+          <div className="text-center pt-1">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-red-500 hover:text-red-600 text-sm font-medium transition"
+            >
+              Delete this goal
             </button>
           </div>
         </form>
