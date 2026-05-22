@@ -206,10 +206,15 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
     }
 
     const geminiData = await geminiRes.json();
-    const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    // Gemini 2.5 may include a "thinking" part before the actual text part.
+    // Find the last part that has a `text` field (skip thought parts).
+    const parts = geminiData?.candidates?.[0]?.content?.parts ?? [];
+    const textPart = [...parts].reverse().find((p: any) => typeof p.text === 'string');
+    const rawText = textPart?.text;
 
     if (!rawText) {
-      console.error('[AI Coach] Empty Gemini response:', JSON.stringify(geminiData));
+      console.error('[AI Coach] No text part in Gemini response:', JSON.stringify(geminiData));
       return NextResponse.json({ error: 'AI returned an empty response.' }, { status: 502 });
     }
 
