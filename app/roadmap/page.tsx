@@ -1,20 +1,12 @@
 'use client';
 
 /**
- * app/roadmap/page.tsx — Phase 2: Bubble Canvas
+ * app/roadmap/page.tsx — Phase 2.1 (refined)
  *
- * Routing logic (unchanged from Phase 1):
- *   1. LifeFrame incomplete → redirect to next incomplete worksheet
- *   2. No active goals       → FTUECategoryPicker
- *   3. Goals exist           → BubbleCanvas  ← NEW (replaces CanvasComingSoon)
- *
- * New in Phase 2:
- *   - BubbleCanvas replaces the placeholder
- *   - EditGoalModal for editing existing goals
- *   - ActivitiesDrawer fixed to bottom
- *   - Handlers for edit, delete, position change, activity completion,
- *     personal activity add/toggle
- *   - savedValues + savedInterests extracted and passed to modals
+ * Changes from Phase 2:
+ *   - ActivitiesDrawer removed (per "turn off DASH maybe" note)
+ *   - savedValues and savedInterests passed to BubbleCanvas for ambient display
+ *   - FTUECategoryPicker gets onAskTim prop (stub alert for now, Phase 4)
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -27,20 +19,15 @@ import { showToast } from '@/lib/toast';
 import { evaluateLifeFrameCompletion } from '@/lib/lifeframe-completion';
 import { loadRoadmap, saveRoadmap } from '@/lib/roadmap-storage';
 import { emptyRoadmapData } from '@/lib/roadmap-types';
-import type { Goal, GoalNode, PersonalActivity, RoadmapData } from '@/lib/roadmap-types';
+import type { Goal, GoalNode, RoadmapData } from '@/lib/roadmap-types';
 
 import FTUECategoryPicker from './components/FTUECategoryPicker';
 import BubbleCanvas from './components/BubbleCanvas';
 import AddGoalModal from './components/AddGoalModal';
 import EditGoalModal from './components/EditGoalModal';
-import ActivitiesDrawer from './components/ActivitiesDrawer';
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
 
-/**
- * Recursively updates a GoalNode by id anywhere in the tree.
- * Returns a new tree — never mutates the original.
- */
 function updateNodeInTree(
   nodes: GoalNode[],
   nodeId: string,
@@ -158,7 +145,6 @@ export default function RoadmapPage() {
     const result = await saveRoadmap(supabase, userId, next, saveSeq);
     if (!result.ok) {
       showToast.error(result.error ?? 'Failed to save. Please try again.');
-      // Don't roll back — optimistic update stays, user can retry
     }
   };
 
@@ -200,55 +186,10 @@ export default function RoadmapPage() {
     });
   };
 
-  // ── Activity handlers ───────────────────────────────────────────────────────
+  // ── Ask Tim stub ────────────────────────────────────────────────────────────
 
-  const handleCompleteActivity = async (
-    goalId: string,
-    nodeId: string,
-    completed: boolean
-  ) => {
-    const now = new Date().toISOString();
-    const update: Partial<GoalNode> = {
-      completed,
-      completedAt: completed ? now : undefined,
-    };
-    await persist({
-      ...roadmap,
-      goals: roadmap.goals.map(g =>
-        g.id === goalId
-          ? { ...g, children: updateNodeInTree(g.children, nodeId, update) }
-          : g
-      ),
-    });
-  };
-
-  const handleTogglePersonalActivity = async (
-    activityId: string,
-    completed: boolean
-  ) => {
-    const now = new Date().toISOString();
-    await persist({
-      ...roadmap,
-      personalActivities: roadmap.personalActivities.map(a =>
-        a.id === activityId
-          ? { ...a, completed, completedAt: completed ? now : undefined }
-          : a
-      ),
-    });
-  };
-
-  const handleAddPersonalActivity = async (title: string) => {
-    const newActivity: PersonalActivity = {
-      id: crypto.randomUUID(),
-      title,
-      completed: false,
-      includeToday: true,
-      createdAt: new Date().toISOString(),
-    };
-    await persist({
-      ...roadmap,
-      personalActivities: [...roadmap.personalActivities, newActivity],
-    });
+  const handleAskTim = () => {
+    showToast.info('AI coaching is coming in Phase 4! For now, pick a category to start.');
   };
 
   // ── Render states ───────────────────────────────────────────────────────────
@@ -301,26 +242,21 @@ export default function RoadmapPage() {
         <FTUECategoryPicker
           categories={categories}
           onSelectCategory={setFtueCategory}
+          onAskTim={handleAskTim}
         />
       )}
 
       {/* Bubble Canvas */}
       {activeGoals.length > 0 && (
-        <>
-          <BubbleCanvas
-            roadmap={roadmap}
-            onAddGoal={() => setAddGoalOpen(true)}
-            onEditGoal={setEditingGoal}
-            onDeleteGoal={handleDeleteGoal}
-            onPositionChange={handlePositionChange}
-          />
-          <ActivitiesDrawer
-            roadmap={roadmap}
-            onCompleteActivity={handleCompleteActivity}
-            onTogglePersonalActivity={handleTogglePersonalActivity}
-            onAddPersonalActivity={handleAddPersonalActivity}
-          />
-        </>
+        <BubbleCanvas
+          roadmap={roadmap}
+          savedValues={savedValues}
+          savedInterests={savedInterests}
+          onAddGoal={() => setAddGoalOpen(true)}
+          onEditGoal={setEditingGoal}
+          onDeleteGoal={handleDeleteGoal}
+          onPositionChange={handlePositionChange}
+        />
       )}
 
       {/* Add Goal modal — FTUE or canvas button */}
