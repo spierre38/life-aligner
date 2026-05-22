@@ -184,6 +184,21 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
     if (!geminiRes.ok) {
       const errText = await geminiRes.text();
       console.error('[AI Coach] Gemini error:', geminiRes.status, errText);
+
+      if (geminiRes.status === 429) {
+        return NextResponse.json(
+          { error: 'Tim is resting — the AI quota has been exceeded. Please wait a minute and try again, or enable billing on your Google Cloud project for higher limits.' },
+          { status: 429 }
+        );
+      }
+
+      if (geminiRes.status === 403) {
+        return NextResponse.json(
+          { error: 'The API key is not authorized. Check that the Gemini API is enabled in your Google Cloud project.' },
+          { status: 403 }
+        );
+      }
+
       return NextResponse.json(
         { error: 'AI service returned an error. Please try again later.' },
         { status: 502 }
