@@ -1,55 +1,97 @@
 /**
- * roadmap-types.ts
+ * roadmap-types.ts — v3
  *
- * Single source of truth for every TypeScript type used across the new
- * Roadmap feature (Phases 0–6). Importing from here keeps page.tsx,
- * storage helpers, and API routes all in sync on the same shape.
+ * Single source of truth for every TypeScript type used across the
+ * Roadmap feature. v3 adopts Tim's many-to-many model:
+ *
+ *   - Activities are first-class entities (not tree children)
+ *   - An Activity connects to one or many Goals via connectedGoalIds[]
+ *   - Sub-Activities nest under Activities (one level only)
+ *   - "Personal" activities have connectedGoalIds: []
  *
  * NO logic lives here — pure types only. This file will never import
  * anything from the rest of the codebase.
  */
 
-// ─── Tree node ───────────────────────────────────────────────────────────────
+// ─── Sub-Activity ─────────────────────────────────────────────────────────────
 
 /**
- * One node in the 3-level work tree underneath a Goal.
+ * A concrete action step nested under an Activity.
+ * Tim's example: "Call Gil about running group" under the Activity
+ * "Join Tuesday night running group".
  *
- *   Goal (level 0 — see Goal interface below)
- *   └─ GoalNode type='sub_goal'   (level 1)
- *      └─ GoalNode type='activity' (level 2 — cannot have children)
- *
- * Max depth enforced in UI, not here, so data can always be read safely
- * even if it somehow has extra nesting.
+ * Sub-activities can individually be flagged for the To-Do list.
  */
-export interface GoalNode {
+export interface SubActivity {
   id: string;
-
-  /**
-   * 'sub_goal' nodes can have children; 'activity' nodes cannot.
-   * The UI enforces this — storage reads it defensively.
-   */
-  type: 'sub_goal' | 'activity';
-
   title: string;
 
-  /** Whether this node has been checked off by the user. */
+  /** Whether this sub-activity has been checked off. */
   completed: boolean;
 
-  /** ISO-8601 timestamp set when `completed` flips to true. */
+  /** ISO-8601 timestamp set when completed flips to true. */
   completedAt?: string;
 
   /**
-   * Only sub_goals can have children. Activities intentionally cannot.
-   * May be undefined (treated the same as empty array).
+   * If true, this sub-activity appears on the To-Do page.
+   * Tim's notes: "For each Activity and Sub-Activity, provide option
+   * for it to be added to the To Do List."
    */
-  children?: GoalNode[];
+  includeToday: boolean;
+
+  /** ISO-8601 timestamp of creation. */
+  createdAt: string;
+}
+
+// ─── Activity ─────────────────────────────────────────────────────────────────
+
+/**
+ * A first-class action item that can connect to one or many Goals.
+ *
+ * Tim's example: "Run Tough Farmer obstacle course at Meredith Farm"
+ * connects to: Lose Weight, Connect with Son, Join Communities,
+ * Improve Farm, Work Outdoors.
+ *
+ * Activities with connectedGoalIds: [] are "personal" activities
+ * (standalone, not tied to any goal).
+ */
+export interface Activity {
+  /** Stable UUID — generated with crypto.randomUUID() at creation time. */
+  id: string;
+
+  title: string;
 
   /**
-   * If true, this activity appears in the "Your Activities" daily drawer.
-   * Only meaningful on nodes where type === 'activity'.
-   * Defaults to false — users opt in per-activity (John's favourite feature).
+   * Goal IDs this activity is connected to. Many-to-many.
+   * Empty array = personal/standalone activity.
    */
-  includeToday?: boolean;
+  connectedGoalIds: string[];
+
+  /** Whether this activity has been checked off. */
+  completed: boolean;
+
+  /** ISO-8601 timestamp set when completed flips to true. */
+  completedAt?: string;
+
+  /**
+   * If true, this activity appears on the To-Do page.
+   * Tim's notes: "For each Activity that is entered, allow entry
+   * of Sub-Activity... provide option for it to be added to the To Do List."
+   */
+  includeToday: boolean;
+
+  /**
+   * Concrete action steps under this activity.
+   * Tim's example: Activity "Join gym that does HIIT classes" has
+   * Sub-Activity "Attend free HIIT class at Pulse Fit to check it out".
+   */
+  subActivities: SubActivity[];
+
+  /** ISO-8601 timestamp of creation. */
+  createdAt: string;
+
+  /** ISO-8601 timestamp of last update. */
+  updatedAt: string;
 }
 
 // ─── Goal ────────────────────────────────────────────────────────────────────
@@ -57,9 +99,10 @@ export interface GoalNode {
 /**
  * A top-level goal on the user's roadmap canvas.
  *
- * Goals are stored inside RoadmapData.goals[]. Each one becomes a
- * floating bubble on the canvas (Phase 2) and expands into a full-screen
- * detail view (Phase 3) with its own GoalNode tree.
+ * In v3, goals no longer own activities as children. Activities are
+ * stored at the top level of RoadmapData and reference goals via
+ * connectedGoalIds[]. To find a goal's activities:
+ *   activities.filter(a => a.connectedGoalIds.includes(goal.id))
  */
 export interface Goal {
   /** Stable UUID — generated with crypto.randomUUID() at creation time. */
@@ -69,7 +112,7 @@ export interface Goal {
 
   /**
    * Single rich-text field answering "why does this goal matter to me?"
-   * Displayed in the "Why" branch of the detail view (Phase 3).
+   * Displayed in the "Why" branch of the detail view.
    */
   why?: string;
 
@@ -85,14 +128,6 @@ export interface Goal {
 
   /** Interest names drawn from interests.existing or interests.exploring */
   connectedInterests: string[];
-
-  // ── Work tree ──────────────────────────────────────────────────────────────
-
-  /**
-   * The 3-level tree of sub-goals and activities under this goal.
-   * An empty array is valid (goal has no tasks yet).
-   */
-  children: GoalNode[];
 
   // ── Canvas placement ───────────────────────────────────────────────────────
 
@@ -112,8 +147,8 @@ export interface Goal {
 
   /**
    * - 'active'    → visible on the canvas
-   * - 'completed' → moved to Reflections (Phase 5), hidden from canvas
-   * - 'deleted'   → soft-deleted, may become a reflection card too
+   * - 'completed' → moved to Reflections, hidden from canvas
+   * - 'deleted'   → soft-deleted
    */
   status: 'active' | 'completed' | 'deleted';
 
@@ -129,8 +164,7 @@ export interface Goal {
    * Cached AI coaching output for this goal (Phase 4).
    *
    * We store the profileHash that was used to generate the content so we
-   * can skip the Anthropic API call when the user's profile hasn't changed.
-   * If the hash changes, we regenerate on the next explicit "Refresh" press.
+   * can skip the API call when the user's profile hasn't changed.
    */
   aiContent?: {
     /** One paragraph explaining how this goal connects to the user's values. */
@@ -156,21 +190,31 @@ export interface Goal {
   updatedAt: string;
 }
 
-// ─── Personal activity ──────────────────────────────────────────────────────
+// ─── Legacy types (for migration) ────────────────────────────────────────────
 
 /**
- * A stand-alone activity not attached to any goal.
- * Shown in the amber "Personal" section of the Activities drawer.
- * Always appears in the drawer (includeToday is always true for these).
+ * v2 GoalNode — used only for migration from schema_version 2.
+ * DO NOT use in new code.
+ * @deprecated Use Activity + SubActivity instead.
  */
-export interface PersonalActivity {
+export interface LegacyGoalNode {
   id: string;
+  type: 'sub_goal' | 'activity';
   title: string;
   completed: boolean;
   completedAt?: string;
-  /** Always true — personal activities are added directly to the drawer. */
-  includeToday: boolean;
+  children?: LegacyGoalNode[];
+  includeToday?: boolean;
+}
+
+/**
+ * v2 Goal shape — used only for migration.
+ * @deprecated
+ */
+export interface LegacyGoal extends Omit<Goal, 'createdAt' | 'updatedAt'> {
+  children: LegacyGoalNode[];
   createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Top-level container ─────────────────────────────────────────────────────
@@ -180,22 +224,23 @@ export interface PersonalActivity {
  * for category='roadmap'.
  *
  * schema_version is used to detect and migrate old data:
- *   - Missing or < 2 → wipe to a clean v2 blank on next save
- *   - 2              → current format, use as-is
+ *   - Missing or < 2 → wipe to a clean v3 blank
+ *   - 2              → auto-migrate to v3 (flatten GoalNode trees)
+ *   - 3              → current format, use as-is
  */
 export interface RoadmapData {
-  /** Always 2 for data written by this version of the app. */
-  schema_version: 2;
+  /** Always 3 for data written by this version of the app. */
+  schema_version: 3;
 
   /** All goals — active, completed, and deleted. Filter in the UI. */
   goals: Goal[];
 
   /**
-   * Stand-alone activities not attached to any goal.
-   * Shown in the amber 'Personal' section of the Activities drawer.
-   * Always shown in today's list when present.
+   * All activities — connected to goals via connectedGoalIds[].
+   * Activities with connectedGoalIds: [] are personal/standalone.
+   * Filter by includeToday for the To-Do page.
    */
-  personalActivities: PersonalActivity[];
+  activities: Activity[];
 
   /** ISO-8601 timestamp of the most recent save. */
   updated_at: string;
@@ -210,9 +255,9 @@ export interface RoadmapData {
  */
 export function emptyRoadmapData(): RoadmapData {
   return {
-    schema_version: 2,
+    schema_version: 3,
     goals: [],
-    personalActivities: [],
+    activities: [],
     updated_at: new Date().toISOString(),
   };
 }

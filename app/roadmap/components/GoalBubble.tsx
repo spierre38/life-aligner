@@ -15,7 +15,7 @@
  */
 
 import { useState, useRef } from 'react';
-import type { Goal, GoalNode } from '@/lib/roadmap-types';
+import type { Goal } from '@/lib/roadmap-types';
 import { BUBBLE_SIZE } from '@/lib/roadmap-layout';
 
 // ─── Visual constants ─────────────────────────────────────────────────────────
@@ -46,25 +46,7 @@ function categoryToGradient(categoryName: string): { from: string; to: string } 
 
 const DEFAULT_GRADIENT = { from: '#7C3AED', to: '#4F46E5' };
 
-// ─── Tree counting ────────────────────────────────────────────────────────────
-
-function countNodes(nodes: GoalNode[]): { subGoals: number; activities: number; done: number } {
-  let subGoals = 0, activities = 0, done = 0;
-  for (const node of nodes) {
-    if (node.type === 'sub_goal') subGoals++;
-    if (node.type === 'activity') {
-      activities++;
-      if (node.completed) done++;
-    }
-    if (node.children) {
-      const sub = countNodes(node.children);
-      subGoals += sub.subGoals;
-      activities += sub.activities;
-      done += sub.done;
-    }
-  }
-  return { subGoals, activities, done };
-}
+// Activity counts are now passed as props from BubbleCanvas
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,6 +55,8 @@ interface GoalBubbleProps {
   position: { x: number; y: number };
   animIndex: number;
   reducedMotion: boolean;
+  activityCount: number;
+  doneCount: number;
   onOpen: (goalId: string) => void;
   onEdit: (goal: Goal) => void;
   onDelete: (goalId: string) => void;
@@ -97,6 +81,8 @@ export default function GoalBubble({
   position,
   animIndex,
   reducedMotion,
+  activityCount,
+  doneCount,
   onOpen,
   onEdit,
   onDelete,
@@ -115,7 +101,8 @@ export default function GoalBubble({
     ? categoryToGradient(goal.connectedCategories[0])
     : DEFAULT_GRADIENT;
 
-  const { subGoals, activities, done } = countNodes(goal.children);
+  const activities = activityCount;
+  const done = doneCount;
 
   const gradId = `grad-${goal.id.slice(0, 8)}`;
   const shadowId = `shadow-${goal.id.slice(0, 8)}`;
@@ -323,12 +310,7 @@ export default function GoalBubble({
             style={{ top: containerPad + BUBBLE_SIZE + 8 }}
           >
             <div className="bg-slate-800/95 backdrop-blur-sm text-white text-xs rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[140px]">
-              {subGoals > 0 && (
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                  <span>{subGoals} sub-goal{subGoals !== 1 ? 's' : ''}</span>
-                </div>
-              )}
+
               {activities > 0 && (
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
@@ -342,7 +324,7 @@ export default function GoalBubble({
                   ))}
                 </div>
               )}
-              {subGoals === 0 && activities === 0 && goal.connectedCategories.length === 0 && (
+              {activities === 0 && goal.connectedCategories.length === 0 && (
                 <span className="text-white/50">Click to add details</span>
               )}
             </div>

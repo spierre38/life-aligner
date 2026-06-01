@@ -1,151 +1,108 @@
 /**
- * roadmap-storage.ts
+ * roadmap-storage.ts — v3
  *
  * All database I/O for the Roadmap feature lives here.
  * Nothing in this file touches the DOM or React — it's pure async functions
  * that any component or API route can import.
  *
- * Three public exports:
- *   loadRoadmap(supabase, userId)          — safe read with migration
+ * Public exports:
+ *   loadRoadmap(supabase, userId)               — safe read with migration
  *   saveRoadmap(supabase, userId, data, seqRef) — race-safe upsert
- *   normalizeGoal(raw)                     — defensive shape coercion
+ *   normalizeGoal(raw)                          — defensive shape coercion
+ *   normalizeActivity(raw)                      — defensive shape coercion
+ *
+ * Migration: v2 → v3
+ *   - GoalNode trees are flattened into top-level Activity[] entries
+ *   - PersonalActivities become Activities with connectedGoalIds: []
+ *   - Goal.children is removed
  *
  * Design rules:
  *   - Never throw. Errors come back as { ok: false, error: string }.
  *   - Never trust the JSONB column. Every field is validated on read.
- *   - Writes upgrade old schema; reads never mutate the database.
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { emptyRoadmapData, type Goal, type GoalNode, type PersonalActivity, type RoadmapData } from './roadmap-types';
+import {
+  emptyRoadmapData,
+  type Goal,
+  type Activity,
+  type SubActivity,
+  type RoadmapData,
+  type LegacyGoalNode,
+} from './roadmap-types';
 
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
-/**
- * Safely reads a named field from an unknown value.
- * Returns undefined rather than throwing if the input is not an object.
- */
 function field(obj: unknown, key: string): unknown {
   if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
   return (obj as Record<string, unknown>)[key];
 }
 
-/**
- * Coerces unknown input into a string, or returns the fallback.
- */
 function asString(val: unknown, fallback = ''): string {
   return typeof val === 'string' ? val : fallback;
 }
 
-/**
- * Coerces unknown input into a boolean, or returns the fallback.
- */
 function asBool(val: unknown, fallback = false): boolean {
   return typeof val === 'boolean' ? val : fallback;
 }
 
-/**
- * Coerces unknown input into an array of strings (filters non-strings out).
- */
 function asStringArray(val: unknown): string[] {
   if (!Array.isArray(val)) return [];
   return val.filter((v): v is string => typeof v === 'string');
 }
 
-/**
- * Validates that a value is one of the allowed status strings.
- * Falls back to 'active' for any unrecognised value so goals
- * never silently disappear.
- */
 function asGoalStatus(val: unknown): Goal['status'] {
   if (val === 'completed' || val === 'deleted') return val;
   return 'active';
 }
 
-/**
- * Validates a blob variant (0–3), defaulting to 0.
- */
 function asBlobVariant(val: unknown): 0 | 1 | 2 | 3 {
   if (val === 0 || val === 1 || val === 2 || val === 3) return val;
   return 0;
 }
 
-// ─── normalizeGoalNode ───────────────────────────────────────────────────────
+// ─── normalizeSubActivity ─────────────────────────────────────────────────────
 
-/**
- * Recursively normalizes an unknown tree node from the database.
- * Returns null if the input is fundamentally malformed (not an object).
- * Missing fields are filled with safe defaults rather than discarded.
- */
-function normalizeGoalNode(raw: unknown, depth = 0): GoalNode | null {
+function normalizeSubActivity(raw: unknown): SubActivity | null {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
-
-  const type = field(raw, 'type');
-  const nodeType: GoalNode['type'] = type === 'activity' ? 'activity' : 'sub_goal';
-
-  // Activities cannot have children regardless of what's in the DB.
-  // Sub-goals can, but we cap recursion at depth 2 (Goal→Sub-goal→Activity).
-  const rawChildren = nodeType === 'sub_goal' && depth < 2
-    ? field(raw, 'children')
-    : undefined;
-
-  const children: GoalNode[] = Array.isArray(rawChildren)
-    ? (rawChildren.map(c => normalizeGoalNode(c, depth + 1)).filter(Boolean) as GoalNode[])
-    : [];
-
   return {
     id: asString(field(raw, 'id')) || crypto.randomUUID(),
-    type: nodeType,
     title: asString(field(raw, 'title')),
     completed: asBool(field(raw, 'completed')),
     completedAt: asString(field(raw, 'completedAt')) || undefined,
     includeToday: asBool(field(raw, 'includeToday'), false),
-    // Only include children key when there are children to keep the object lean.
-    ...(children.length > 0 ? { children } : {}),
-  };
-}
-
-// ─── normalizePersonalActivity ────────────────────────────────────────────
-
-/**
- * Normalizes a personal activity from unknown JSONB input.
- * Returns null if the input is not an object.
- */
-function normalizePersonalActivity(raw: unknown): PersonalActivity | null {
-  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  return {
-    id: asString(field(raw, 'id')) || crypto.randomUUID(),
-    title: asString(field(raw, 'title')),
-    completed: asBool(field(raw, 'completed')),
-    completedAt: asString(field(raw, 'completedAt')) || undefined,
-    includeToday: asBool(field(raw, 'includeToday'), true),
     createdAt: asString(field(raw, 'createdAt')) || new Date().toISOString(),
   };
 }
 
-// ─── normalizeGoal ───────────────────────────────────────────────────────────
+// ─── normalizeActivity ───────────────────────────────────────────────────────
 
-/**
- * Normalizes a raw, unknown value from the JSONB column into a valid Goal.
- * Returns null only if the input is not an object at all.
- *
- * Every field is coerced defensively:
- *   - Missing strings → empty string or undefined
- *   - Missing arrays  → empty array
- *   - Invalid status  → 'active' (so goals never silently vanish)
- *   - Invalid blob    → 0
- *   - Invalid AI cache → stripped out entirely
- */
+export function normalizeActivity(raw: unknown): Activity | null {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
+
+  const rawSubs = field(raw, 'subActivities');
+  const subActivities: SubActivity[] = Array.isArray(rawSubs)
+    ? (rawSubs.map(normalizeSubActivity).filter(Boolean) as SubActivity[])
+    : [];
+
+  return {
+    id: asString(field(raw, 'id')) || crypto.randomUUID(),
+    title: asString(field(raw, 'title')),
+    connectedGoalIds: asStringArray(field(raw, 'connectedGoalIds')),
+    completed: asBool(field(raw, 'completed')),
+    completedAt: asString(field(raw, 'completedAt')) || undefined,
+    includeToday: asBool(field(raw, 'includeToday'), false),
+    subActivities,
+    createdAt: asString(field(raw, 'createdAt')) || new Date().toISOString(),
+    updatedAt: asString(field(raw, 'updatedAt')) || new Date().toISOString(),
+  };
+}
+
+// ─── normalizeGoal (v3 — no children) ────────────────────────────────────────
+
 export function normalizeGoal(raw: unknown): Goal | null {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return null;
 
-  // Normalize children tree.
-  const rawChildren = field(raw, 'children');
-  const children: GoalNode[] = Array.isArray(rawChildren)
-    ? (rawChildren.map(c => normalizeGoalNode(c, 0)).filter(Boolean) as GoalNode[])
-    : [];
-
-  // Normalize position (only keep if both x and y are finite numbers).
   const rawPos = field(raw, 'position');
   const rawX = field(rawPos, 'x');
   const rawY = field(rawPos, 'y');
@@ -155,8 +112,6 @@ export function normalizeGoal(raw: unknown): Goal | null {
       ? { x: rawX, y: rawY }
       : undefined;
 
-  // Normalize AI cache — all four fields must be present and valid strings,
-  // otherwise strip the whole block so stale/partial caches don't slip through.
   const rawAi = field(raw, 'aiContent');
   const aiWhyItHelps = asString(field(rawAi, 'whyItHelps'));
   const aiDailyIdeas = asStringArray(field(rawAi, 'dailyIdeas'));
@@ -174,7 +129,6 @@ export function normalizeGoal(raw: unknown): Goal | null {
     connectedCategories: asStringArray(field(raw, 'connectedCategories')),
     connectedValues: asStringArray(field(raw, 'connectedValues')),
     connectedInterests: asStringArray(field(raw, 'connectedInterests')),
-    children,
     position,
     blobVariant: asBlobVariant(field(raw, 'blobVariant')),
     status: asGoalStatus(field(raw, 'status')),
@@ -183,6 +137,145 @@ export function normalizeGoal(raw: unknown): Goal | null {
     aiContent,
     createdAt: asString(field(raw, 'createdAt')) || new Date().toISOString(),
     updatedAt: asString(field(raw, 'updatedAt')) || new Date().toISOString(),
+  };
+}
+
+// ─── v2 → v3 Migration ──────────────────────────────────────────────────────
+
+/**
+ * Flattens a v2 GoalNode tree into Activity[] entries.
+ *
+ * Strategy:
+ *   - type='activity' → Activity with empty subActivities
+ *   - type='sub_goal' → Activity with its children as subActivities
+ *     (sub_goal children that are activities become SubActivity;
+ *      sub_goal children that are sub_goals are also flattened recursively)
+ */
+function flattenGoalNodeTree(
+  nodes: unknown[],
+  goalId: string,
+  now: string
+): Activity[] {
+  const activities: Activity[] = [];
+
+  for (const rawNode of nodes) {
+    if (rawNode === null || typeof rawNode !== 'object' || Array.isArray(rawNode)) continue;
+
+    const nodeId = asString(field(rawNode, 'id')) || crypto.randomUUID();
+    const nodeTitle = asString(field(rawNode, 'title'));
+    const nodeType = field(rawNode, 'type');
+    const nodeCompleted = asBool(field(rawNode, 'completed'));
+    const nodeCompletedAt = asString(field(rawNode, 'completedAt')) || undefined;
+    const nodeIncludeToday = asBool(field(rawNode, 'includeToday'), false);
+    const rawChildren = field(rawNode, 'children');
+    const children = Array.isArray(rawChildren) ? rawChildren : [];
+
+    if (nodeType === 'activity') {
+      // Leaf activity → becomes a top-level Activity
+      activities.push({
+        id: nodeId,
+        title: nodeTitle,
+        connectedGoalIds: [goalId],
+        completed: nodeCompleted,
+        completedAt: nodeCompletedAt,
+        includeToday: nodeIncludeToday,
+        subActivities: [],
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else {
+      // sub_goal → its children become SubActivities, and the sub_goal
+      // itself becomes an Activity that contains them.
+      const subActivities: SubActivity[] = [];
+      const nestedActivities: Activity[] = [];
+
+      for (const rawChild of children) {
+        if (rawChild === null || typeof rawChild !== 'object' || Array.isArray(rawChild)) continue;
+        const childType = field(rawChild, 'type');
+
+        if (childType === 'activity') {
+          // Activity child of a sub_goal → becomes a SubActivity
+          subActivities.push({
+            id: asString(field(rawChild, 'id')) || crypto.randomUUID(),
+            title: asString(field(rawChild, 'title')),
+            completed: asBool(field(rawChild, 'completed')),
+            completedAt: asString(field(rawChild, 'completedAt')) || undefined,
+            includeToday: asBool(field(rawChild, 'includeToday'), false),
+            createdAt: now,
+          });
+        } else {
+          // Nested sub_goal → flatten recursively as a separate Activity
+          nestedActivities.push(...flattenGoalNodeTree([rawChild], goalId, now));
+        }
+      }
+
+      activities.push({
+        id: nodeId,
+        title: nodeTitle,
+        connectedGoalIds: [goalId],
+        completed: nodeCompleted,
+        completedAt: nodeCompletedAt,
+        includeToday: nodeIncludeToday,
+        subActivities,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      activities.push(...nestedActivities);
+    }
+  }
+
+  return activities;
+}
+
+/**
+ * Migrates a v2 RoadmapData document to v3.
+ * - Flattens GoalNode trees into top-level Activity[]
+ * - Converts PersonalActivities to Activities with empty connectedGoalIds
+ * - Removes `children` from Goals
+ */
+function migrateV2ToV3(rawGoals: unknown[], rawPersonalActivities: unknown[], updatedAt: string): RoadmapData {
+  const now = new Date().toISOString();
+  const goals: Goal[] = [];
+  const activities: Activity[] = [];
+
+  // Migrate each v2 goal
+  for (const rawGoal of rawGoals) {
+    if (rawGoal === null || typeof rawGoal !== 'object' || Array.isArray(rawGoal)) continue;
+
+    // Normalize the goal itself (v3 normalizer — no children)
+    const goal = normalizeGoal(rawGoal);
+    if (!goal) continue;
+    goals.push(goal);
+
+    // Flatten its children tree into activities
+    const rawChildren = field(rawGoal, 'children');
+    if (Array.isArray(rawChildren) && rawChildren.length > 0) {
+      activities.push(...flattenGoalNodeTree(rawChildren, goal.id, now));
+    }
+  }
+
+  // Migrate personal activities
+  for (const rawPA of rawPersonalActivities) {
+    if (rawPA === null || typeof rawPA !== 'object' || Array.isArray(rawPA)) continue;
+    activities.push({
+      id: asString(field(rawPA, 'id')) || crypto.randomUUID(),
+      title: asString(field(rawPA, 'title')),
+      connectedGoalIds: [],
+      completed: asBool(field(rawPA, 'completed')),
+      completedAt: asString(field(rawPA, 'completedAt')) || undefined,
+      includeToday: asBool(field(rawPA, 'includeToday'), true),
+      subActivities: [],
+      createdAt: asString(field(rawPA, 'createdAt')) || now,
+      updatedAt: now,
+    });
+  }
+
+  return {
+    schema_version: 3,
+    goals,
+    activities,
+    updated_at: updatedAt || now,
   };
 }
 
@@ -195,14 +288,14 @@ export type LoadRoadmapResult =
 /**
  * Loads the user's roadmap from Supabase and normalizes it defensively.
  *
- * Migration policy (matches plan spec):
- *   - No row found          → return empty v2 document (migrated: false — nothing to migrate)
- *   - schema_version < 2    → return empty v2 document, set migrated: true so
- *                             the caller can show the "We updated Roadmap" toast
- *   - schema_version === 2  → parse and normalize, never throw
+ * Migration policy:
+ *   - No row found          → return empty v3 document
+ *   - schema_version < 2    → return empty v3 document, migrated: true
+ *   - schema_version === 2  → auto-migrate to v3 (flatten trees), migrated: true
+ *   - schema_version === 3  → parse and normalize, use as-is
  *
- * The migration (wipe) only takes effect on the next *save* — this function
- * never writes to the database. That keeps reads side-effect free.
+ * On migration, the v3 data is saved immediately so we don't re-migrate on
+ * every page load.
  */
 export async function loadRoadmap(
   supabase: SupabaseClient,
@@ -214,7 +307,7 @@ export async function loadRoadmap(
       .select('content')
       .eq('user_id', userId)
       .eq('category', 'roadmap')
-      .maybeSingle(); // maybeSingle returns null (not error) when no row exists
+      .maybeSingle();
 
     if (error) {
       console.error('[roadmap-storage] loadRoadmap DB error:', error);
@@ -227,31 +320,53 @@ export async function loadRoadmap(
     }
 
     const raw = row.content as unknown;
-
-    // Check schema version. Anything missing or < 2 is old data that needs wiping.
     const version = field(raw, 'schema_version');
+
+    // Ancient data (< v2) → wipe to clean v3
     if (typeof version !== 'number' || version < 2) {
-      // Return a blank v2 document. The caller saves this on next interaction,
-      // which is what actually performs the migration in the DB.
       return { ok: true, data: emptyRoadmapData(), migrated: true };
     }
 
-    // v2 data — normalize every goal defensively.
+    // v2 → migrate to v3
+    if (version === 2) {
+      const rawGoals = field(raw, 'goals');
+      const rawPA = field(raw, 'personalActivities');
+      const updatedAt = asString(field(raw, 'updated_at'));
+
+      const migrated = migrateV2ToV3(
+        Array.isArray(rawGoals) ? rawGoals : [],
+        Array.isArray(rawPA) ? rawPA : [],
+        updatedAt
+      );
+
+      // Save the migrated data immediately so we don't re-migrate on every load
+      await supabase
+        .from('workbook_entries')
+        .upsert(
+          { user_id: userId, category: 'roadmap', content: migrated },
+          { onConflict: 'user_id,category' }
+        );
+
+      console.log('[roadmap-storage] Migrated v2 → v3:', migrated.goals.length, 'goals,', migrated.activities.length, 'activities');
+      return { ok: true, data: migrated, migrated: true };
+    }
+
+    // v3 data — normalize defensively
     const rawGoals = field(raw, 'goals');
     const goals: Goal[] = Array.isArray(rawGoals)
       ? (rawGoals.map(normalizeGoal).filter(Boolean) as Goal[])
       : [];
 
-    const rawPersonalActivities = field(raw, 'personalActivities');
-    const personalActivities: PersonalActivity[] = Array.isArray(rawPersonalActivities)
-      ? (rawPersonalActivities.map(normalizePersonalActivity).filter(Boolean) as PersonalActivity[])
+    const rawActivities = field(raw, 'activities');
+    const activities: Activity[] = Array.isArray(rawActivities)
+      ? (rawActivities.map(normalizeActivity).filter(Boolean) as Activity[])
       : [];
 
     const updatedAt = asString(field(raw, 'updated_at')) || new Date().toISOString();
 
     return {
       ok: true,
-      data: { schema_version: 2, goals, personalActivities, updated_at: updatedAt },
+      data: { schema_version: 3, goals, activities, updated_at: updatedAt },
       migrated: false,
     };
   } catch (err) {
@@ -268,18 +383,6 @@ export type SaveRoadmapResult =
 
 /**
  * Persists the roadmap to Supabase with optimistic race protection.
- *
- * Race protection pattern (matches the existing roadmap page):
- *   - seqRef.current is incremented before the await
- *   - After the await, if seqRef.current has moved past our seq, a newer
- *     save has already fired — we discard our result silently
- *
- * This prevents an earlier slow save from overwriting a later fast save.
- *
- * The caller owns the seqRef so multiple save calls from the same component
- * share the same counter. Pass a React.MutableRefObject<number>.
- *
- * Also stamps updated_at on every save so the DB reflects the real write time.
  */
 export async function saveRoadmap(
   supabase: SupabaseClient,
@@ -287,7 +390,6 @@ export async function saveRoadmap(
   data: RoadmapData,
   seqRef: { current: number }
 ): Promise<SaveRoadmapResult> {
-  // Stamp the current time and take our sequence number.
   const stamped: RoadmapData = { ...data, updated_at: new Date().toISOString() };
   const seq = ++seqRef.current;
 
@@ -299,7 +401,6 @@ export async function saveRoadmap(
         { onConflict: 'user_id,category' }
       );
 
-    // If a newer save has already completed, ignore our stale result.
     if (seq !== seqRef.current) return { ok: true };
 
     if (error) {

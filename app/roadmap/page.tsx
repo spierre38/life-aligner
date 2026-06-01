@@ -1,15 +1,23 @@
 'use client';
 
 /**
- * app/roadmap/page.tsx — Phase 3: Goal Detail View
+ * app/roadmap/page.tsx — v3: Many-to-many activities
  *
- * Additions:
- *   - GoalDetailView overlay when a goal bubble is clicked
- *   - AddNodeModal for adding sub-goals/activities to a goal
- *   - Handlers for node operations (add, complete, delete, includeToday)
+ * Orchestrates all Roadmap UI:
+ *   - FTUE category picker (no goals yet)
+ *   - BubbleCanvas (goals + ambient orbs)
+ *   - GoalDetailView overlay (branching tree per goal)
+ *   - AddGoalModal (goal-first entry with inline activities)
+ *   - AddActivityModal (activity-first entry, connect to multiple goals)
+ *   - EditGoalModal (edit existing goal)
+ *
+ * Data model:
+ *   - Goals and Activities are separate top-level arrays
+ *   - Activities reference goals via connectedGoalIds[]
+ *   - SubActivities nest under Activities (one level)
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
@@ -19,75 +27,14 @@ import { showToast } from '@/lib/toast';
 import { evaluateLifeFrameCompletion } from '@/lib/lifeframe-completion';
 import { loadRoadmap, saveRoadmap } from '@/lib/roadmap-storage';
 import { emptyRoadmapData } from '@/lib/roadmap-types';
-import type { Goal, GoalNode, RoadmapData } from '@/lib/roadmap-types';
+import type { Goal, Activity, SubActivity, RoadmapData } from '@/lib/roadmap-types';
 
 import FTUECategoryPicker from './components/FTUECategoryPicker';
 import BubbleCanvas from './components/BubbleCanvas';
 import AddGoalModal from './components/AddGoalModal';
 import EditGoalModal from './components/EditGoalModal';
 import GoalDetailView from './components/GoalDetailView';
-import AddNodeModal from './components/AddNodeModal';
-
-// ─── Tree helpers ─────────────────────────────────────────────────────────────
-
-/** Recursively update a node by id in a tree. Returns new tree. */
-function updateNodeInTree(
-  nodes: GoalNode[],
-  nodeId: string,
-  update: Partial<GoalNode>
-): GoalNode[] {
-  return nodes.map(node => {
-    if (node.id === nodeId) return { ...node, ...update };
-    if (node.children) {
-      return { ...node, children: updateNodeInTree(node.children, nodeId, update) };
-    }
-    return node;
-  });
-}
-
-/** Recursively remove a node by id from a tree. Returns new tree. */
-function removeNodeFromTree(nodes: GoalNode[], nodeId: string): GoalNode[] {
-  return nodes
-    .filter(node => node.id !== nodeId)
-    .map(node => {
-      if (node.children) {
-        return { ...node, children: removeNodeFromTree(node.children, nodeId) };
-      }
-      return node;
-    });
-}
-
-/** Add a child node to a specific parent (or at root level if parentId is null). */
-function addNodeToTree(
-  nodes: GoalNode[],
-  parentId: string | null,
-  newNode: GoalNode
-): GoalNode[] {
-  if (parentId === null) {
-    return [...nodes, newNode];
-  }
-  return nodes.map(node => {
-    if (node.id === parentId) {
-      return { ...node, children: [...(node.children ?? []), newNode] };
-    }
-    if (node.children) {
-      return { ...node, children: addNodeToTree(node.children, parentId, newNode) };
-    }
-    return node;
-  });
-}
-
-/** Find a node's title by id for display purposes. */
-function findNodeTitle(nodes: GoalNode[], nodeId: string): string | null {
-  for (const node of nodes) {
-    if (node.id === nodeId) return node.title;
-    if (node.children) {
-      const found = findNodeTitle(node.children, nodeId);
-      if (found) return found;
-    }
-  }
-  return null;
-}
+import AddActivityModal from './components/AddActivityModal';
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -107,9 +54,10 @@ export default function RoadmapPage() {
   // Modal / view state
   const [ftueCategory, setFtueCategory] = useState<string | null>(null);
   const [addGoalOpen, setAddGoalOpen] = useState(false);
+  const [addActivityOpen, setAddActivityOpen] = useState(false);
+  const [addActivityForGoalId, setAddActivityForGoalId] = useState<string | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [detailGoalId, setDetailGoalId] = useState<string | null>(null);
-  const [addNodeTarget, setAddNodeTarget] = useState<{ goalId: string; parentNodeId: string | null } | null>(null);
 
   const saveSeq = useRef(0);
 
@@ -162,7 +110,7 @@ export default function RoadmapPage() {
         if (!result.ok) { setLoadError(true); return; }
 
         if (result.migrated) {
-          setTimeout(() => showToast.info('We updated your Roadmap. Previous test data was cleared.'), 500);
+          setTimeout(() => showToast.info('We updated your Roadmap to the new format.'), 500);
         }
 
         setUserId(userWithProfile.user.id);
@@ -204,10 +152,17 @@ export default function RoadmapPage() {
 
   // ── Goal-level handlers ─────────────────────────────────────────────────────
 
-  const handleAddGoal = useCallback(async (goal: Goal) => {
+  const handleAddGoalWithActivities = useCallback(async (
+    goal: Goal,
+    newActivities: Activity[]
+  ) => {
     setFtueCategory(null);
     setAddGoalOpen(false);
-    await persist({ ...roadmap, goals: [...roadmap.goals, goal] });
+    await persist({
+      ...roadmap,
+      goals: [...roadmap.goals, goal],
+      activities: [...roadmap.activities, ...newActivities],
+    });
   }, [roadmap, persist]);
 
   const handleEditGoal = useCallback(async (updated: Goal) => {
@@ -225,9 +180,14 @@ export default function RoadmapPage() {
       ...roadmap,
       goals: roadmap.goals.map(g =>
         g.id === goalId
-          ? { ...g, status: 'deleted', deletedAt: new Date().toISOString() }
+          ? { ...g, status: 'deleted' as const, deletedAt: new Date().toISOString() }
           : g
       ),
+      // Also disconnect deleted goal from all activities
+      activities: roadmap.activities.map(a => ({
+        ...a,
+        connectedGoalIds: a.connectedGoalIds.filter(id => id !== goalId),
+      })),
     });
   }, [roadmap, persist]);
 
@@ -241,84 +201,103 @@ export default function RoadmapPage() {
     });
   }, [roadmap, persist]);
 
-  // ── Node-level handlers (for detail view) ───────────────────────────────────
+  // ── Activity-level handlers ─────────────────────────────────────────────────
 
-  const handleToggleComplete = useCallback(async (
-    goalId: string,
-    nodeId: string,
+  const handleAddActivity = useCallback(async (activity: Activity) => {
+    setAddActivityOpen(false);
+    setAddActivityForGoalId(null);
+    await persist({
+      ...roadmap,
+      activities: [...roadmap.activities, activity],
+    });
+  }, [roadmap, persist]);
+
+  const handleToggleActivityComplete = useCallback(async (
+    activityId: string,
     completed: boolean
   ) => {
     const now = new Date().toISOString();
     await persist({
       ...roadmap,
-      goals: roadmap.goals.map(g =>
-        g.id === goalId
-          ? { ...g, children: updateNodeInTree(g.children, nodeId, { completed, completedAt: completed ? now : undefined }) }
-          : g
+      activities: roadmap.activities.map(a =>
+        a.id === activityId
+          ? { ...a, completed, completedAt: completed ? now : undefined, updatedAt: now }
+          : a
       ),
     });
   }, [roadmap, persist]);
 
-  const handleToggleIncludeToday = useCallback(async (
-    goalId: string,
-    nodeId: string,
+  const handleToggleActivityIncludeToday = useCallback(async (
+    activityId: string,
     includeToday: boolean
   ) => {
     await persist({
       ...roadmap,
-      goals: roadmap.goals.map(g =>
-        g.id === goalId
-          ? { ...g, children: updateNodeInTree(g.children, nodeId, { includeToday }) }
-          : g
+      activities: roadmap.activities.map(a =>
+        a.id === activityId
+          ? { ...a, includeToday, updatedAt: new Date().toISOString() }
+          : a
       ),
     });
   }, [roadmap, persist]);
 
-  const handleDeleteNode = useCallback(async (goalId: string, nodeId: string) => {
+  const handleDeleteActivity = useCallback(async (activityId: string) => {
     await persist({
       ...roadmap,
-      goals: roadmap.goals.map(g =>
-        g.id === goalId
-          ? { ...g, children: removeNodeFromTree(g.children, nodeId) }
-          : g
-      ),
+      activities: roadmap.activities.filter(a => a.id !== activityId),
     });
   }, [roadmap, persist]);
 
-  const handleAddNode = useCallback(async (node: GoalNode) => {
-    if (!addNodeTarget) return;
-    const { goalId, parentNodeId } = addNodeTarget;
-    setAddNodeTarget(null);
+  // ── SubActivity handlers ────────────────────────────────────────────────────
 
+  const handleToggleSubActivityComplete = useCallback(async (
+    activityId: string,
+    subActivityId: string,
+    completed: boolean
+  ) => {
+    const now = new Date().toISOString();
     await persist({
       ...roadmap,
-      goals: roadmap.goals.map(g =>
-        g.id === goalId
-          ? { ...g, children: addNodeToTree(g.children, parentNodeId, node) }
-          : g
+      activities: roadmap.activities.map(a =>
+        a.id === activityId
+          ? {
+              ...a,
+              updatedAt: now,
+              subActivities: a.subActivities.map(sa =>
+                sa.id === subActivityId
+                  ? { ...sa, completed, completedAt: completed ? now : undefined }
+                  : sa
+              ),
+            }
+          : a
       ),
     });
-  }, [roadmap, persist, addNodeTarget]);
+  }, [roadmap, persist]);
 
   // ── Ask Tim stub ────────────────────────────────────────────────────────────
 
   const handleAskTim = useCallback(() => {
-    showToast.info('AI coaching is coming in Phase 4! For now, pick a category to start.');
+    showToast.info('AI coaching is live! Click a goal to see Tim\'s coaching.');
   }, []);
 
   // ── Derived state ───────────────────────────────────────────────────────────
+
+  const activeGoals = useMemo(
+    () => roadmap.goals.filter(g => g.status === 'active'),
+    [roadmap.goals]
+  );
 
   const detailGoal = detailGoalId
     ? roadmap.goals.find(g => g.id === detailGoalId) ?? null
     : null;
 
-  const addNodeGoal = addNodeTarget
-    ? roadmap.goals.find(g => g.id === addNodeTarget.goalId) ?? null
-    : null;
-
-  const addNodeParentTitle = addNodeTarget?.parentNodeId && addNodeGoal
-    ? findNodeTitle(addNodeGoal.children, addNodeTarget.parentNodeId) ?? undefined
-    : undefined;
+  // Activities for the currently viewed goal
+  const detailGoalActivities = useMemo(
+    () => detailGoalId
+      ? roadmap.activities.filter(a => a.connectedGoalIds.includes(detailGoalId))
+      : [],
+    [roadmap.activities, detailGoalId]
+  );
 
   // ── Render states ───────────────────────────────────────────────────────────
 
@@ -359,8 +338,6 @@ export default function RoadmapPage() {
     );
   }
 
-  const activeGoals = roadmap.goals.filter(g => g.status === 'active');
-
   return (
     <>
       <AuthNavbar />
@@ -381,6 +358,7 @@ export default function RoadmapPage() {
           savedValues={savedValues}
           savedInterests={savedInterests}
           onAddGoal={() => setAddGoalOpen(true)}
+          onAddActivity={() => setAddActivityOpen(true)}
           onEditGoal={setEditingGoal}
           onDeleteGoal={handleDeleteGoal}
           onPositionChange={handlePositionChange}
@@ -392,12 +370,15 @@ export default function RoadmapPage() {
       {detailGoal && (
         <GoalDetailView
           goal={detailGoal}
+          activities={detailGoalActivities}
+          allActivities={roadmap.activities}
           reducedMotion={reducedMotion}
           onClose={() => setDetailGoalId(null)}
-          onToggleComplete={handleToggleComplete}
-          onToggleIncludeToday={handleToggleIncludeToday}
-          onDeleteNode={handleDeleteNode}
-          onAddNode={(goalId, parentNodeId) => setAddNodeTarget({ goalId, parentNodeId })}
+          onToggleActivityComplete={handleToggleActivityComplete}
+          onToggleActivityIncludeToday={handleToggleActivityIncludeToday}
+          onToggleSubActivityComplete={handleToggleSubActivityComplete}
+          onDeleteActivity={handleDeleteActivity}
+          onAddActivity={(goalId) => { setAddActivityForGoalId(goalId); setAddActivityOpen(true); }}
           onEditGoal={(g) => { setDetailGoalId(null); setEditingGoal(g); }}
         />
       )}
@@ -410,7 +391,7 @@ export default function RoadmapPage() {
           savedValues={savedValues}
           savedInterests={savedInterests}
           onClose={() => { setFtueCategory(null); setAddGoalOpen(false); }}
-          onSave={handleAddGoal}
+          onSave={handleAddGoalWithActivities}
         />
       )}
 
@@ -427,13 +408,16 @@ export default function RoadmapPage() {
         />
       )}
 
-      {/* Add Node modal */}
-      {addNodeTarget !== null && addNodeGoal && (
-        <AddNodeModal
-          goalTitle={addNodeGoal.title}
-          parentTitle={addNodeParentTitle}
-          onClose={() => setAddNodeTarget(null)}
-          onSave={handleAddNode}
+      {/* Add Activity modal — activity-first entry */}
+      {addActivityOpen && (
+        <AddActivityModal
+          existingGoals={activeGoals}
+          preselectedGoalId={addActivityForGoalId}
+          savedValues={savedValues}
+          savedInterests={savedInterests}
+          savedCategories={categories}
+          onClose={() => { setAddActivityOpen(false); setAddActivityForGoalId(null); }}
+          onSave={handleAddActivity}
         />
       )}
     </>

@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useState, useMemo } from 'react';
-import type { Goal, RoadmapData, GoalNode } from '@/lib/roadmap-types';
+import type { Goal, RoadmapData } from '@/lib/roadmap-types';
 import { computeLayout, computeCanvasHeight, BUBBLE_SIZE } from '@/lib/roadmap-layout';
 import GoalBubble from './GoalBubble';
 
@@ -24,6 +24,7 @@ interface BubbleCanvasProps {
   savedValues: string[];
   savedInterests: string[];
   onAddGoal: () => void;
+  onAddActivity: () => void;
   onEditGoal: (goal: Goal) => void;
   onDeleteGoal: (goalId: string) => void;
   onPositionChange: (goalId: string, position: { x: number; y: number }) => void;
@@ -38,22 +39,7 @@ function stringToHue(s: string): number {
   return Math.abs(h) % 360;
 }
 
-function countFlat(nodes: GoalNode[], type: string): number {
-  let n = 0;
-  for (const node of nodes) {
-    if (node.type === type) n++;
-    if (node.children) n += countFlat(node.children, type);
-  }
-  return n;
-}
-function countFlatDone(nodes: GoalNode[], type: string): number {
-  let n = 0;
-  for (const node of nodes) {
-    if (node.type === type && node.completed) n++;
-    if (node.children) n += countFlatDone(node.children, type);
-  }
-  return n;
-}
+// Activity counting is now done inline via roadmap.activities.filter()
 
 // ─── Ambient orb ──────────────────────────────────────────────────────────────
 
@@ -105,14 +91,16 @@ function AmbientOrb({
 
 // ─── Mobile card ──────────────────────────────────────────────────────────────
 
-function MobileGoalCard({ goal, onEdit, onDelete }: {
+function MobileGoalCard({ goal, activityCount, doneCount, onEdit, onDelete }: {
   goal: Goal;
+  activityCount: number;
+  doneCount: number;
   onEdit: (g: Goal) => void;
   onDelete: (id: string) => void;
 }) {
   const hue = goal.connectedCategories[0] ? stringToHue(goal.connectedCategories[0]) : 270;
-  const totalActivities = countFlat(goal.children, 'activity');
-  const doneActivities = countFlatDone(goal.children, 'activity');
+  const totalActivities = activityCount;
+  const doneActivities = doneCount;
 
   return (
     <div
@@ -146,6 +134,7 @@ export default function BubbleCanvas({
   savedValues,
   savedInterests,
   onAddGoal,
+  onAddActivity,
   onEditGoal,
   onDeleteGoal,
   onPositionChange,
@@ -278,10 +267,16 @@ export default function BubbleCanvas({
         <div className="px-4 py-8 space-y-4 pb-32">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-white">Your Goals</h1>
-            <button onClick={onAddGoal}
-              className="bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full transition">
-              + Add
-            </button>
+            <div className="flex gap-2">
+              <button onClick={onAddActivity}
+                className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-sm font-semibold px-3 py-2 rounded-full transition">
+                + Activity
+              </button>
+              <button onClick={onAddGoal}
+                className="bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-3 py-2 rounded-full transition">
+                + Goal
+              </button>
+            </div>
           </div>
 
           {/* Values & Interests chips — mobile */}
@@ -310,9 +305,19 @@ export default function BubbleCanvas({
             </div>
           )}
 
-          {activeGoals.map(goal => (
-            <MobileGoalCard key={goal.id} goal={goal} onEdit={onEditGoal} onDelete={onDeleteGoal} />
-          ))}
+          {activeGoals.map(goal => {
+            const goalActivities = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
+            return (
+              <MobileGoalCard
+                key={goal.id}
+                goal={goal}
+                activityCount={goalActivities.length}
+                doneCount={goalActivities.filter(a => a.completed).length}
+                onEdit={onEditGoal}
+                onDelete={onDeleteGoal}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -323,14 +328,24 @@ export default function BubbleCanvas({
           style={{ height: canvasHeight }}
         >
           {/* Add goal FAB */}
-          <button
-            onClick={onAddGoal}
-            aria-label="Add a new goal"
-            className="fixed top-20 right-6 z-40 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold text-sm px-4 py-2.5 rounded-full hover:from-purple-700 hover:to-indigo-700 transition shadow-lg shadow-purple-900/40 flex items-center gap-2"
-          >
-            <span className="text-lg leading-none">+</span>
-            Add goal
-          </button>
+          <div className="fixed top-20 right-6 z-40 flex gap-2">
+            <button
+              onClick={onAddActivity}
+              aria-label="Add a new activity"
+              className="bg-emerald-600/80 hover:bg-emerald-600 text-white font-semibold text-sm px-4 py-2.5 rounded-full transition shadow-lg shadow-emerald-900/40 flex items-center gap-2"
+            >
+              <span className="text-lg leading-none">+</span>
+              Add activity
+            </button>
+            <button
+              onClick={onAddGoal}
+              aria-label="Add a new goal"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold text-sm px-4 py-2.5 rounded-full hover:from-purple-700 hover:to-indigo-700 transition shadow-lg shadow-purple-900/40 flex items-center gap-2"
+            >
+              <span className="text-lg leading-none">+</span>
+              Add goal
+            </button>
+          </div>
 
           {/* Radial glow center */}
           <div
@@ -350,6 +365,7 @@ export default function BubbleCanvas({
           {/* Goal bubbles */}
           {activeGoals.map((goal, i) => {
             const pos = positions.get(goal.id) ?? { x: 0, y: 0 };
+            const goalActs = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
             return (
               <GoalBubble
                 key={goal.id}
@@ -357,6 +373,8 @@ export default function BubbleCanvas({
                 position={pos}
                 animIndex={i}
                 reducedMotion={reducedMotion}
+                activityCount={goalActs.length}
+                doneCount={goalActs.filter(a => a.completed).length}
                 onOpen={onOpenGoal}
                 onEdit={onEditGoal}
                 onDelete={onDeleteGoal}

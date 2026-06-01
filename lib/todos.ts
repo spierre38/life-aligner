@@ -1,30 +1,86 @@
-// lib/todos.ts
-// Enhanced with sub-goals support
+/**
+ * lib/todos.ts — v3
+ *
+ * Data layer for the To-Do page. Now reads from v3 RoadmapData:
+ *   - Activities with includeToday === true are "roadmap todos"
+ *   - SubActivities with includeToday === true also appear
+ *   - Manual todos are Activities with connectedGoalIds: [] and includeToday: true
+ *
+ * All mutations go through the same roadmap content in workbook_entries.
+ */
 
 import { supabase } from './supabase';
-import { nanoid } from 'nanoid';
 import { logActivity } from './accountability';
+import type { RoadmapData, Activity, SubActivity, Goal } from './roadmap-types';
 
 export interface SubGoal {
-    id: string;
-    text: string;
-    completed: boolean;
-    completed_at?: string | null;
+  id: string;
+  text: string;
+  completed: boolean;
+  completed_at?: string | null;
 }
 
 export interface TodoItem {
-    id: string;
-    text: string;
-    completed: boolean;
-    completed_at?: string | null;
-    hidden?: boolean;
-    source: 'roadmap' | 'manual';
-    goal_title?: string;
-    category?: string;
-    priority?: number;
-    due_date?: string;
-    notes?: string;
-    sub_goals?: SubGoal[];
+  id: string;
+  text: string;
+  completed: boolean;
+  completed_at?: string | null;
+  hidden?: boolean;
+  source: 'roadmap' | 'manual';
+  goal_title?: string;
+  category?: string;
+  priority?: number;
+  due_date?: string;
+  notes?: string;
+  sub_goals?: SubGoal[];
+  // v3 additions
+  activityId?: string;      // back-reference for mutations
+  isSubActivity?: boolean;  // true if this todo comes from a SubActivity
+  parentActivityId?: string; // for sub-activities
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function field(obj: unknown, key: string): unknown {
+  if (obj === null || typeof obj !== 'object' || Array.isArray(obj)) return undefined;
+  return (obj as Record<string, unknown>)[key];
+}
+
+async function loadRoadmapContent(): Promise<{ data: RoadmapData | null; userId: string | null; error: any }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, userId: null, error: null };
+
+  const { data: row, error } = await supabase
+    .from('workbook_entries')
+    .select('content')
+    .eq('user_id', user.id)
+    .eq('category', 'roadmap')
+    .maybeSingle();
+
+  if (error) return { data: null, userId: user.id, error };
+  if (!row?.content) return { data: null, userId: user.id, error: null };
+
+  const raw = row.content as any;
+  const version = raw?.schema_version;
+
+  // Only v3 is supported for todo operations
+  if (version !== 3) {
+    return { data: null, userId: user.id, error: null };
+  }
+
+  return { data: raw as RoadmapData, userId: user.id, error: null };
+}
+
+async function saveRoadmapContent(userId: string, content: RoadmapData): Promise<{ error: any }> {
+  const { error } = await supabase
+    .from('workbook_entries')
+    .update({
+      content: { ...content, updated_at: new Date().toISOString() },
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('category', 'roadmap');
+  return { error };
 }
 
 // ===================================
@@ -32,99 +88,92 @@ export interface TodoItem {
 // ===================================
 
 export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: any }> {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            return { data: [], error: null };
-        }
+  try {
+    const { data: roadmap, userId, error } = await loadRoadmapContent();
 
-        const { data: roadmapEntry, error } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .maybeSingle();
+    if (error) return { data: null, error };
+    if (!roadmap) return { data: [], error: null };
 
-        if (error) {
-            console.error('Error fetching roadmap:', error);
-            return { data: null, error };
-        }
+    const todos: TodoItem[] = [];
+    const goals = roadmap.goals ?? [];
+    const activities = roadmap.activities ?? [];
 
-        if (!roadmapEntry?.content) {
-            return { data: [], error: null };
-        }
-
-        const todos: TodoItem[] = [];
-        const content = roadmapEntry.content;
-
-        // Extract roadmap activities
-        if (content.items && Array.isArray(content.items)) {
-            content.items.forEach((item: any, itemIndex: number) => {
-                const goalTitle = item.goal || item.behavior_change || 'Untitled';
-
-                if (item.activities && Array.isArray(item.activities)) {
-                    item.activities.forEach((activity: any, actIndex: number) => {
-                        if (typeof activity === 'string') {
-                            todos.push({
-                                id: `roadmap_${itemIndex}_${actIndex}`,
-                                text: activity,
-                                completed: false,
-                                hidden: false,
-                                source: 'roadmap',
-                                goal_title: goalTitle,
-                                category: item.category,
-                                priority: itemIndex * 100 + actIndex + 1,
-                                sub_goals: []
-                            });
-                        } else {
-                            todos.push({
-                                id: activity.id || `roadmap_${itemIndex}_${actIndex}`,
-                                text: activity.text || activity,
-                                completed: activity.completed || false,
-                                completed_at: activity.completed_at || null,
-                                hidden: activity.hidden || false,
-                                source: 'roadmap',
-                                goal_title: goalTitle,
-                                category: item.category,
-                                priority: activity.priority || (itemIndex * 100 + actIndex + 1),
-                                due_date: activity.due_date,
-                                notes: activity.notes,
-                                sub_goals: activity.sub_goals || []
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        // Extract manual todos
-        if (content.manual_todos && Array.isArray(content.manual_todos)) {
-            content.manual_todos.forEach((todo: any) => {
-                todos.push({
-                    id: todo.id || `manual_${nanoid(8)}`,
-                    text: todo.text,
-                    completed: todo.completed || false,
-                    completed_at: todo.completed_at || null,
-                    hidden: todo.hidden || false,
-                    source: 'manual',
-                    category: todo.category,
-                    priority: todo.priority || (todos.length + 1),
-                    due_date: todo.due_date,
-                    notes: todo.notes,
-                    sub_goals: todo.sub_goals || []
-                });
-            });
-        }
-
-        // Sort by priority
-        todos.sort((a, b) => (a.priority || 9999) - (b.priority || 9999));
-
-        return { data: todos, error: null };
-
-    } catch (err) {
-        console.error('Error in getAllTodos:', err);
-        return { data: null, error: err };
+    // Build a goal lookup for titles
+    const goalMap = new Map<string, Goal>();
+    for (const g of goals) {
+      goalMap.set(g.id, g);
     }
+
+    let priority = 1;
+
+    for (const activity of activities) {
+      if (!activity.includeToday) continue;
+
+      // Determine goal title for display
+      const connectedGoal = activity.connectedGoalIds.length > 0
+        ? goalMap.get(activity.connectedGoalIds[0])
+        : undefined;
+      const goalTitle = connectedGoal?.title;
+      const category = connectedGoal?.connectedCategories?.[0];
+
+      // Map sub-activities to SubGoals for the UI
+      const subGoals: SubGoal[] = (activity.subActivities ?? []).map(sa => ({
+        id: sa.id,
+        text: sa.title,
+        completed: sa.completed,
+        completed_at: sa.completedAt ?? null,
+      }));
+
+      todos.push({
+        id: activity.id,
+        text: activity.title,
+        completed: activity.completed,
+        completed_at: activity.completedAt ?? null,
+        hidden: false,
+        source: activity.connectedGoalIds.length > 0 ? 'roadmap' : 'manual',
+        goal_title: goalTitle,
+        category,
+        priority: priority++,
+        sub_goals: subGoals,
+        activityId: activity.id,
+      });
+    }
+
+    // Also include sub-activities that have includeToday but whose parent activity doesn't
+    for (const activity of activities) {
+      if (activity.includeToday) continue; // already included via parent
+      for (const sa of activity.subActivities ?? []) {
+        if (!sa.includeToday) continue;
+
+        const connectedGoal = activity.connectedGoalIds.length > 0
+          ? goalMap.get(activity.connectedGoalIds[0])
+          : undefined;
+
+        todos.push({
+          id: sa.id,
+          text: sa.title,
+          completed: sa.completed,
+          completed_at: sa.completedAt ?? null,
+          hidden: false,
+          source: 'roadmap',
+          goal_title: connectedGoal?.title,
+          category: connectedGoal?.connectedCategories?.[0],
+          priority: priority++,
+          sub_goals: [],
+          activityId: activity.id,
+          isSubActivity: true,
+          parentActivityId: activity.id,
+        });
+      }
+    }
+
+    todos.sort((a, b) => (a.priority || 9999) - (b.priority || 9999));
+
+    return { data: todos, error: null };
+  } catch (err) {
+    console.error('Error in getAllTodos:', err);
+    return { data: null, error: err };
+  }
 }
 
 // ===================================
@@ -132,103 +181,72 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
 // ===================================
 
 export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | 'manual') {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
 
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
+    const now = new Date().toISOString();
+    let updated = false;
+    let logText = '';
+    let logGoal = '';
 
-        if (fetchError || !roadmapEntry) {
-            return { error: fetchError || { message: 'No roadmap found' } };
+    // Check if it's a regular activity
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id === todoId) {
+        updated = true;
+        const newCompleted = !a.completed;
+        logText = a.title;
+        // Find goal title for logging
+        const goalId = a.connectedGoalIds[0];
+        if (goalId) {
+          const goal = roadmap.goals.find(g => g.id === goalId);
+          logGoal = goal?.title ?? 'Roadmap Goal';
         }
+        return {
+          ...a,
+          completed: newCompleted,
+          completedAt: newCompleted ? now : undefined,
+          updatedAt: now,
+        };
+      }
 
-        const content = roadmapEntry.content;
-        let updated = false;
-        let loggedActivityData: any = null;
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        const activityId = typeof activity === 'object' ? activity.id : null;
-
-                        if (activityId === todoId) {
-                            updated = true;
-                            const newCompleted = typeof activity === 'object' ? !activity.completed : true;
-                            
-                            if (newCompleted) {
-                                loggedActivityData = {
-                                    text: typeof activity === 'string' ? activity : activity.text,
-                                    goalTitle: item.title || item.goal || item.behavior_change || 'Roadmap Goal'
-                                };
-                            }
-                            
-                            return {
-                                ...(typeof activity === 'string' ? { text: activity } : activity),
-                                id: activityId || todoId,
-                                completed: newCompleted,
-                                completed_at: newCompleted ? new Date().toISOString() : null
-                            };
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    updated = true;
-                    const newCompleted = !todo.completed;
-                    
-                    if (newCompleted) {
-                        loggedActivityData = {
-                            text: todo.text,
-                            goalTitle: 'Manual Todo'
-                        };
-                    }
-                    
-                    return {
-                        ...todo,
-                        completed: newCompleted,
-                        completed_at: newCompleted ? new Date().toISOString() : null
-                    };
-                }
-                return todo;
-            });
+      // Check sub-activities
+      const updatedSubs = a.subActivities.map(sa => {
+        if (sa.id === todoId) {
+          updated = true;
+          const newCompleted = !sa.completed;
+          logText = sa.title;
+          return {
+            ...sa,
+            completed: newCompleted,
+            completedAt: newCompleted ? now : undefined,
+          };
         }
+        return sa;
+      });
 
-        if (!updated) {
-            return { error: { message: 'Todo not found' } };
-        }
+      if (updatedSubs !== a.subActivities) {
+        return { ...a, subActivities: updatedSubs, updatedAt: now };
+      }
+      return a;
+    });
 
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .update({
-                content,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
+    if (!updated) return { error: { message: 'Todo not found' } };
 
-        if (!updateError && loggedActivityData) {
-            logActivity('goal_completed', {
-                activity_text: loggedActivityData.text,
-                goal_title: loggedActivityData.goalTitle
-            }).catch(console.error);
-        }
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
 
-        return { error: updateError };
-
-    } catch (err) {
-        console.error('Error toggling todo:', err);
-        return { error: err };
+    if (!saveErr && logText) {
+      logActivity('goal_completed', {
+        activity_text: logText,
+        goal_title: logGoal || 'Manual Todo',
+      }).catch(console.error);
     }
+
+    return { error: saveErr };
+  } catch (err) {
+    console.error('Error toggling todo:', err);
+    return { error: err };
+  }
 }
 
 // ===================================
@@ -236,77 +254,38 @@ export async function toggleTodoCompletion(todoId: string, source: 'roadmap' | '
 // ===================================
 
 export async function toggleTodoVisibility(todoId: string, source: 'roadmap' | 'manual') {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
 
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
+    let updated = false;
 
-        if (fetchError || !roadmapEntry) {
-            return { error: fetchError || { message: 'No roadmap found' } };
+    // Toggle includeToday to hide/show
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id === todoId) {
+        updated = true;
+        return { ...a, includeToday: !a.includeToday, updatedAt: new Date().toISOString() };
+      }
+
+      // Check sub-activities
+      const updatedSubs = a.subActivities.map(sa => {
+        if (sa.id === todoId) {
+          updated = true;
+          return { ...sa, includeToday: !sa.includeToday };
         }
+        return sa;
+      });
+      return { ...a, subActivities: updatedSubs };
+    });
 
-        const content = roadmapEntry.content;
-        let updated = false;
+    if (!updated) return { error: { message: 'Todo not found' } };
 
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        const activityId = typeof activity === 'object' ? activity.id : null;
-
-                        if (activityId === todoId) {
-                            updated = true;
-                            const currentHidden = typeof activity === 'object' ? !!activity.hidden : false;
-                            
-                            return {
-                                ...(typeof activity === 'string' ? { text: activity } : activity),
-                                id: activityId || todoId,
-                                hidden: !currentHidden
-                            };
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    updated = true;
-                    return {
-                        ...todo,
-                        hidden: !todo.hidden
-                    };
-                }
-                return todo;
-            });
-        }
-
-        if (!updated) {
-            return { error: { message: 'Todo not found' } };
-        }
-
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .update({
-                content,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        return { error: updateError };
-
-    } catch (err) {
-        console.error('Error toggling todo visibility:', err);
-        return { error: err };
-    }
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
+    return { error: saveErr };
+  } catch (err) {
+    console.error('Error toggling todo visibility:', err);
+    return { error: err };
+  }
 }
 
 // ===================================
@@ -314,82 +293,43 @@ export async function toggleTodoVisibility(todoId: string, source: 'roadmap' | '
 // ===================================
 
 export async function toggleSubGoalCompletion(todoId: string, subGoalId: string, source: 'roadmap' | 'manual') {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
 
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
+    const now = new Date().toISOString();
+    let updated = false;
 
-        if (fetchError || !roadmapEntry) {
-            return { error: fetchError || { message: 'No roadmap found' } };
-        }
-
-        const content = roadmapEntry.content;
-        let updated = false;
-
-        const updateSubGoals = (todo: any) => {
-            if (todo.sub_goals && Array.isArray(todo.sub_goals)) {
-                todo.sub_goals = todo.sub_goals.map((sg: any) => {
-                    if (sg.id === subGoalId) {
-                        updated = true;
-                        const newCompleted = !sg.completed;
-                        return {
-                            ...sg,
-                            completed: newCompleted,
-                            completed_at: newCompleted ? new Date().toISOString() : null
-                        };
-                    }
-                    return sg;
-                });
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id === todoId) {
+        return {
+          ...a,
+          updatedAt: now,
+          subActivities: a.subActivities.map(sa => {
+            if (sa.id === subGoalId) {
+              updated = true;
+              const newCompleted = !sa.completed;
+              return {
+                ...sa,
+                completed: newCompleted,
+                completedAt: newCompleted ? now : undefined,
+              };
             }
-            return todo;
+            return sa;
+          }),
         };
+      }
+      return a;
+    });
 
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return updateSubGoals(activity);
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return updateSubGoals(todo);
-                }
-                return todo;
-            });
-        }
+    if (!updated) return { error: { message: 'Sub-goal not found' } };
 
-        if (!updated) {
-            return { error: { message: 'Sub-goal not found' } };
-        }
-
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .update({
-                content,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        return { error: updateError };
-
-    } catch (err) {
-        console.error('Error toggling sub-goal:', err);
-        return { error: err };
-    }
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
+    return { error: saveErr };
+  } catch (err) {
+    console.error('Error toggling sub-goal:', err);
+    return { error: err };
+  }
 }
 
 // ===================================
@@ -397,80 +337,44 @@ export async function toggleSubGoalCompletion(todoId: string, subGoalId: string,
 // ===================================
 
 export async function addSubGoal(todoId: string, subGoalText: string, source: 'roadmap' | 'manual') {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
 
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
+    const now = new Date().toISOString();
+    const newSub: SubActivity = {
+      id: crypto.randomUUID(),
+      title: subGoalText,
+      completed: false,
+      includeToday: false,
+      createdAt: now,
+    };
 
-        if (fetchError || !roadmapEntry) {
-            return { error: fetchError || { message: 'No roadmap found' } };
-        }
+    let updated = false;
 
-        const content = roadmapEntry.content;
-        const newSubGoal: SubGoal = {
-            id: nanoid(12),
-            text: subGoalText,
-            completed: false,
-            completed_at: null
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id === todoId) {
+        updated = true;
+        return {
+          ...a,
+          updatedAt: now,
+          subActivities: [...a.subActivities, newSub],
         };
+      }
+      return a;
+    });
 
-        let updated = false;
+    if (!updated) return { error: { message: 'Todo not found' } };
 
-        const addToTodo = (todo: any) => {
-            if (!todo.sub_goals) {
-                todo.sub_goals = [];
-            }
-            todo.sub_goals.push(newSubGoal);
-            updated = true;
-            return todo;
-        };
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return addToTodo(activity);
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return addToTodo(todo);
-                }
-                return todo;
-            });
-        }
-
-        if (!updated) {
-            return { error: { message: 'Todo not found' } };
-        }
-
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .update({
-                content,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        return { data: newSubGoal, error: updateError };
-
-    } catch (err) {
-        console.error('Error adding sub-goal:', err);
-        return { error: err };
-    }
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
+    return {
+      data: { id: newSub.id, text: newSub.title, completed: false, completed_at: null },
+      error: saveErr,
+    };
+  } catch (err) {
+    console.error('Error adding sub-goal:', err);
+    return { error: err };
+  }
 }
 
 // ===================================
@@ -478,63 +382,79 @@ export async function addSubGoal(todoId: string, subGoalText: string, source: 'r
 // ===================================
 
 export async function addManualTodo(text: string, options?: {
-    priority?: number;
-    due_date?: string;
-    category?: string;
-    notes?: string;
+  priority?: number;
+  due_date?: string;
+  category?: string;
+  notes?: string;
 }) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: { message: 'Not authenticated' } };
 
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .maybeSingle();
+    const { data: row, error: fetchError } = await supabase
+      .from('workbook_entries')
+      .select('content')
+      .eq('user_id', user.id)
+      .eq('category', 'roadmap')
+      .maybeSingle();
 
-        if (fetchError) {
-            return { error: fetchError };
-        }
+    if (fetchError) return { error: fetchError };
 
-        const content = roadmapEntry?.content || { items: [] };
+    const now = new Date().toISOString();
+    let content: RoadmapData;
 
-        if (!content.manual_todos) {
-            content.manual_todos = [];
-        }
-
-        const newTodo = {
-            id: `manual_${nanoid(12)}`,
-            text,
-            completed: false,
-            completed_at: null,
-            priority: options?.priority || (content.manual_todos.length + 1),
-            due_date: options?.due_date || null,
-            category: options?.category || null,
-            notes: options?.notes || null,
-            sub_goals: []
-        };
-
-        content.manual_todos.push(newTodo);
-
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .upsert({
-                user_id: user.id,
-                category: 'roadmap',
-                content,
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: 'user_id,category'
-            });
-
-        return { data: newTodo, error: updateError };
-
-    } catch (err) {
-        console.error('Error adding manual todo:', err);
-        return { error: err };
+    if (!row?.content || (row.content as any)?.schema_version !== 3) {
+      // Initialize v3 if needed
+      content = {
+        schema_version: 3,
+        goals: [],
+        activities: [],
+        updated_at: now,
+      };
+    } else {
+      content = row.content as unknown as RoadmapData;
     }
+
+    // Create a new Activity with no connected goals (manual/personal)
+    const newActivity: Activity = {
+      id: crypto.randomUUID(),
+      title: text,
+      connectedGoalIds: [],
+      completed: false,
+      includeToday: true,
+      subActivities: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    content.activities.push(newActivity);
+
+    const { error: updateError } = await supabase
+      .from('workbook_entries')
+      .upsert({
+        user_id: user.id,
+        category: 'roadmap',
+        content: { ...content, updated_at: now },
+      }, {
+        onConflict: 'user_id,category',
+      });
+
+    return {
+      data: {
+        id: newActivity.id,
+        text: newActivity.title,
+        completed: false,
+        completed_at: null,
+        source: 'manual' as const,
+        priority: content.activities.length,
+        sub_goals: [],
+      },
+      error: updateError,
+    };
+  } catch (err) {
+    console.error('Error adding manual todo:', err);
+    return { error: err };
+  }
 }
 
 // ===================================
@@ -542,44 +462,18 @@ export async function addManualTodo(text: string, options?: {
 // ===================================
 
 export async function deleteManualTodo(todoId: string) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
 
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
+    roadmap.activities = roadmap.activities.filter(a => a.id !== todoId);
 
-        if (fetchError || !roadmapEntry) {
-            return { error: fetchError || { message: 'No roadmap found' } };
-        }
-
-        const content = roadmapEntry.content;
-
-        if (!content.manual_todos) {
-            return { error: { message: 'No manual todos' } };
-        }
-
-        content.manual_todos = content.manual_todos.filter((todo: any) => todo.id !== todoId);
-
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .update({
-                content,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        return { error: updateError };
-
-    } catch (err) {
-        console.error('Error deleting todo:', err);
-        return { error: err };
-    }
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
+    return { error: saveErr };
+  } catch (err) {
+    console.error('Error deleting todo:', err);
+    return { error: err };
+  }
 }
 
 // ===================================
@@ -587,62 +481,8 @@ export async function deleteManualTodo(todoId: string) {
 // ===================================
 
 export async function updateTodoOrder(orderedTodos: TodoItem[]) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return { error: { message: 'Not authenticated' } };
-
-        const { data: roadmapEntry, error: fetchError } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (fetchError || !roadmapEntry) {
-            return { error: fetchError || { message: 'No roadmap found' } };
-        }
-
-        const content = roadmapEntry.content;
-
-        orderedTodos.forEach((todo, index) => {
-            if (todo.source === 'roadmap' && content.items) {
-                content.items = content.items.map((item: any) => {
-                    if (item.activities) {
-                        item.activities = item.activities.map((activity: any) => {
-                            if ((typeof activity === 'object' ? activity.id : null) === todo.id) {
-                                return {
-                                    ...(typeof activity === 'string' ? { text: activity } : activity),
-                                    priority: index + 1
-                                };
-                            }
-                            return activity;
-                        });
-                    }
-                    return item;
-                });
-            } else if (todo.source === 'manual' && content.manual_todos) {
-                content.manual_todos = content.manual_todos.map((t: any) => {
-                    if (t.id === todo.id) {
-                        return { ...t, priority: index + 1 };
-                    }
-                    return t;
-                });
-            }
-        });
-
-        const { error: updateError } = await supabase
-            .from('workbook_entries')
-            .update({
-                content,
-                updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        return { error: updateError };
-
-    } catch (err) {
-        console.error('Error updating order:', err);
-        return { error: err };
-    }
+  // Order is now implicit in the array position of activities.
+  // For now, this is a no-op since v3 activities don't have a priority field.
+  // The To-Do page can sort by createdAt or user-defined order in the future.
+  return { error: null };
 }
