@@ -29,6 +29,7 @@ interface BubbleCanvasProps {
   onDeleteGoal: (goalId: string) => void;
   onPositionChange: (goalId: string, position: { x: number; y: number }) => void;
   onOpenGoal: (goalId: string) => void;
+  onReviewAll: () => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -139,6 +140,7 @@ export default function BubbleCanvas({
   onDeleteGoal,
   onPositionChange,
   onOpenGoal,
+  onReviewAll,
 }: BubbleCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 800 });
@@ -268,6 +270,10 @@ export default function BubbleCanvas({
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-white">Your Goals</h1>
             <div className="flex gap-2">
+              <button onClick={onReviewAll}
+                className="bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 text-sm font-semibold px-3 py-2 rounded-full transition">
+                Review All
+              </button>
               <button onClick={onAddActivity}
                 className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-sm font-semibold px-3 py-2 rounded-full transition">
                 + Activity
@@ -329,6 +335,13 @@ export default function BubbleCanvas({
         >
           {/* Add goal FAB */}
           <div className="fixed top-20 right-6 z-40 flex gap-2">
+            <button
+              onClick={onReviewAll}
+              aria-label="Review all activities and goals"
+              className="bg-slate-800/80 backdrop-blur-sm border border-white/10 hover:bg-slate-800 text-white font-semibold text-sm px-4 py-2.5 rounded-full transition shadow-lg shadow-black/40 flex items-center gap-2"
+            >
+              Review All
+            </button>
             <button
               onClick={onAddActivity}
               aria-label="Add a new activity"

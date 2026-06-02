@@ -252,6 +252,8 @@ function ActivityBubble({
   blobVariant,
   reducedMotion,
   goalCount,
+  isSelected,
+  onSelect,
   onToggleComplete,
   onToggleIncludeToday,
   onDelete,
@@ -261,22 +263,29 @@ function ActivityBubble({
   blobVariant: number;
   reducedMotion: boolean;
   goalCount: number;
+  isSelected: boolean;
+  onSelect: (activityId: string) => void;
   onToggleComplete: (activityId: string, completed: boolean) => void;
   onToggleIncludeToday: (activityId: string, includeToday: boolean) => void;
   onDelete: (activityId: string) => void;
 }) {
-  const [showActions, setShowActions] = useState(false);
   const hue = stringToHue(activity.title);
   const blob = NODE_BLOBS[blobVariant % NODE_BLOBS.length];
 
   return (
     <div
-      className={`relative group ${reducedMotion ? '' : 'detail-float'}`}
+      className={`relative ${reducedMotion ? '' : 'detail-float'}`}
       style={{ width: size, height: size, animationDelay: `${blobVariant * 0.2}s` }}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      onClick={(e) => { e.stopPropagation(); onSelect(activity.id); }}
     >
-      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden>
+      {/* Selection ring */}
+      {isSelected && (
+        <div
+          className="absolute rounded-full border-2 border-white/60 animate-pulse pointer-events-none"
+          style={{ inset: -4 }}
+        />
+      )}
+      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden className="cursor-pointer">
         <defs>
           <linearGradient id={`act-grad-${activity.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={`hsl(${hue}, 55%, ${activity.completed ? 25 : 48}%)`} />
@@ -297,30 +306,30 @@ function ActivityBubble({
         )}
       </div>
 
-      {/* Action buttons on hover */}
-      {showActions && (
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+      {/* Action buttons — visible when selected (click to select, stays visible) */}
+      {isSelected && (
+        <div className="absolute -bottom-9 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
           <button
-            onClick={() => onToggleComplete(activity.id, !activity.completed)}
-            className="bg-white/20 hover:bg-white/30 text-white text-[10px] px-2 py-1 rounded-full transition"
+            onClick={(e) => { e.stopPropagation(); onToggleComplete(activity.id, !activity.completed); }}
+            className="bg-white/25 hover:bg-white/40 text-white text-[11px] px-2.5 py-1.5 rounded-full transition shadow-lg backdrop-blur-sm"
             title={activity.completed ? 'Mark incomplete' : 'Mark complete'}
           >
-            {activity.completed ? '↩' : '✓'}
+            {activity.completed ? '↩ Undo' : '✓ Done'}
           </button>
           <button
-            onClick={() => onToggleIncludeToday(activity.id, !activity.includeToday)}
-            className={`text-[10px] px-2 py-1 rounded-full transition ${
+            onClick={(e) => { e.stopPropagation(); onToggleIncludeToday(activity.id, !activity.includeToday); }}
+            className={`text-[11px] px-2.5 py-1.5 rounded-full transition shadow-lg backdrop-blur-sm ${
               activity.includeToday
-                ? 'bg-emerald-500/40 text-emerald-200'
-                : 'bg-white/20 hover:bg-white/30 text-white'
+                ? 'bg-emerald-500/50 text-emerald-100 hover:bg-emerald-500/70'
+                : 'bg-white/25 hover:bg-white/40 text-white'
             }`}
             title={activity.includeToday ? 'Remove from To-Do' : 'Add to To-Do'}
           >
-            📋
+            📋 {activity.includeToday ? 'On list' : 'To-Do'}
           </button>
           <button
-            onClick={() => onDelete(activity.id)}
-            className="bg-red-500/20 hover:bg-red-500/40 text-red-300 text-[10px] px-2 py-1 rounded-full transition"
+            onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${activity.title}"?`)) onDelete(activity.id); }}
+            className="bg-red-500/25 hover:bg-red-500/50 text-red-200 text-[11px] px-2.5 py-1.5 rounded-full transition shadow-lg backdrop-blur-sm"
             title="Delete"
           >
             ✕
@@ -389,6 +398,7 @@ export default function GoalDetailView({
 }: GoalDetailViewProps) {
   const [mounted, setMounted] = useState(false);
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setMounted(true));
@@ -482,7 +492,9 @@ export default function GoalDetailView({
 
       <div className="flex min-h-screen pt-16">
         {/* ── Tree area (left) ────────────────────────────────────── */}
-        <div className="flex-1 relative overflow-auto" style={{ minHeight: '100vh' }}>
+        <div className="flex-1 relative overflow-auto" style={{ minHeight: '100vh' }}
+          onClick={() => setSelectedActivityId(null)}
+        >
           {/* SVG connector lines */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
             {/* Root → activity lines */}
@@ -635,23 +647,21 @@ export default function GoalDetailView({
                     zIndex: 10,
                   }}
                 >
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => {
+                  <ActivityBubble
+                    activity={activity}
+                    size={ACTIVITY_SIZE}
+                    blobVariant={i % 4}
+                    reducedMotion={reducedMotion}
+                    goalCount={goalCount}
+                    isSelected={selectedActivityId === activity.id}
+                    onSelect={(id) => {
+                      setSelectedActivityId(prev => prev === id ? null : id);
                       if (hasSubs) toggleExpand(activity.id);
                     }}
-                  >
-                    <ActivityBubble
-                      activity={activity}
-                      size={ACTIVITY_SIZE}
-                      blobVariant={i % 4}
-                      reducedMotion={reducedMotion}
-                      goalCount={goalCount}
-                      onToggleComplete={onToggleActivityComplete}
-                      onToggleIncludeToday={onToggleActivityIncludeToday}
-                      onDelete={onDeleteActivity}
-                    />
-                  </div>
+                    onToggleComplete={onToggleActivityComplete}
+                    onToggleIncludeToday={onToggleActivityIncludeToday}
+                    onDelete={onDeleteActivity}
+                  />
 
                   {hasSubs && (
                     <button

@@ -35,6 +35,7 @@ import AddGoalModal from './components/AddGoalModal';
 import EditGoalModal from './components/EditGoalModal';
 import GoalDetailView from './components/GoalDetailView';
 import AddActivityModal from './components/AddActivityModal';
+import ReviewActivitiesView from './components/ReviewActivitiesView';
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -58,6 +59,7 @@ export default function RoadmapPage() {
   const [addActivityForGoalId, setAddActivityForGoalId] = useState<string | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [detailGoalId, setDetailGoalId] = useState<string | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const saveSeq = useRef(0);
 
@@ -363,6 +365,21 @@ export default function RoadmapPage() {
           onDeleteGoal={handleDeleteGoal}
           onPositionChange={handlePositionChange}
           onOpenGoal={setDetailGoalId}
+          onReviewAll={() => setReviewOpen(true)}
+        />
+      )}
+
+      {/* Review All Activities overlay */}
+      {reviewOpen && (
+        <ReviewActivitiesView
+          goals={roadmap.goals}
+          activities={roadmap.activities}
+          onClose={() => setReviewOpen(false)}
+          onToggleActivityComplete={handleToggleActivityComplete}
+          onToggleActivityIncludeToday={handleToggleActivityIncludeToday}
+          onDeleteActivity={handleDeleteActivity}
+          onAddGoal={() => { setReviewOpen(false); setAddGoalOpen(true); }}
+          onAddActivity={() => { setReviewOpen(false); setAddActivityOpen(true); }}
         />
       )}
 
