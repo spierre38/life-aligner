@@ -69,10 +69,10 @@ function AmbientOrb({
 }) {
   const displayHue = isHighlighted ? (highlightHue ?? hue) : hue;
   const iconColor = kind === 'value' ? 'text-blue-300/50' : 'text-rose-300/50';
-  const textColor = isHighlighted ? 'text-white' : iconColor;
+  const textColor = isHighlighted ? 'text-white font-bold drop-shadow-md' : iconColor;
   return (
     <div
-      className={`absolute pointer-events-none select-none transition-all duration-500 ${reducedMotion ? '' : 'amb-drift'} ${isHighlighted ? 'scale-110 z-10' : 'z-0'}`}
+      className={`absolute pointer-events-none select-none transition-all duration-300 ${reducedMotion ? '' : 'amb-drift'} ${isHighlighted ? 'scale-125 z-20' : 'z-0'}`}
       style={{
         left: x,
         top: y,
@@ -82,18 +82,18 @@ function AmbientOrb({
       }}
     >
       <div
-        className="w-full h-full rounded-full flex items-center justify-center transition-all duration-500"
+        className="w-full h-full rounded-full flex items-center justify-center transition-all duration-300"
         style={{
           background: isHighlighted
-            ? `radial-gradient(circle, hsla(${displayHue},80%,60%,0.6) 0%, hsla(${displayHue},80%,40%,0.3) 70%, transparent 100%)`
+            ? `radial-gradient(circle, hsla(${displayHue},90%,60%,0.95) 0%, hsla(${displayHue},90%,40%,0.7) 70%, transparent 100%)`
             : `radial-gradient(circle, hsla(${displayHue},50%,60%,0.15) 0%, hsla(${displayHue},50%,40%,0.05) 70%, transparent 100%)`,
           border: isHighlighted
-            ? `1px solid hsla(${displayHue},80%,70%,0.5)`
+            ? `2px solid hsla(${displayHue},100%,80%,0.9)`
             : `1px solid hsla(${displayHue},40%,70%,0.1)`,
-          boxShadow: isHighlighted ? `0 0 20px hsla(${displayHue},80%,60%,0.4)` : 'none',
+          boxShadow: isHighlighted ? `0 0 35px hsla(${displayHue},90%,60%,0.8), inset 0 0 15px hsla(${displayHue},100%,80%,0.5)` : 'none',
         }}
       >
-        <span className={`text-[9px] font-medium transition-colors duration-500 ${textColor} text-center leading-tight px-1`}>
+        <span className={`transition-all duration-300 ${textColor} text-center leading-tight px-1 ${isHighlighted ? 'text-[11px]' : 'text-[9px] font-medium'}`}>
           {label}
         </span>
       </div>
