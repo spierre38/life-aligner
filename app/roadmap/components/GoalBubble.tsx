@@ -61,6 +61,8 @@ interface GoalBubbleProps {
   onEdit: (goal: Goal) => void;
   onDelete: (goalId: string) => void;
   onPositionChange: (goalId: string, position: { x: number; y: number }) => void;
+  onHoverStart?: (goalId: string) => void;
+  onHoverEnd?: () => void;
 }
 
 // ─── Satellite positions by blob variant ──────────────────────────────────────
@@ -87,6 +89,8 @@ export default function GoalBubble({
   onEdit,
   onDelete,
   onPositionChange,
+  onHoverStart,
+  onHoverEnd,
 }: GoalBubbleProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -195,8 +199,8 @@ export default function GoalBubble({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => { setIsHovered(false); setShowMenu(false); setShowWhyTooltip(false); }}
+        onMouseEnter={() => { setIsHovered(true); onHoverStart?.(goal.id); }}
+        onMouseLeave={() => { setIsHovered(false); setShowMenu(false); setShowWhyTooltip(false); onHoverEnd?.(); }}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onOpen(goal.id); }}
       >
         {/* ── Main SVG blob ────────────────────────────────────────── */}

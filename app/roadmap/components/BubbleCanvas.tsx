@@ -53,6 +53,8 @@ function AmbientOrb({
   delay,
   kind,
   reducedMotion,
+  isHighlighted,
+  highlightHue,
 }: {
   label: string;
   hue: number;
@@ -62,11 +64,15 @@ function AmbientOrb({
   delay: number;
   kind: 'value' | 'interest';
   reducedMotion: boolean;
+  isHighlighted?: boolean;
+  highlightHue?: number;
 }) {
+  const displayHue = isHighlighted ? (highlightHue ?? hue) : hue;
   const iconColor = kind === 'value' ? 'text-blue-300/50' : 'text-rose-300/50';
+  const textColor = isHighlighted ? 'text-white' : iconColor;
   return (
     <div
-      className={`absolute pointer-events-none select-none ${reducedMotion ? '' : 'amb-drift'}`}
+      className={`absolute pointer-events-none select-none transition-all duration-500 ${reducedMotion ? '' : 'amb-drift'} ${isHighlighted ? 'scale-110 z-10' : 'z-0'}`}
       style={{
         left: x,
         top: y,
@@ -76,13 +82,18 @@ function AmbientOrb({
       }}
     >
       <div
-        className="w-full h-full rounded-full flex items-center justify-center"
+        className="w-full h-full rounded-full flex items-center justify-center transition-all duration-500"
         style={{
-          background: `radial-gradient(circle, hsla(${hue},50%,60%,0.15) 0%, hsla(${hue},50%,40%,0.05) 70%, transparent 100%)`,
-          border: `1px solid hsla(${hue},40%,70%,0.1)`,
+          background: isHighlighted
+            ? `radial-gradient(circle, hsla(${displayHue},80%,60%,0.6) 0%, hsla(${displayHue},80%,40%,0.3) 70%, transparent 100%)`
+            : `radial-gradient(circle, hsla(${displayHue},50%,60%,0.15) 0%, hsla(${displayHue},50%,40%,0.05) 70%, transparent 100%)`,
+          border: isHighlighted
+            ? `1px solid hsla(${displayHue},80%,70%,0.5)`
+            : `1px solid hsla(${displayHue},40%,70%,0.1)`,
+          boxShadow: isHighlighted ? `0 0 20px hsla(${displayHue},80%,60%,0.4)` : 'none',
         }}
       >
-        <span className={`text-[9px] font-medium ${iconColor} text-center leading-tight px-1`}>
+        <span className={`text-[9px] font-medium transition-colors duration-500 ${textColor} text-center leading-tight px-1`}>
           {label}
         </span>
       </div>
@@ -146,6 +157,7 @@ export default function BubbleCanvas({
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 800 });
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [hoveredGoalId, setHoveredGoalId] = useState<string | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -370,9 +382,26 @@ export default function BubbleCanvas({
 
           {/* Ambient value/interest orbs — decorative, behind goals */}
           <div className="absolute inset-0 pointer-events-none z-0">
-            {ambientOrbs.map((orb, i) => (
-              <AmbientOrb key={`${orb.kind}-${i}`} {...orb} reducedMotion={reducedMotion} />
-            ))}
+            {ambientOrbs.map((orb, i) => {
+              const hoveredGoal = hoveredGoalId ? activeGoals.find(g => g.id === hoveredGoalId) : null;
+              const isHighlighted = hoveredGoal 
+                ? (orb.kind === 'value' && hoveredGoal.connectedValues.includes(orb.label)) || 
+                  (orb.kind === 'interest' && hoveredGoal.connectedInterests.includes(orb.label))
+                : false;
+              const highlightHue = hoveredGoal?.connectedCategories[0] 
+                ? stringToHue(hoveredGoal.connectedCategories[0]) 
+                : 270;
+
+              return (
+                <AmbientOrb 
+                  key={`${orb.kind}-${i}`} 
+                  {...orb} 
+                  reducedMotion={reducedMotion}
+                  isHighlighted={isHighlighted}
+                  highlightHue={highlightHue}
+                />
+              );
+            })}
           </div>
 
           {/* Goal bubbles */}
@@ -392,6 +421,8 @@ export default function BubbleCanvas({
                 onEdit={onEditGoal}
                 onDelete={onDeleteGoal}
                 onPositionChange={onPositionChange}
+                onHoverStart={setHoveredGoalId}
+                onHoverEnd={() => setHoveredGoalId(null)}
               />
             );
           })}
