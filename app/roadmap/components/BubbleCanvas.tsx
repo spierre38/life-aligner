@@ -265,14 +265,22 @@ export default function BubbleCanvas({
           </div>
           <h2 className="text-3xl font-bold text-white mb-3">Your canvas is clear</h2>
           <p className="text-slate-400 mb-8 max-w-sm">
-            Add a new goal to get started on your next chapter.
+            Start your journey by adding a broad goal, or jump straight into a specific activity.
           </p>
-          <button
-            onClick={onAddGoal}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-700 hover:to-indigo-700 transition shadow-lg"
-          >
-            + Add a goal
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={onAddActivity}
+              className="bg-emerald-600/80 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-full transition shadow-lg flex items-center justify-center gap-2"
+            >
+              <span className="text-lg leading-none">+</span> Add an activity
+            </button>
+            <button
+              onClick={onAddGoal}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-full hover:from-purple-700 hover:to-indigo-700 transition shadow-lg flex items-center justify-center gap-2"
+            >
+              <span className="text-lg leading-none">+</span> Add a goal
+            </button>
+          </div>
         </div>
       )}
 

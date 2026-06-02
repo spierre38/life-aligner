@@ -205,12 +205,54 @@ export default function RoadmapPage() {
 
   // ── Activity-level handlers ─────────────────────────────────────────────────
 
-  const handleAddActivity = useCallback(async (activity: Activity) => {
+  const handleAddActivity = useCallback(async (activity: Activity, newGoalTitles: string[] = []) => {
     setAddActivityOpen(false);
     setAddActivityForGoalId(null);
+
+    const now = new Date().toISOString();
+    const newGoals: Goal[] = newGoalTitles.map(title => ({
+      id: crypto.randomUUID(),
+      title,
+      connectedCategories: [],
+      connectedValues: [],
+      connectedInterests: [],
+      blobVariant: (Math.floor(Math.random() * 4) as 0 | 1 | 2 | 3),
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    const finalActivity = {
+      ...activity,
+      connectedGoalIds: [...activity.connectedGoalIds, ...newGoals.map(g => g.id)],
+    };
+
     await persist({
       ...roadmap,
-      activities: [...roadmap.activities, activity],
+      goals: [...roadmap.goals, ...newGoals],
+      activities: [...roadmap.activities, finalActivity],
+    });
+  }, [roadmap, persist]);
+
+  const handleCreateActivityInline = useCallback(async (
+    goalId: string,
+    title: string,
+    includeToday: boolean
+  ) => {
+    const now = new Date().toISOString();
+    const newActivity: Activity = {
+      id: crypto.randomUUID(),
+      title,
+      connectedGoalIds: [goalId],
+      completed: false,
+      includeToday,
+      subActivities: [],
+      createdAt: now,
+      updatedAt: now,
+    };
+    await persist({
+      ...roadmap,
+      activities: [...roadmap.activities, newActivity],
     });
   }, [roadmap, persist]);
 
@@ -396,6 +438,7 @@ export default function RoadmapPage() {
           onToggleSubActivityComplete={handleToggleSubActivityComplete}
           onDeleteActivity={handleDeleteActivity}
           onAddActivity={(goalId) => { setAddActivityForGoalId(goalId); setAddActivityOpen(true); }}
+          onCreateActivityInline={handleCreateActivityInline}
           onEditGoal={(g) => { setDetailGoalId(null); setEditingGoal(g); }}
         />
       )}

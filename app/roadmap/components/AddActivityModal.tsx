@@ -27,7 +27,7 @@ interface AddActivityModalProps {
   savedInterests: string[];
   savedCategories: string[];
   onClose: () => void;
-  onSave: (activity: Activity) => void;
+  onSave: (activity: Activity, newGoalTitles: string[]) => void;
 }
 
 export default function AddActivityModal({
@@ -45,6 +45,8 @@ export default function AddActivityModal({
   );
   const [includeToday, setIncludeToday] = useState(false);
   const [subActivityDrafts, setSubActivityDrafts] = useState<SubActivityDraft[]>([]);
+  const [newGoalDrafts, setNewGoalDrafts] = useState<string[]>([]);
+  const [newGoalInput, setNewGoalInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [showLifeFrame, setShowLifeFrame] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -110,7 +112,19 @@ export default function AddActivityModal({
       updatedAt: now,
     };
 
-    onSave(newActivity);
+    onSave(newActivity, newGoalDrafts);
+  };
+
+  const handleAddGoalDraft = () => {
+    const val = newGoalInput.trim();
+    if (val && !newGoalDrafts.includes(val) && !existingGoals.some(g => g.title === val)) {
+      setNewGoalDrafts(prev => [...prev, val]);
+      setNewGoalInput('');
+    }
+  };
+
+  const removeGoalDraft = (val: string) => {
+    setNewGoalDrafts(prev => prev.filter(v => v !== val));
   };
 
   const hasLifeFrame = savedCategories.length > 0 || savedValues.length > 0 || savedInterests.length > 0;
@@ -190,37 +204,76 @@ export default function AddActivityModal({
           )}
 
           {/* Connect to Goals */}
-          {existingGoals.length > 0 && (
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">
-                Connect to goals <span className="text-gray-400 font-normal">(select one or more)</span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {existingGoals.map(goal => {
-                  const isSelected = selectedGoalIds.includes(goal.id);
-                  return (
-                    <button
-                      key={goal.id}
-                      type="button"
-                      onClick={() => toggleGoal(goal.id)}
-                      className={`px-3 py-2 rounded-xl text-sm font-medium transition border-2 ${
-                        isSelected
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300'
-                      }`}
-                    >
-                      {isSelected && '✓ '}{goal.title}
-                    </button>
-                  );
-                })}
-              </div>
-              {selectedGoalIds.length === 0 && (
-                <p className="text-xs text-gray-400 mt-1.5 italic">
-                  No goals selected — this will be a personal activity
-                </p>
-              )}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-2">
+              Connect to goals <span className="text-gray-400 font-normal">(select one or more)</span>
+            </p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {existingGoals.map(goal => {
+                const isSelected = selectedGoalIds.includes(goal.id);
+                return (
+                  <button
+                    key={goal.id}
+                    type="button"
+                    onClick={() => toggleGoal(goal.id)}
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition border-2 ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300'
+                    }`}
+                  >
+                    {isSelected && '✓ '}{goal.title}
+                  </button>
+                );
+              })}
+              {newGoalDrafts.map(draft => (
+                <div
+                  key={draft}
+                  className="px-3 py-2 rounded-xl text-sm font-medium border-2 bg-purple-600 text-white border-purple-600 shadow-md flex items-center gap-2"
+                >
+                  <span className="text-purple-200 text-[10px] uppercase tracking-wider font-bold">New</span>
+                  {draft}
+                  <button
+                    type="button"
+                    onClick={() => removeGoalDraft(draft)}
+                    className="ml-1 text-purple-200 hover:text-white transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
             </div>
-          )}
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newGoalInput}
+                onChange={e => setNewGoalInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddGoalDraft();
+                  }
+                }}
+                placeholder="+ Create new goal..."
+                className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+              />
+              <button
+                type="button"
+                onClick={handleAddGoalDraft}
+                disabled={!newGoalInput.trim()}
+                className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+
+            {selectedGoalIds.length === 0 && newGoalDrafts.length === 0 && (
+              <p className="text-xs text-gray-400 mt-2 italic">
+                No goals selected — this will be a personal activity
+              </p>
+            )}
+          </div>
 
           {/* Activity title */}
           <div>
@@ -332,7 +385,7 @@ export default function AddActivityModal({
               disabled={!canSubmit}
               className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition disabled:opacity-50 shadow-lg shadow-emerald-200"
             >
-              {saving ? 'Saving…' : `Add Activity${selectedGoalIds.length > 0 ? ` → ${selectedGoalIds.length} goal${selectedGoalIds.length > 1 ? 's' : ''}` : ''}`}
+              {saving ? 'Saving…' : `Add Activity${(selectedGoalIds.length + newGoalDrafts.length) > 0 ? ` → ${(selectedGoalIds.length + newGoalDrafts.length)} goal${(selectedGoalIds.length + newGoalDrafts.length) > 1 ? 's' : ''}` : ''}`}
             </button>
           </div>
         </form>

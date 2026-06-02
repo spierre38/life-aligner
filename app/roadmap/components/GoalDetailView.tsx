@@ -55,7 +55,13 @@ interface AiCoachContent {
   profileHash: string;
 }
 
-function AiCoachPanel({ goal }: { goal: Goal }) {
+function AiCoachPanel({ 
+  goal, 
+  onCreateActivityInline 
+}: { 
+  goal: Goal; 
+  onCreateActivityInline: (goalId: string, title: string, includeToday: boolean) => void; 
+}) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [content, setContent] = useState<AiCoachContent | null>(goal.aiContent ?? null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -90,9 +96,14 @@ function AiCoachPanel({ goal }: { goal: Goal }) {
     if (!content) {
       fetchCoaching(false);
     } else {
-      setStatus('done');
+      const isStale = new Date(content.generatedAt).toDateString() !== new Date().toDateString();
+      if (isStale) {
+        fetchCoaching(true);
+      } else {
+        setStatus('done');
+      }
     }
-  }, [goal.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [goal.id, content]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="hidden lg:flex w-80 flex-shrink-0 flex-col border-l border-white/5 bg-slate-950/50 backdrop-blur-sm">
@@ -167,9 +178,25 @@ function AiCoachPanel({ goal }: { goal: Goal }) {
                 <p className="text-amber-300/60 text-[10px] font-bold uppercase tracking-wider mb-2">Ideas for today</p>
                 <ul className="space-y-2">
                   {content.dailyIdeas.map((idea, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 bg-amber-400/50 rounded-full mt-1.5 flex-shrink-0" />
-                      <span className="text-white/70 text-sm leading-relaxed">{idea}</span>
+                    <li key={i} className="flex flex-col gap-1.5 group">
+                      <div className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 bg-amber-400/50 rounded-full mt-1.5 flex-shrink-0" />
+                        <span className="text-white/70 text-sm leading-relaxed">{idea}</span>
+                      </div>
+                      <div className="flex items-center gap-2 pl-3.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onCreateActivityInline(goal.id, idea, false)}
+                          className="text-[10px] font-semibold text-white/50 hover:text-white/80 bg-white/5 hover:bg-white/10 px-2 py-1 rounded transition"
+                        >
+                          + Activity
+                        </button>
+                        <button
+                          onClick={() => onCreateActivityInline(goal.id, idea, true)}
+                          className="text-[10px] font-semibold text-amber-200 hover:text-amber-100 bg-amber-500/20 hover:bg-amber-500/30 px-2 py-1 rounded transition"
+                        >
+                          + To-Do
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -225,6 +252,7 @@ interface GoalDetailViewProps {
   onToggleSubActivityComplete: (activityId: string, subActivityId: string, completed: boolean) => void;
   onDeleteActivity: (activityId: string) => void;
   onAddActivity: (goalId: string) => void;
+  onCreateActivityInline: (goalId: string, title: string, includeToday: boolean) => void;
   onEditGoal: (goal: Goal) => void;
 }
 
@@ -394,6 +422,7 @@ export default function GoalDetailView({
   onToggleSubActivityComplete,
   onDeleteActivity,
   onAddActivity,
+  onCreateActivityInline,
   onEditGoal,
 }: GoalDetailViewProps) {
   const [mounted, setMounted] = useState(false);
@@ -726,7 +755,7 @@ export default function GoalDetailView({
         </div>
 
         {/* ── AI Coaching sidebar ─────────────────────────────────── */}
-        <AiCoachPanel goal={goal} />
+        <AiCoachPanel goal={goal} onCreateActivityInline={onCreateActivityInline} />
       </div>
     </div>
   );
