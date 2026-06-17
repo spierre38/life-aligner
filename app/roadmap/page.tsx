@@ -37,6 +37,7 @@ import GoalDetailView from './components/GoalDetailView';
 import AddActivityModal from './components/AddActivityModal';
 import ReviewActivitiesView from './components/ReviewActivitiesView';
 import { CompletionModal } from './components/CompletionModal';
+import type { CompletionData } from './components/CompletionModal';
 import { uploadReflectionImage } from '@/lib/reflection-images';
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -203,22 +204,41 @@ export default function RoadmapPage() {
     setCompletingGoal(goal);
   }, []);
 
-  /** Persist the goal as completed with an optional finalReflection */
-  const handleCompleteConfirm = useCallback(async (finalReflection: string) => {
+  /** Persist the goal as completed with optional reflection, quote, and cover photo */
+  const handleCompleteConfirm = useCallback(async (data: CompletionData) => {
     if (!completingGoal) return;
     const now = new Date().toISOString();
+
+    // Upload cover photo if provided
+    let coverImageUrl: string | undefined;
+    if (data.coverFile && userId) {
+      try {
+        // Reuse uploadReflectionImage — store cover at userId/covers/goalId.jpg
+        coverImageUrl = await uploadReflectionImage(data.coverFile, userId, 'covers', completingGoal.id) ?? undefined;
+      } catch (err) {
+        console.warn('[completion] Cover upload failed:', err);
+      }
+    }
+
     await persist({
       ...roadmap,
       goals: roadmap.goals.map(g =>
         g.id === completingGoal.id
-          ? { ...g, status: 'completed' as const, completedAt: now, finalReflection: finalReflection || undefined }
+          ? {
+              ...g,
+              status: 'completed' as const,
+              completedAt: now,
+              finalReflection: data.finalReflection || undefined,
+              chapterQuote: data.chapterQuote || undefined,
+              coverImageUrl: coverImageUrl || undefined,
+            }
           : g
       ),
     });
     setCompletingGoal(null);
     setDetailGoalId(null);
     showToast.success('Chapter saved to your Reflections ✨');
-  }, [completingGoal, roadmap, persist]);
+  }, [completingGoal, roadmap, persist, userId]);
 
   /** Add a journal entry (reflection) to a goal, optionally with images */
   const handleAddReflection = useCallback(async (

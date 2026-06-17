@@ -852,3 +852,98 @@ section {
     transition: none;
   }
 }
+
+/* ─── Micro-Animations ────────────────────────────────────────────────────────
+   Premium interaction feedback animations for workbook pages.
+   Usage: add class via JS state, remove after ~600ms.
+─────────────────────────────────────────────────────────────────────────────── */
+
+/* Selection pulse — used when toggling a card or pill selected */
+@keyframes select-pulse {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.055); }
+  65%  { transform: scale(0.975); }
+  100% { transform: scale(1); }
+}
+
+.animate-select-pulse {
+  animation: select-pulse 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Pop-in — used for new tags, pills, and list items appearing */
+@keyframes pop-in {
+  0%   { transform: scale(0.65); opacity: 0; }
+  70%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Slide-in-up — used for step transitions and new content blocks */
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered children — apply to parent, children get sequential delays */
+.stagger-children > * {
+  opacity: 0;
+  animation: slide-in-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.stagger-children > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2)  { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3)  { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4)  { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8)  { animation-delay: 350ms; }
+.stagger-children > *:nth-child(9)  { animation-delay: 400ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 450ms; }
+
+/* Check-draw — animated checkmark stroke (apply to the SVG path) */
+@keyframes check-draw {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.animate-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: check-draw 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+}
+
+/* Shimmer glow — subtle pulse on selected state borders */
+@keyframes border-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.0); }
+  50%       { box-shadow: 0 0 0 3px rgba(255,255,255,0.12); }
+}
+
+.animate-border-glow {
+  animation: border-glow 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-select-pulse,
+  .animate-pop-in,
+  .animate-slide-in-up,
+  .stagger-children > *,
+  .animate-check-draw,
+  .animate-border-glow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -13,12 +13,13 @@
  *   - Enhanced stats
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import { uploadReflectionImage } from '@/lib/reflection-images';
 import type { Goal, Reflection, RoadmapData } from '@/lib/roadmap-types';
 
 // Mesh gradient rotation — each chapter gets a distinct aurora color
@@ -146,14 +147,46 @@ function ImageGallery({ images }: { images: string[] }) {
 
 // ─── Chapter Card ────────────────────────────────────────────────────────────
 
-function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
+interface ChapterCardProps {
+  goal: Goal;
+  index: number;
+  userId: string | null;
+  onUpdateChapter: (goalId: string, updates: { chapterQuote?: string; coverImageUrl?: string }) => Promise<void>;
+}
+
+function ChapterCard({ goal, index, userId, onUpdateChapter }: ChapterCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editQuote, setEditQuote] = useState(goal.chapterQuote ?? '');
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(goal.coverImageUrl ?? null);
+  const [saving, setSaving] = useState(false);
+
   const mesh = CHAPTER_MESHES[index % CHAPTER_MESHES.length];
   const reflections = goal.reflections ?? [];
   const reflectionCount = reflections.length;
   const duration = formatDuration(goal.createdAt, goal.completedAt);
   const completedDate = goal.completedAt ? formatDate(goal.completedAt) : null;
-  const hasCover = !!goal.coverImageUrl;
+  const hasCover = !!editCoverPreview;
+
+  const handleSaveEdit = async () => {
+    setSaving(true);
+    let coverImageUrl: string | undefined = goal.coverImageUrl;
+    if (editCoverFile && userId) {
+      try {
+        coverImageUrl = await uploadReflectionImage(editCoverFile, userId, 'covers', goal.id) ?? goal.coverImageUrl;
+      } catch (e) {
+        console.warn('[chapter-edit] Cover upload failed:', e);
+      }
+    }
+    await onUpdateChapter(goal.id, {
+      chapterQuote: editQuote.trim() || undefined,
+      coverImageUrl,
+    });
+    setSaving(false);
+    setEditing(false);
+    setEditCoverFile(null);
+  };
 
   return (
     <article
@@ -166,9 +199,9 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
     >
       {/* Chapter cover — custom image or mesh gradient */}
       <div
-        className="relative h-48 md:h-56"
+        className="relative h-48 md:h-56 group"
         style={{
-          background: hasCover ? `url(${goal.coverImageUrl}) center/cover no-repeat` : mesh,
+          background: hasCover ? `url(${editCoverPreview}) center/cover no-repeat` : mesh,
         }}
       >
         {/* Dark overlay for text readability on both cover types */}
@@ -195,6 +228,18 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
           </div>
         )}
 
+        {/* Edit button — appears on hover */}
+        <button
+          onClick={() => setEditing(e => !e)}
+          className="absolute bottom-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5"
+          style={{ background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)' }}
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Edit chapter
+        </button>
+
         {/* Goal title overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
           <h2
@@ -207,10 +252,107 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
         </div>
       </div>
 
+      {/* Inline edit panel */}
+      {editing && (
+        <div
+          className="px-6 py-5 border-b"
+          style={{ background: 'var(--color-surface-2)', borderColor: 'var(--color-border)' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--color-text-dim)' }}>
+            Edit Chapter
+          </p>
+
+          {/* Quote */}
+          <div className="mb-4">
+            <label className="block text-xs mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Chapter quote</label>
+            <input
+              type="text"
+              value={editQuote}
+              onChange={e => setEditQuote(e.target.value.slice(0, 120))}
+              placeholder="One sentence that captures this chapter..."
+              className="w-full rounded-xl px-4 py-2.5 text-sm transition focus:outline-none"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text)',
+              }}
+            />
+          </div>
+
+          {/* Cover photo */}
+          <div className="mb-4">
+            <label className="block text-xs mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Cover photo</label>
+            {editCoverPreview ? (
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                  <img src={editCoverPreview} alt="Cover" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex gap-2">
+                  <label
+                    className="text-xs cursor-pointer px-3 py-1.5 rounded-lg transition hover:opacity-80"
+                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+                  >
+                    Replace
+                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (f) { setEditCoverFile(f); setEditCoverPreview(URL.createObjectURL(f)); }
+                      }}
+                    />
+                  </label>
+                  <button
+                    onClick={() => { setEditCoverFile(null); setEditCoverPreview(null); }}
+                    className="text-xs px-3 py-1.5 rounded-lg transition hover:opacity-80"
+                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-dim)' }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label
+                className="flex items-center gap-2 p-3 rounded-xl cursor-pointer transition hover:opacity-80"
+                style={{ border: '1px dashed var(--color-border)', color: 'var(--color-text-dim)' }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs">Upload a cover photo</span>
+                <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) { setEditCoverFile(f); setEditCoverPreview(URL.createObjectURL(f)); }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleSaveEdit}
+              disabled={saving}
+              className="px-4 py-2 rounded-xl text-xs font-semibold transition disabled:opacity-50"
+              style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </button>
+            <button
+              onClick={() => { setEditing(false); setEditQuote(goal.chapterQuote ?? ''); setEditCoverPreview(goal.coverImageUrl ?? null); setEditCoverFile(null); }}
+              className="px-4 py-2 rounded-xl text-xs font-medium transition hover:opacity-70"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Card body */}
       <div className="p-6">
         {/* Chapter quote */}
-        {goal.chapterQuote && (
+        {(goal.chapterQuote || editQuote) && !editing && (
           <div className="mb-5 pl-4" style={{ borderLeft: '3px solid var(--color-text-dim)' }}>
             <p
               className="text-lg italic leading-relaxed"
@@ -331,6 +473,8 @@ export default function ReflectionsPage() {
   const [loading, setLoading] = useState(true);
   const [chapters, setChapters] = useState<Goal[]>([]);
   const [activeSince, setActiveSince] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -343,6 +487,8 @@ export default function ReflectionsPage() {
         router.push('/login');
         return;
       }
+
+      setUserId(userWithProfile.user.id);
 
       const { data } = await supabase
         .from('workbook_entries')
@@ -372,6 +518,7 @@ export default function ReflectionsPage() {
         setActiveSince(earliest);
       }
 
+      if (roadmap) setRoadmapData(roadmap);
       setChapters(completed);
       setLoading(false);
     };
@@ -391,6 +538,28 @@ export default function ReflectionsPage() {
     // Sort years descending
     return Object.entries(groups).sort(([a], [b]) => Number(b) - Number(a));
   }, [chapters]);
+
+  /** Persist quote/cover edits made directly on the Chapters page */
+  const handleUpdateChapter = useCallback(async (
+    goalId: string,
+    updates: { chapterQuote?: string; coverImageUrl?: string }
+  ) => {
+    if (!userId || !roadmapData) return;
+    const updatedRoadmap: RoadmapData = {
+      ...roadmapData,
+      goals: roadmapData.goals.map(g =>
+        g.id === goalId ? { ...g, ...updates } : g
+      ),
+    };
+    await supabase
+      .from('workbook_entries')
+      .upsert(
+        { user_id: userId, category: 'roadmap', content: updatedRoadmap },
+        { onConflict: 'user_id,category' }
+      );
+    setRoadmapData(updatedRoadmap);
+    setChapters(prev => prev.map(g => g.id === goalId ? { ...g, ...updates } : g));
+  }, [userId, roadmapData]);
 
   // Enhanced stats
   const totalReflections = chapters.reduce((sum, g) => sum + (g.reflections?.length ?? 0), 0);
@@ -539,7 +708,15 @@ export default function ReflectionsPage() {
                     {goals.map((goal, i) => {
                       // Calculate global index for mesh gradient rotation
                       const globalIdx = chapters.indexOf(goal);
-                      return <ChapterCard key={goal.id} goal={goal} index={globalIdx >= 0 ? globalIdx : i} />;
+                      return (
+                        <ChapterCard
+                          key={goal.id}
+                          goal={goal}
+                          index={globalIdx >= 0 ? globalIdx : i}
+                          userId={userId}
+                          onUpdateChapter={handleUpdateChapter}
+                        />
+                      );
                     })}
                   </div>
                 </div>

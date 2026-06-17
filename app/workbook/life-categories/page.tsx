@@ -94,6 +94,10 @@ export default function LifeCategoriesWorksheet() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 
+    // Micro-animation state
+    const [pulsingCard, setPulsingCard] = useState<string | null>(null);
+    const [newPurposeIdx, setNewPurposeIdx] = useState<number | null>(null);
+
     // Worksheet data
     const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
     const [categoryDetails, setCategoryDetails] = useState<LifeCategory[]>([]);
@@ -227,7 +231,12 @@ export default function LifeCategoriesWorksheet() {
     };
 
     const addPurposeElement = () => {
-        setPurposeElements(prev => [...prev, { name: '', description: '' }]);
+        setPurposeElements(prev => {
+            const next = [...prev, { name: '', description: '' }];
+            setNewPurposeIdx(next.length - 1);
+            setTimeout(() => setNewPurposeIdx(null), 500);
+            return next;
+        });
     };
 
     const updatePurposeElement = (index: number, field: 'name' | 'description', value: string) => {
@@ -278,10 +287,13 @@ export default function LifeCategoriesWorksheet() {
         return (
             <>
                 <AuthNavbar />
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16 flex items-center justify-center">
+                <div className="min-h-screen pt-16 flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
                     <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-600 font-medium">Checking prerequisites...</p>
+                        <div
+                            className="w-14 h-14 rounded-full animate-spin mx-auto mb-4"
+                            style={{ border: '2px solid var(--color-border)', borderTopColor: 'var(--color-text)' }}
+                        />
+                        <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>Checking prerequisites...</p>
                     </div>
                 </div>
             </>
@@ -293,15 +305,18 @@ export default function LifeCategoriesWorksheet() {
             <>
                 <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
                 <AuthNavbar />
-                <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 pt-16 flex items-center justify-center">
-                    <div className="text-center animate-fade-in">
-                        <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                <div className="min-h-screen pt-16 flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
+                    <div className="text-center">
+                        <div
+                            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
+                            style={{ background: 'rgba(0,200,100,0.15)', border: '2px solid rgba(0,200,100,0.4)' }}
+                        >
+                            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'rgba(0,200,100,0.9)' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">LifeFrame Complete! ✨</h2>
-                        <p className="text-xl text-gray-600">Redirecting to your dashboard...</p>
+                        <h2 className="text-4xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>LifeFrame Complete ✦</h2>
+                        <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>Redirecting to your dashboard...</p>
                     </div>
                 </div>
             </>
@@ -326,38 +341,45 @@ export default function LifeCategoriesWorksheet() {
     return (
         <>
             <AuthNavbar />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-16">
+            <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
                 {/* Progress Bar */}
-                <div className="fixed top-16 left-0 w-full h-1.5 bg-gray-200 z-40">
+                <div className="fixed top-16 left-0 w-full h-[2px] z-40" style={{ background: 'var(--color-surface-2)' }}>
                     <div
-                        className="h-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 transition-all duration-500"
-                        style={{ width: `${(currentStep / 5) * 100}%` }}
+                        className="h-full transition-all duration-500"
+                        style={{ width: `${(currentStep / 5) * 100}%`, background: 'var(--color-text)' }}
                     ></div>
                 </div>
 
                 <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
                     {/* Step 1: Introduction */}
                     {currentStep === 1 && (
-                        <div className="min-h-[80vh] flex items-center justify-center animate-fade-in">
+                        <div className="min-h-[80vh] flex items-center justify-center animate-slide-in-up">
                             <div className="max-w-2xl w-full">
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20">
+                                <div
+                                    className="rounded-3xl p-8 md:p-12"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
                                     <div className="text-center">
                                         <div className="w-20 h-20 mx-auto mb-6">
                                             <CategoriesPieIllustration />
                                         </div>
-                                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                                        <h1 className="text-4xl md:text-5xl font-light mb-6" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                             Life Categories
                                         </h1>
-                                        <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
-                                            Life Categories are the areas of your life that you want to focus on and set goals within. They provide structure to your Roadmap and help ensure you're making progress across all asepects of your life that matter to you.
+                                        <p className="text-lg md:text-xl leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>
+                                            Life Categories are the areas of your life that you want to focus on and set goals within. They provide structure to your Roadmap and help ensure you're making progress across all aspects of your life that matter to you.
                                         </p>
-                                        <div className="inline-flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full text-sm font-semibold text-indigo-700 mb-8">
+                                        <div
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8"
+                                            style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+                                        >
                                             <span>📚</span>
                                             <span>LifeFrame • Step 3 of 3 • 15-20 min</span>
                                         </div>
                                         <button
                                             onClick={() => setCurrentStep(2)}
-                                            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-indigo-600/20 transition-all transform hover:scale-105"
+                                            className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
+                                            style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
                                             Let's Begin →
                                         </button>
@@ -369,10 +391,11 @@ export default function LifeCategoriesWorksheet() {
 
                     {/* Step 2: Video + Tim's Example Combined */}
                     {currentStep === 2 && (
-                        <div className="min-h-[80vh] py-8 animate-fade-in">
+                        <div className="min-h-[80vh] py-8 animate-slide-in-up">
                             <button
                                 onClick={() => setCurrentStep(1)}
-                                className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-6 transition"
+                                className="flex items-center gap-2 mb-6 transition hover:opacity-70"
+                                style={{ color: 'var(--color-text-muted)' }}
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -382,7 +405,10 @@ export default function LifeCategoriesWorksheet() {
 
                             <div className="grid lg:grid-cols-2 gap-6 mb-8">
                                 {/* Video Card 1 */}
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
+                                <div
+                                    className="rounded-3xl overflow-hidden"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+                                >
                                     <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 aspect-video flex items-center justify-center">
                                         <div className="text-center">
                                             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
@@ -401,17 +427,20 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                        <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                                             Understanding Categories & Purpose
                                         </h3>
-                                        <p className="text-gray-600 text-sm">
+                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                             Tim explains how to identify your life areas and define meaningful purpose elements.
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Video Card 2 */}
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
+                                <div
+                                    className="rounded-3xl overflow-hidden"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+                                >
                                     <div className="relative bg-gradient-to-br from-purple-900 to-pink-900 aspect-video flex items-center justify-center">
                                         <div className="text-center">
                                             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
@@ -430,38 +459,41 @@ export default function LifeCategoriesWorksheet() {
                                         </div>
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                        <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                                             Defining Your Purpose
                                         </h3>
-                                        <p className="text-gray-600 text-sm">
+                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                             Tim explores how purpose is driven by long-term goals that are meaningful to you and beneficial to others.
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Tim's Example */}
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-4">Tim's Example</h3>
+                                <div
+                                    className="rounded-3xl p-6"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+                                >
+                                    <h3 className="text-2xl font-light mb-4" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Tim's Example</h3>
                                     <div className="space-y-3">
-                                        <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-                                            <h4 className="font-bold text-gray-900 mb-1">Health</h4>
-                                            <p className="text-xs text-gray-600">Physical • Mental</p>
+                                        <div className="p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Health</h4>
+                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Physical • Mental</p>
                                         </div>
-                                        <div className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-100">
-                                            <h4 className="font-bold text-gray-900 mb-1">Relationships</h4>
-                                            <p className="text-xs text-gray-600">Family • Friends • Partnership • Community</p>
+                                        <div className="p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Relationships</h4>
+                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Family • Friends • Partnership • Community</p>
                                         </div>
-                                        <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
-                                            <h4 className="font-bold text-gray-900 mb-1">Purpose</h4>
-                                            <p className="text-xs text-gray-600">Help Others • Environment</p>
+                                        <div className="p-4 rounded-xl" style={{ background: 'rgba(0,200,100,0.08)', border: '1px solid rgba(0,200,100,0.2)' }}>
+                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Purpose</h4>
+                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Help Others • Environment</p>
                                         </div>
-                                        <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border border-yellow-100">
-                                            <h4 className="font-bold text-gray-900 mb-1">Career</h4>
-                                            <p className="text-xs text-gray-600">Business Growth • Leadership Development • Impacting Academic Growth</p>
+                                        <div className="p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Career</h4>
+                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Business Growth • Leadership Development • Impacting Academic Growth</p>
                                         </div>
                                     </div>
-                                    <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                                        <p className="text-xs text-gray-700">
+                                    <div className="mt-4 p-3 rounded-lg" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                                             💡 <strong>Insight:</strong> Categories evolved over time—balance came gradually.
                                         </p>
                                     </div>
@@ -469,20 +501,23 @@ export default function LifeCategoriesWorksheet() {
                             </div>
 
                             {/* Purpose Explanation */}
-                            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-yellow-100">
+                            <div
+                                className="rounded-3xl p-8"
+                                style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,180,0,0.2)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+                            >
                                 <div className="flex flex-col md:flex-row gap-6 items-start">
                                     <div className="w-16 h-16 flex-shrink-0">
                                         <PurposeStarIllustration />
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-3">Understanding Purpose</h3>
-                                        <p className="text-gray-700 mb-4">
+                                        <h3 className="text-2xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Understanding Purpose</h3>
+                                        <p className="mb-4" style={{ color: 'var(--color-text-muted)' }}>
                                             Purpose is driven by long-term goals that are <strong>meaningful to you</strong> and <strong>beneficial to others</strong>.
                                         </p>
                                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                                             <div>
-                                                <p className="font-semibold text-gray-900 mb-2">Questions to ask:</p>
-                                                <ul className="space-y-1 text-gray-700">
+                                                <p className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Questions to ask:</p>
+                                                <ul className="space-y-1" style={{ color: 'var(--color-text-muted)' }}>
                                                     <li>• What impact do I want to make?</li>
                                                     <li>• How can I help others?</li>
                                                     <li>• What do I want my life to look like in 5 years?</li>
@@ -491,8 +526,8 @@ export default function LifeCategoriesWorksheet() {
                                                 </ul>
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-gray-900 mb-2">Examples:</p>
-                                                <ul className="space-y-1 text-gray-700">
+                                                <p className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Examples:</p>
+                                                <ul className="space-y-1" style={{ color: 'var(--color-text-muted)' }}>
                                                     <li>• Help Others</li>
                                                     <li>• Mentor Youth</li>
                                                     <li>• Address Loneliness</li>
@@ -509,7 +544,8 @@ export default function LifeCategoriesWorksheet() {
                             <div className="mt-8 flex justify-center">
                                 <button
                                     onClick={() => setCurrentStep(3)}
-                                    className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-indigo-600/20 transition-all"
+                                    className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
+                                    style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                 >
                                     Start Building →
                                 </button>
@@ -519,57 +555,70 @@ export default function LifeCategoriesWorksheet() {
 
                     {/* Step 3: Enhanced Builder */}
                     {currentStep === 3 && (
-                        <div className="py-8 animate-fade-in">
+                        <div className="py-8 animate-slide-in-up">
                             <button
                                 onClick={() => setCurrentStep(2)}
-                                className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-6 transition group"
+                                className="flex items-center gap-2 mb-6 transition hover:opacity-70 group"
+                                style={{ color: 'var(--color-text-muted)' }}
                             >
                                 <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                <span className="font-medium">Back to Learning</span>
+                                        <span className="font-medium">Back to Learning</span>
                             </button>
 
                             {/* Header with Enhanced Progress */}
                             <div className="mb-8">
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div
+                                            className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                                            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+                                        >
+                                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Build Your LifeFrame</h1>
-                                            <p className="text-gray-600">Choose categories, then define your purpose</p>
+                                            <h1 className="text-3xl md:text-4xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Build Your LifeFrame</h1>
+                                            <p style={{ color: 'var(--color-text-muted)' }}>Choose categories, then define your purpose</p>
                                         </div>
                                     </div>
 
                                     {/* Completion Indicator */}
                                     <div className="flex items-center gap-2">
                                         {categoryDetails.length >= 3 && purposeElements.filter(p => p.name.trim()).length >= 1 ? (
-                                            <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-4 py-2 rounded-full">
-                                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <div
+                                                className="flex items-center gap-2 px-4 py-2 rounded-full"
+                                                style={{ background: 'rgba(0,200,100,0.12)', border: '1px solid rgba(0,200,100,0.3)' }}
+                                            >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" style={{ color: 'rgba(0,200,100,0.9)' }}>
                                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                 </svg>
-                                                <span className="text-sm font-bold text-green-700">Ready to save!</span>
+                                                <span className="text-sm font-semibold" style={{ color: 'rgba(0,200,100,0.9)' }}>Ready to save!</span>
                                             </div>
                                         ) : (
-                                            <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-full">
-                                                <svg className="w-5 h-5 text-blue-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div
+                                                className="flex items-center gap-2 px-4 py-2 rounded-full"
+                                                style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
+                                            >
+                                                <svg className="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--color-text-dim)' }}>
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <span className="text-sm font-bold text-blue-700">Keep building...</span>
+                                                <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Keep building...</span>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Enhanced Progress Tracker with Milestones */}
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 hover:shadow-[0_8px_30px_rgb(99,102,241,0.15)] hover:-translate-y-0.5 transition-all duration-300">
+                                {/* Enhanced Progress Tracker */}
+                                <div
+                                    className="rounded-2xl p-6 transition-all duration-300"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                                >
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-sm font-bold text-gray-700">Your Progress</span>
-                                        <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                                        <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Your Progress</span>
+                                        <span className="text-2xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                             {categoryDetails.length + purposeElements.filter(p => p.name.trim()).length} / 4
                                         </span>
                                     </div>
@@ -577,8 +626,8 @@ export default function LifeCategoriesWorksheet() {
                                     {/* Visual Progress Steps */}
                                     <div className="flex items-center gap-3 mb-4">
                                         {[
-                                            { label: '3 Categories', count: 3, type: 'categories' },
-                                            { label: '1 Purpose', count: 1, type: 'purpose' }
+                                            { label: '3 Categories', count: 3, type: 'categories', color: 'rgba(100,120,255,0.8)' },
+                                            { label: '1 Purpose', count: 1, type: 'purpose', color: 'rgba(255,180,0,0.8)' }
                                         ].map((milestone, idx) => {
                                             const currentCount = milestone.type === 'categories' ? categoryDetails.length : purposeElements.filter(p => p.name.trim()).length;
                                             const isComplete = currentCount >= milestone.count;
@@ -586,18 +635,15 @@ export default function LifeCategoriesWorksheet() {
                                             return (
                                                 <div key={idx} className="flex-1">
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs font-medium text-gray-600">{milestone.label}</span>
-                                                        <span className={`text-xs font-bold ${isComplete ? 'text-green-600' : 'text-gray-400'}`}>
+                                                        <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{milestone.label}</span>
+                                                        <span className="text-xs font-semibold" style={{ color: isComplete ? milestone.color : 'var(--color-text-dim)' }}>
                                                             {currentCount}/{milestone.count}
                                                         </span>
                                                     </div>
-                                                    <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                                                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-surface-2)' }}>
                                                         <div
-                                                            className={`h-full transition-all duration-500 ${milestone.type === 'categories'
-                                                                ? 'bg-gradient-to-r from-blue-500 to-indigo-600'
-                                                                : 'bg-gradient-to-r from-yellow-500 to-orange-600'
-                                                                }`}
-                                                            style={{ width: `${Math.min(100, (currentCount / milestone.count) * 100)}%` }}
+                                                            className="h-full transition-all duration-500 rounded-full"
+                                                            style={{ width: `${Math.min(100, (currentCount / milestone.count) * 100)}%`, background: milestone.color }}
                                                         />
                                                     </div>
                                                 </div>
@@ -606,11 +652,11 @@ export default function LifeCategoriesWorksheet() {
                                     </div>
 
                                     {/* Motivational Message */}
-                                    <div className="flex items-start gap-2 bg-indigo-50 rounded-lg p-3">
-                                        <svg className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <div className="flex items-start gap-2 rounded-lg p-3" style={{ background: 'var(--color-surface-2)' }}>
+                                        <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" style={{ color: 'var(--color-text-dim)' }}>
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                         </svg>
-                                        <p className="text-xs text-indigo-800">
+                                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                                             {categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0 ? (
                                                 <><strong>Getting started:</strong> Pick 3-5 life areas that matter most to you, then add at least one purpose element.</>
                                             ) : categoryDetails.length < 3 ? (
@@ -632,17 +678,23 @@ export default function LifeCategoriesWorksheet() {
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-blue-600/20">
+                                            <div
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
+                                                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                                            >
                                                 1
                                             </div>
                                             <div>
-                                                <h2 className="text-2xl font-bold text-gray-900">Life Categories</h2>
-                                                <p className="text-sm text-gray-600">Pick 3-8 areas to focus on</p>
+                                                <h2 className="text-2xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Life Categories</h2>
+                                                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Pick 3-8 areas to focus on</p>
                                             </div>
                                         </div>
                                         {categoryDetails.length > 0 && (
-                                            <div className="bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
-                                                <span className="text-sm font-bold text-blue-700">{categoryDetails.length} selected</span>
+                                            <div
+                                                className="px-3 py-1 rounded-full"
+                                                style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
+                                            >
+                                                <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>{categoryDetails.length} selected</span>
                                             </div>
                                         )}
                                     </div>
@@ -662,11 +714,16 @@ export default function LifeCategoriesWorksheet() {
                                         ].map((cat) => {
                                             const isSelected = selectedCategories.has(cat.name);
                                             const colors = getCategoryColor(cat.name);
+                                            const isPulsing = pulsingCard === cat.name;
 
                                             return (
                                                 <button
                                                     key={cat.name}
                                                     onClick={() => {
+                                                        // Trigger select-pulse animation
+                                                        setPulsingCard(cat.name);
+                                                        setTimeout(() => setPulsingCard(null), 420);
+
                                                         const newSelected = new Set(selectedCategories);
                                                         if (isSelected) {
                                                             newSelected.delete(cat.name);
@@ -680,13 +737,18 @@ export default function LifeCategoriesWorksheet() {
                                                         }
                                                         setSelectedCategories(newSelected);
                                                     }}
-                                                    className={`
-                                                        group relative p-4 rounded-2xl transition-all duration-300 text-left
-                                                        ${isSelected
-                                                            ? `bg-gradient-to-br ${colors.bg} text-white shadow-xl ${colors.glow} scale-[1.02] ring-2 ring-white ring-offset-2`
-                                                            : 'bg-white/80 backdrop-blur-sm border-2 border-gray-100 text-gray-700 shadow-[0_4px_20px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-indigo-300 hover:scale-[1.01]'
-                                                        }
-                                                    `}
+                                                    className={[
+                                                        'group relative p-4 rounded-2xl transition-all duration-300 text-left',
+                                                        isSelected
+                                                            ? `bg-gradient-to-br ${colors.bg} text-white shadow-xl ${colors.glow} scale-[1.02] ring-2 ring-white/20 ring-offset-2 ring-offset-transparent`
+                                                            : '',
+                                                        isPulsing ? 'animate-select-pulse' : ''
+                                                    ].join(' ')}
+                                                    style={!isSelected ? {
+                                                        background: 'var(--color-surface)',
+                                                        border: '1px solid var(--color-border)',
+                                                        color: 'var(--color-text-muted)'
+                                                    } : undefined}
                                                 >
                                                     <div className="flex items-start justify-between mb-2">
                                                         <div className="text-3xl">{cat.emoji}</div>
@@ -698,10 +760,14 @@ export default function LifeCategoriesWorksheet() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className={`font-bold mb-1 ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                                                    <div className={`font-semibold mb-1 ${isSelected ? 'text-white' : ''}`}
+                                                        style={!isSelected ? { color: 'var(--color-text)' } : undefined}
+                                                    >
                                                         {cat.name}
                                                     </div>
-                                                    <div className={`text-xs ${isSelected ? 'text-white/90' : 'text-gray-500'}`}>
+                                                    <div className={`text-xs ${isSelected ? 'text-white/80' : ''}`}
+                                                        style={!isSelected ? { color: 'var(--color-text-dim)' } : undefined}
+                                                    >
                                                         {cat.desc}
                                                     </div>
                                                 </button>
@@ -735,9 +801,14 @@ export default function LifeCategoriesWorksheet() {
                                                             group relative p-4 rounded-2xl transition-all duration-300 text-left
                                                             ${isSelected
                                                                 ? `bg-gradient-to-br ${colors.bg} text-white shadow-xl ${colors.glow} scale-[1.02] ring-2 ring-white ring-offset-2`
-                                                                : 'bg-white/80 backdrop-blur-sm border-2 border-gray-100 text-gray-700 shadow-[0_4px_20px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:border-indigo-300 hover:scale-[1.01]'
+                                                                : ''
                                                             }
                                                         `}
+                                                        style={!isSelected ? {
+                                                            background: 'var(--color-surface)',
+                                                            border: '1px solid var(--color-border)',
+                                                            color: 'var(--color-text-muted)'
+                                                        } : undefined}
                                                     >
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="text-3xl">✨</div>
@@ -749,10 +820,14 @@ export default function LifeCategoriesWorksheet() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className={`font-bold mb-1 ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                                                        <div className={`font-semibold mb-1 ${isSelected ? 'text-white' : ''}`}
+                                                        style={!isSelected ? { color: 'var(--color-text)' } : undefined}
+                                                    >
                                                             {cat.name}
                                                         </div>
-                                                        <div className={`text-xs ${isSelected ? 'text-white/90' : 'text-gray-500'}`}>
+                                                        <div className={`text-xs ${isSelected ? 'text-white/80' : ''}`}
+                                                        style={!isSelected ? { color: 'var(--color-text-dim)' } : undefined}
+                                                    >
                                                             Custom category
                                                         </div>
                                                     </button>
@@ -761,8 +836,11 @@ export default function LifeCategoriesWorksheet() {
                                     </div>
 
                                     {/* Custom Category Input */}
-                                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-dashed border-gray-300">
-                                        <p className="text-xs font-semibold text-gray-600 mb-3">Don't see what you need?</p>
+                                    <div
+                                        className="rounded-2xl p-4 border-2 border-dashed"
+                                        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+                                    >
+                                        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>Don't see what you need?</p>
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
@@ -770,39 +848,43 @@ export default function LifeCategoriesWorksheet() {
                                                 value={customCategory}
                                                 onChange={(e) => setCustomCategory(e.target.value)}
                                                 onKeyPress={(e) => e.key === 'Enter' && addCategory()}
-                                                className="flex-1 px-4 py-2.5 rounded-xl border-2 border-gray-300 focus:border-indigo-600 focus:outline-none text-sm font-medium text-gray-900"
+                                                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none transition"
+                                                style={{
+                                                    background: 'var(--color-surface-2)',
+                                                    border: '1px solid var(--color-border)',
+                                                    color: 'var(--color-text)',
+                                                }}
                                             />
                                             <button
                                                 onClick={addCategory}
                                                 disabled={!customCategory.trim()}
-                                                className={`
-                                                    px-5 py-2.5 rounded-xl font-bold text-sm transition-all
-                                                    ${customCategory.trim()
-                                                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-600/20'
-                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                    }
-                                                `}
+                                                className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-30"
+                                                style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
                                             >
                                                 Add
                                             </button>
                                         </div>
                                     </div>
 
-                                    {/* Sub-Categories Section - ONLY shows if categories selected */}
+                                    {/* Sub-Categories Section */}
                                     {categoryDetails.length > 0 && (
-                                        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-[0_4px_20px_rgb(0,0,0,0.08)] border border-white/20">
+                                        <div
+                                            className="rounded-2xl p-5"
+                                            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                                        >
                                             <div className="flex items-center justify-between mb-4">
-                                                <h3 className="font-bold text-gray-900">Add Details (Optional)</h3>
-                                                <span className="text-xs text-gray-500">Refine your categories</span>
+                                                <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>Add Details (Optional)</h3>
+                                                <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Refine your categories</span>
                                             </div>
                                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                                                 {categoryDetails.map((category) => (
                                                     <div
                                                         key={category.name}
-                                                        className="group bg-gray-50 rounded-xl p-3 border border-gray-200 hover:border-indigo-300 hover:bg-white transition-all"
+                                                        className="group rounded-xl p-3 transition-all"
+                                                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
                                                     >
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <span className="font-semibold text-gray-900 text-sm">{category.name}</span>
+                                                            <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{category.name}</span>
                                                             <button
                                                                 onClick={() => {
                                                                     setCategoryDetails(prev => prev.filter(c => c.name !== category.name));
@@ -812,7 +894,8 @@ export default function LifeCategoriesWorksheet() {
                                                                         return newSet;
                                                                     });
                                                                 }}
-                                                                className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
+                                                                className="opacity-0 group-hover:opacity-100 transition-all"
+                                                                style={{ color: 'var(--color-text-muted)' }}
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -820,15 +903,19 @@ export default function LifeCategoriesWorksheet() {
                                                             </button>
                                                         </div>
 
-                                                        {/* Show existing sub-categories */}
+                                                        {/* Sub-category tags */}
                                                         {category.subCategories.length > 0 && (
                                                             <div className="flex flex-wrap gap-1.5 mb-2">
                                                                 {category.subCategories.map((sub) => (
-                                                                    <div key={sub} className="bg-indigo-100 px-2 py-0.5 rounded-md text-xs text-indigo-700 flex items-center gap-1">
+                                                                    <div
+                                                                        key={sub}
+                                                                        className="px-2 py-0.5 rounded-md text-xs flex items-center gap-1"
+                                                                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+                                                                    >
                                                                         {sub}
                                                                         <button
                                                                             onClick={() => removeSubCategory(category.name, sub)}
-                                                                            className="hover:text-red-600"
+                                                                            className="hover:opacity-70 transition"
                                                                         >
                                                                             ×
                                                                         </button>
@@ -837,7 +924,6 @@ export default function LifeCategoriesWorksheet() {
                                                             </div>
                                                         )}
 
-                                                        {/* Add sub-category input */}
                                                         {editingCategory === category.name ? (
                                                             <div className="flex gap-1.5">
                                                                 <input
@@ -846,21 +932,21 @@ export default function LifeCategoriesWorksheet() {
                                                                     value={customSubCategory}
                                                                     onChange={(e) => setCustomSubCategory(e.target.value)}
                                                                     onKeyPress={(e) => e.key === 'Enter' && addSubCategory(category.name)}
-                                                                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:border-indigo-600 focus:outline-none text-xs text-gray-900"
+                                                                    className="flex-1 px-3 py-1.5 rounded-lg focus:outline-none text-xs transition"
+                                                                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
                                                                     autoFocus
                                                                 />
                                                                 <button
                                                                     onClick={() => addSubCategory(category.name)}
-                                                                    className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-xs font-bold"
+                                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
+                                                                    style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
                                                                 >
                                                                     ✓
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => {
-                                                                        setEditingCategory(null);
-                                                                        setCustomSubCategory('');
-                                                                    }}
-                                                                    className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-xs"
+                                                                    onClick={() => { setEditingCategory(null); setCustomSubCategory(''); }}
+                                                                    className="px-3 py-1.5 rounded-lg text-xs transition hover:opacity-70"
+                                                                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
                                                                 >
                                                                     ✕
                                                                 </button>
@@ -868,7 +954,8 @@ export default function LifeCategoriesWorksheet() {
                                                         ) : (
                                                             <button
                                                                 onClick={() => setEditingCategory(category.name)}
-                                                                className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+                                                                className="text-xs font-semibold transition hover:opacity-70"
+                                                                style={{ color: 'var(--color-text-muted)' }}
                                                             >
                                                                 + Add sub-category
                                                             </button>
@@ -884,34 +971,49 @@ export default function LifeCategoriesWorksheet() {
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 text-white rounded-xl flex items-center justify-center font-bold shadow-lg shadow-yellow-500/20">
+                                            <div
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                                                style={{ background: 'rgba(255,180,0,0.15)', border: '1px solid rgba(255,180,0,0.3)' }}
+                                            >
                                                 ⭐
                                             </div>
                                             <div>
-                                                <h2 className="text-2xl font-bold text-gray-900">Your Purpose</h2>
-                                                <p className="text-sm text-gray-600">How will you make an impact?</p>
+                                                <h2 className="text-2xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Your Purpose</h2>
+                                                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>How will you make an impact?</p>
                                             </div>
                                         </div>
                                         {purposeElements.filter(p => p.name.trim()).length > 0 && (
-                                            <div className="bg-yellow-50 border border-yellow-200 px-3 py-1 rounded-full">
-                                                <span className="text-sm font-bold text-yellow-700">{purposeElements.filter(p => p.name.trim()).length} added</span>
+                                            <div
+                                                className="px-3 py-1 rounded-full"
+                                                style={{ background: 'rgba(255,180,0,0.1)', border: '1px solid rgba(255,180,0,0.2)' }}
+                                            >
+                                                <span className="text-sm font-semibold" style={{ color: 'rgba(255,180,0,0.8)' }}>{purposeElements.filter(p => p.name.trim()).length} added</span>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Quick Examples */}
-                                    <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-4 border-2 border-yellow-200">
-                                        <p className="text-xs font-semibold text-gray-700 mb-3">💡 Quick Add:</p>
+                                    <div
+                                        className="rounded-2xl p-4"
+                                        style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,180,0,0.2)' }}
+                                    >
+                                        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>💡 Quick Add:</p>
                                         <div className="flex flex-wrap gap-2">
                                             {['Help Others', 'Help Environment', 'Mentor Youth', 'Address Loneliness'].map((example) => (
                                                 <button
                                                     key={example}
                                                     onClick={() => {
                                                         if (!purposeElements.find(p => p.name === example)) {
-                                                            setPurposeElements(prev => [...prev, { name: example, description: '' }]);
+                                                            setPurposeElements(prev => {
+                                                                const next = [...prev, { name: example, description: '' }];
+                                                                setNewPurposeIdx(next.length - 1);
+                                                                setTimeout(() => setNewPurposeIdx(null), 500);
+                                                                return next;
+                                                            });
                                                         }
                                                     }}
-                                                    className="px-3 py-1.5 bg-white hover:bg-yellow-100 text-gray-700 rounded-lg text-xs font-medium transition shadow-sm hover:shadow-md"
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition hover:opacity-80 active:scale-95"
+                                                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
                                                 >
                                                     + {example}
                                                 </button>
@@ -922,7 +1024,11 @@ export default function LifeCategoriesWorksheet() {
                                     {/* Purpose Elements */}
                                     <div className="space-y-3">
                                         {purposeElements.map((element, index) => (
-                                            <div key={index} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-gray-100 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-300">
+                                            <div
+                                                key={index}
+                                                className={['rounded-2xl p-4 transition-all duration-300', index === newPurposeIdx ? 'animate-pop-in' : ''].join(' ')}
+                                                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                                            >
                                                 <div className="flex gap-3">
                                                     <div className="flex-1">
                                                         <input
@@ -930,19 +1036,30 @@ export default function LifeCategoriesWorksheet() {
                                                             placeholder="Purpose element (e.g., Help Others)"
                                                             value={element.name}
                                                             onChange={(e) => updatePurposeElement(index, 'name', e.target.value)}
-                                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl focus:border-yellow-500 focus:outline-none font-semibold text-sm mb-2 text-gray-900"
+                                                            className="w-full px-3 py-2 rounded-xl font-semibold text-sm mb-2 focus:outline-none transition"
+                                                            style={{
+                                                                background: 'var(--color-surface-2)',
+                                                                border: '1px solid var(--color-border)',
+                                                                color: 'var(--color-text)',
+                                                            }}
                                                         />
                                                         <textarea
                                                             placeholder="How will you achieve this? (optional)"
                                                             value={element.description}
                                                             onChange={(e) => updatePurposeElement(index, 'description', e.target.value)}
                                                             rows={2}
-                                                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-xl focus:border-yellow-500 focus:outline-none text-xs text-gray-900"
+                                                            className="w-full px-3 py-2 rounded-xl text-xs focus:outline-none transition"
+                                                            style={{
+                                                                background: 'var(--color-surface-2)',
+                                                                border: '1px solid var(--color-border)',
+                                                                color: 'var(--color-text)',
+                                                            }}
                                                         />
                                                     </div>
                                                     <button
                                                         onClick={() => removePurposeElement(index)}
-                                                        className="text-gray-400 hover:text-red-500 transition"
+                                                        className="transition hover:text-red-400"
+                                                        style={{ color: 'var(--color-text-dim)' }}
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -954,7 +1071,8 @@ export default function LifeCategoriesWorksheet() {
 
                                         <button
                                             onClick={addPurposeElement}
-                                            className="w-full py-3.5 border-2 border-dashed border-yellow-300 rounded-2xl text-yellow-700 hover:bg-yellow-50 font-semibold text-sm transition hover:border-yellow-400"
+                                            className="w-full py-3.5 border-2 border-dashed rounded-2xl text-sm font-semibold transition"
+                                            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
                                         >
                                             + Add Purpose Element
                                         </button>
@@ -962,11 +1080,15 @@ export default function LifeCategoriesWorksheet() {
                                 </div>
                             </div>
 
-                            {/* Save Button - Fixed at bottom */}
-                            <div className="sticky bottom-6 flex justify-center gap-3 pt-6">
+                            {/* Save Button */}
+                            <div
+                                className="flex justify-center gap-3 pt-8 mt-4"
+                                style={{ borderTop: '1px solid var(--color-border)' }}
+                            >
                                 <button
                                     onClick={() => setCurrentStep(2)}
-                                    className="px-6 py-3 bg-white/80 backdrop-blur-sm border-2 border-gray-300 text-gray-700 rounded-full font-bold hover:border-indigo-600 hover:text-indigo-600 transition shadow-lg"
+                                    className="px-6 py-3 rounded-full font-semibold transition hover:opacity-70"
+                                    style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}
                                 >
                                     ← Back
                                 </button>
@@ -988,13 +1110,8 @@ export default function LifeCategoriesWorksheet() {
                                         URL.revokeObjectURL(url);
                                     }}
                                     disabled={categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0}
-                                    className={`
-                    px-6 py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105 flex items-center gap-2
-                    ${(categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0)
-                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-xl'
-                                        }
-                  `}
+                                    className="px-6 py-3 rounded-full font-semibold transition flex items-center gap-2 disabled:opacity-30"
+                                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1004,13 +1121,8 @@ export default function LifeCategoriesWorksheet() {
                                 <button
                                     onClick={saveCategories}
                                     disabled={saving || (categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0)}
-                                    className={`
-                    px-10 py-3 rounded-full font-bold shadow-2xl transition-all transform hover:scale-105
-                    ${saving || (categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0)
-                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:shadow-green-600/20'
-                                        }
-                  `}
+                                    className="px-10 py-3 rounded-full font-semibold transition hover:opacity-90 active:scale-[0.98] disabled:opacity-30"
+                                    style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                 >
                                     {saving ? (
                                         <span className="flex items-center gap-2">

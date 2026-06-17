@@ -138,6 +138,13 @@ export default function InterestsWorksheet() {
         new Set() // Start with all categories collapsed
     );
     const [searchTerm, setSearchTerm] = useState('');
+    // Micro-animation state
+    const [pulsingPill, setPulsingPill] = useState<string | null>(null);
+
+    const triggerPillPulse = (interest: string) => {
+        setPulsingPill(interest);
+        setTimeout(() => setPulsingPill(null), 420);
+    };
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -258,10 +265,13 @@ export default function InterestsWorksheet() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
                 <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-800">Checking prerequisites...</p>
+                    <div
+                        className="w-14 h-14 rounded-full animate-spin mx-auto mb-4"
+                        style={{ border: '2px solid var(--color-border)', borderTopColor: 'var(--color-text)' }}
+                    />
+                    <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>Checking prerequisites...</p>
                 </div>
             </div>
         );
@@ -271,15 +281,18 @@ export default function InterestsWorksheet() {
         return (
             <>
             <Confetti show={showConfetti} onComplete={() => setShowConfetti(false)} />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
-                <div className="text-center animate-fade-in">
-                    <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
+                <div className="text-center">
+                    <div
+                        className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6"
+                        style={{ background: 'rgba(0,200,100,0.15)', border: '2px solid rgba(0,200,100,0.4)' }}
+                    >
+                        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'rgba(0,200,100,0.9)' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4">Interests Saved! ✨</h2>
-                    <p className="text-xl text-gray-800">Redirecting to your dashboard...</p>
+                    <h2 className="text-4xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Interests Saved ✦</h2>
+                    <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>Redirecting to your dashboard...</p>
                 </div>
             </div>
             </>
@@ -289,44 +302,47 @@ export default function InterestsWorksheet() {
     return (
         <>
             <AuthNavbar />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-16 relative">
-                {/* Background Image with Overlay */}
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-[url('/backgrounds/interests-bg.png')] bg-cover bg-center opacity-[0.12]"></div>
-                </div>
+            <div className="min-h-screen pt-16 relative" style={{ background: 'var(--color-bg)' }}>
                 {/* Progress Bar */}
-                <div className="fixed top-16 left-0 w-full h-2 bg-gray-200 z-40">
+                <div className="fixed top-16 left-0 w-full h-[2px] z-40" style={{ background: 'var(--color-surface-2)' }}>
                     <div
-                        className="h-full bg-gradient-to-r from-pink-600 to-orange-600 transition-all duration-500"
-                        style={{ width: `${(currentStep / 5) * 100}%` }}
+                        className="h-full transition-all duration-500"
+                        style={{ width: `${(currentStep / 5) * 100}%`, background: 'var(--color-text)' }}
                     ></div>
                 </div>
 
                 <div className="max-w-6xl mx-auto px-4 py-12 relative z-10">
                     {/* Step 1: Introduction */}
                     {currentStep === 1 && (
-                        <div className="min-h-screen flex items-center justify-center animate-fade-in">
+                        <div className="min-h-screen flex items-center justify-center animate-slide-in-up">
                             <div className="max-w-2xl w-full">
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20">
+                                <div
+                                    className="rounded-3xl p-8 md:p-12"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
                                     <div className="text-center">
                                         <div className="w-20 h-20 mx-auto mb-6">
                                             <HeartIllustration />
                                         </div>
-                                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                                        <h1 className="text-4xl md:text-5xl font-light mb-6" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                             Your Interests
                                         </h1>
-                                        <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-6">
+                                        <p className="text-lg md:text-xl leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>
                                             Interests are activities that bring you joy and rejuvenate you. The sweet spot?
                                             Finding interests that allow you to deploy your creativity to benefit others.
                                         </p>
-                                        <div className="inline-flex items-center gap-2 bg-pink-50 px-4 py-2 rounded-full text-sm font-semibold text-pink-700 mb-8">
+                                        <div
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8"
+                                            style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+                                        >
                                             {IntIcons.heart('w-4 h-4')}
                                             <span>LifeFrame • Step 2 of 3 • 10-15 min</span>
                                         </div>
                                         <div>
                                             <button
                                                 onClick={() => setCurrentStep(2)}
-                                                className="bg-gradient-to-r from-pink-600 to-orange-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-pink-600/20 transition-all transform hover:scale-105"
+                                                className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
+                                                style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                             >
                                                 Let's Explore →
                                             </button>
@@ -339,54 +355,63 @@ export default function InterestsWorksheet() {
 
                     {/* Step 2: Video Placeholder */}
                     {currentStep === 2 && (
-                        <div className="min-h-screen flex items-center justify-center animate-fade-in">
+                        <div className="min-h-screen flex items-center justify-center animate-slide-in-up">
                             <div className="max-w-4xl w-full">
                                 <button
-                                    onClick={() => router.push('/dashboard')}
-                                    className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                    onClick={() => setCurrentStep(1)}
+                                    className="flex items-center gap-2 mb-8 transition hover:opacity-70"
+                                    style={{ color: 'var(--color-text-muted)' }}
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                     </svg>
-                                    Back to Dashboard
+                                    Back
                                 </button>
 
-                                <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-                                    <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 aspect-video flex items-center justify-center">
+                                <div
+                                    className="rounded-3xl overflow-hidden"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
+                                    <div className="relative bg-gradient-to-br from-gray-900 to-black aspect-video flex items-center justify-center">
                                         <div className="text-center">
-                                            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
+                                            <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(255,255,255,0.1)' }}>
                                                 <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-white text-2xl font-semibold mb-2">Video Coming Soon</p>
-                                            <p className="text-gray-300">Understanding Your Interests</p>
+                                            <p className="text-white text-2xl font-light mb-2" style={{ letterSpacing: '-0.02em' }}>Video Coming Soon</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.5)' }} className="text-sm">Understanding Your Interests</p>
                                         </div>
-                                        <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded text-sm">
+                                        <div
+                                            className="absolute bottom-4 right-4 text-white px-3 py-1 rounded text-sm"
+                                            style={{ background: 'rgba(0,0,0,0.6)' }}
+                                        >
                                             3 min
                                         </div>
                                     </div>
 
                                     <div className="p-8">
-                                        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                                        <h2 className="text-3xl font-light mb-4" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                             Joy, Rejuvenation, and Creativity
                                         </h2>
-                                        <p className="text-gray-800 mb-6">
+                                        <p className="mb-6" style={{ color: 'var(--color-text-muted)' }}>
                                             Learn how to identify activities that bring you happiness and energy. While allowing you to deploy your creativity to help others.
                                         </p>
 
                                         <div className="flex gap-4">
                                             <button
-                                                onClick={() => setCurrentStep(3)}
-                                                className="flex-1 bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl transition"
-                                            >
-                                                Continue →
-                                            </button>
-                                            <button
                                                 onClick={() => setCurrentStep(1)}
-                                                className="px-8 py-4 rounded-full font-bold border-2 border-gray-300 text-gray-800 hover:border-orange-600 hover:text-orange-600 transition"
+                                                className="px-8 py-4 rounded-full font-semibold transition hover:opacity-70"
+                                                style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}
                                             >
                                                 ← Back
+                                            </button>
+                                            <button
+                                                onClick={() => setCurrentStep(3)}
+                                                className="flex-1 px-8 py-4 rounded-full font-semibold transition hover:opacity-90"
+                                                style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
+                                            >
+                                                Continue →
                                             </button>
                                         </div>
                                     </div>
@@ -397,11 +422,12 @@ export default function InterestsWorksheet() {
 
                     {/* Step 3: Real Examples */}
                     {currentStep === 3 && (
-                        <div className="min-h-screen flex items-center justify-center py-20 animate-fade-in">
+                        <div className="min-h-screen flex items-center justify-center py-20 animate-slide-in-up">
                             <div className="max-w-5xl w-full">
                                 <button
                                     onClick={() => setCurrentStep(2)}
-                                    className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                    className="flex items-center gap-2 mb-8 transition hover:opacity-70"
+                                    style={{ color: 'var(--color-text-muted)' }}
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -409,25 +435,28 @@ export default function InterestsWorksheet() {
                                     Back
                                 </button>
 
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 p-8 md:p-12">
-                                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                                <div
+                                    className="rounded-3xl p-8 md:p-12"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
+                                    <h2 className="text-3xl md:text-4xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                         How Interests Show Up in Life
                                     </h2>
-                                    <p className="text-lg text-gray-600 mb-8">
+                                    <p className="text-lg mb-8" style={{ color: 'var(--color-text-muted)' }}>
                                         Let's look at how different people experience their interests:
                                     </p>
 
                                     <div className="space-y-8">
                                         {/* Tim's Example */}
-                                        <div className="border-l-4 border-blue-500 pl-6">
-                                            <h3 className="text-2xl font-bold text-gray-900 mb-3">Tim's Interests</h3>
+                                        <div className="pl-6" style={{ borderLeft: '3px solid var(--color-border)' }}>
+                                            <h3 className="text-2xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Tim's Interests</h3>
 
                                             <div className="space-y-4">
-                                                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                                    <span className="text-blue-500 mt-0.5">{IntIcons.tv()}</span>
+                                                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                    <span style={{ color: 'var(--color-text-muted)' }} className="mt-0.5">{IntIcons.tv()}</span>
                                                     <div>
-                                                        <p className="font-semibold text-gray-900 mb-1">Watching Sports</p>
-                                                        <p className="text-gray-700 text-sm">
+                                                        <p className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Watching Sports</p>
+                                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                             <strong>Joy:</strong> ✓ Yes, he enjoys it<br />
                                                             <strong>Rejuvenation:</strong> ✗ Not really<br />
                                                             <strong>Creativity:</strong> ✗ No<br />
@@ -436,11 +465,11 @@ export default function InterestsWorksheet() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-start gap-3 p-4 bg-green-50 rounded-xl border border-green-100">
-                                                    <span className="text-green-500 mt-0.5">{IntIcons.runner()}</span>
+                                                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                    <span style={{ color: 'rgba(0,200,100,0.8)' }} className="mt-0.5">{IntIcons.runner()}</span>
                                                     <div>
-                                                        <p className="font-semibold text-gray-900 mb-1">HIIT Classes</p>
-                                                        <p className="text-gray-700 text-sm">
+                                                        <p className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>HIIT Classes</p>
+                                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                             <strong>Joy:</strong> ✓ Yes, loves the challenge<br />
                                                             <strong>Rejuvenation:</strong> ✓ Feels energized after<br />
                                                             <strong>Creativity:</strong> ✗ No<br />
@@ -449,19 +478,19 @@ export default function InterestsWorksheet() {
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl border-2 border-green-400">
-                                                    <span className="text-emerald-600 mt-0.5">{IntIcons.handshake()}</span>
+                                                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(0,200,100,0.08)', border: '2px solid rgba(0,200,100,0.3)' }}>
+                                                    <span style={{ color: 'rgba(0,200,100,0.9)' }} className="mt-0.5">{IntIcons.handshake()}</span>
                                                     <div>
-                                                        <p className="font-semibold text-gray-900 mb-1">Problem Solving & Partnerships</p>
-                                                        <p className="text-gray-700 text-sm">
+                                                        <p className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Problem Solving & Partnerships</p>
+                                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                             <strong>Joy:</strong> ✓ Yes, finds it exciting<br />
                                                             <strong>Rejuvenation:</strong> ✓ Gets energy from it<br />
                                                             <strong>Creativity:</strong> ✓ Uses creative thinking<br />
-                                                            <strong>Helping Others:</strong> ✓ Created jobs, helped millions, now assisting multiple non-profit orgranizations
+                                                            <strong>Helping Others:</strong> ✓ Created jobs, helped millions, now assisting multiple non-profit organizations
                                                         </p>
                                                         <div className="flex items-center gap-1.5 mt-2">
-                                                            <span className="text-emerald-600">{IntIcons.target('w-4 h-4')}</span>
-                                                            <p className="text-emerald-700 font-semibold text-sm">The Sweet Spot!</p>
+                                                            <span style={{ color: 'rgba(0,200,100,0.9)' }}>{IntIcons.target('w-4 h-4')}</span>
+                                                            <p className="font-semibold text-sm" style={{ color: 'rgba(0,200,100,0.9)' }}>The Sweet Spot!</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -470,44 +499,44 @@ export default function InterestsWorksheet() {
 
                                         {/* Other Examples */}
                                         <div className="grid md:grid-cols-2 gap-5">
-                                            <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:shadow-md transition-shadow">
-                                                <h4 className="text-lg font-bold text-gray-900 mb-2">Jess - Art School Owner</h4>
-                                                <p className="text-gray-700 text-sm mb-2">
+                                            <div className="p-6 rounded-2xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                <h4 className="text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>Jess - Art School Owner</h4>
+                                                <p className="text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
                                                     <strong>Interests:</strong> Painting & Teaching
                                                 </p>
-                                                <p className="text-gray-700 text-sm">
+                                                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                     <strong>Joy:</strong> ✓ Loves creating art and sharing it<br />
                                                     <strong>Rejuvenation:</strong> ✓ Feels alive when painting<br />
                                                     <strong>Creativity:</strong> ✓ Expresses herself through art<br />
                                                     <strong>Help Others:</strong> ✓ Addresses adult loneliness through community art classes
                                                 </p>
                                                 <div className="flex items-center gap-1.5 mt-2">
-                                                    <span className="text-emerald-600">{IntIcons.target('w-4 h-4')}</span>
-                                                    <p className="text-emerald-700 font-semibold text-sm">The Sweet Spot!</p>
+                                                    <span style={{ color: 'rgba(0,200,100,0.9)' }}>{IntIcons.target('w-4 h-4')}</span>
+                                                    <p className="font-semibold text-sm" style={{ color: 'rgba(0,200,100,0.9)' }}>The Sweet Spot!</p>
                                                 </div>
                                             </div>
 
-                                            <div className="p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100 hover:shadow-md transition-shadow">
-                                                <h4 className="text-lg font-bold text-gray-900 mb-2">Laura - Fitness Trainer, Group Class Instructor</h4>
-                                                <p className="text-gray-700 text-sm mb-2">
+                                            <div className="p-6 rounded-2xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                <h4 className="text-lg font-medium mb-2" style={{ color: 'var(--color-text)' }}>Laura - Fitness Trainer, Group Class Instructor</h4>
+                                                <p className="text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
                                                     <strong>Interests:</strong> Fitness, Nutrition
                                                 </p>
-                                                <p className="text-gray-700 text-sm">
+                                                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                     <strong>Joy:</strong> ✓ Loves the energy of group classes<br />
                                                     <strong>Rejuvenation:</strong> ✓ Gets energized by teaching and working out<br />
                                                     <strong>Creativity:</strong> ✓ Creates new workout routines and programs<br />
                                                     <strong>Help Others:</strong> ✓ Helps others achieve their health goals
                                                 </p>
                                                 <div className="flex items-center gap-1.5 mt-2">
-                                                    <span className="text-emerald-600">{IntIcons.target('w-4 h-4')}</span>
-                                                    <p className="text-emerald-700 font-semibold text-sm">The Sweet Spot!</p>
+                                                    <span style={{ color: 'rgba(0,200,100,0.9)' }}>{IntIcons.target('w-4 h-4')}</span>
+                                                    <p className="font-semibold text-sm" style={{ color: 'rgba(0,200,100,0.9)' }}>The Sweet Spot!</p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-5">
-                                            <span className="text-amber-500 flex-shrink-0 mt-0.5">{IntIcons.lightbulb('w-5 h-5')}</span>
-                                            <p className="text-gray-700 text-sm">
+                                        <div className="flex items-start gap-3 rounded-xl p-5" style={{ background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.2)' }}>
+                                            <span style={{ color: 'rgba(255,180,0,0.8)' }} className="flex-shrink-0 mt-0.5">{IntIcons.lightbulb('w-5 h-5')}</span>
+                                            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                 <strong>Key Insight:</strong> All interests are valid and bring value to your life.
                                                 But the most fulfilling interests combine joy, rejuvenation, creativity, and service to others.
                                             </p>
@@ -517,7 +546,8 @@ export default function InterestsWorksheet() {
                                     <div className="mt-10">
                                         <button
                                             onClick={() => setCurrentStep(4)}
-                                            className="w-full bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-xl hover:shadow-pink-600/20 transition"
+                                            className="w-full px-8 py-4 rounded-full font-semibold transition hover:opacity-90"
+                                            style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
                                             Next: Finding Your Sweet Spot →
                                         </button>
@@ -529,11 +559,12 @@ export default function InterestsWorksheet() {
 
                     {/* Step 4: The Sweet Spot */}
                     {currentStep === 4 && (
-                        <div className="min-h-screen flex items-center justify-center py-20 animate-fade-in">
+                        <div className="min-h-screen flex items-center justify-center py-20 animate-slide-in-up">
                             <div className="max-w-4xl w-full">
                                 <button
                                     onClick={() => setCurrentStep(3)}
-                                    className="text-gray-800 hover:text-gray-900 flex items-center gap-2 mb-8 transition"
+                                    className="flex items-center gap-2 mb-8 transition hover:opacity-70"
+                                    style={{ color: 'var(--color-text-muted)' }}
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -541,83 +572,95 @@ export default function InterestsWorksheet() {
                                     Back
                                 </button>
 
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20 p-8 md:p-12">
+                                <div
+                                    className="rounded-3xl p-8 md:p-12"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
                                     <div className="text-center mb-10">
-                                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-orange-500/20">
+                                        <div
+                                            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                                            style={{ background: 'rgba(255,180,0,0.15)', border: '1px solid rgba(255,180,0,0.3)', color: 'rgba(255,180,0,0.9)' }}
+                                        >
                                             {IntIcons.target('w-7 h-7')}
                                         </div>
-                                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                                        <h2 className="text-3xl md:text-4xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                             Finding Your Sweet Spot
                                         </h2>
-                                        <p className="text-lg text-gray-600">
+                                        <p className="text-lg" style={{ color: 'var(--color-text-muted)' }}>
                                             Two types of interests to identify
                                         </p>
                                     </div>
 
                                     <div className="space-y-6">
-                                        <div className="flex items-start gap-4 p-7 bg-gradient-to-br from-pink-50 to-orange-50 rounded-2xl border border-pink-100">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-orange-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-pink-500/20">
+                                        <div className="flex items-start gap-4 p-7 rounded-2xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                            <div
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'rgba(255,80,160,0.15)', border: '1px solid rgba(255,80,160,0.3)', color: 'rgba(255,80,160,0.9)' }}
+                                            >
                                                 {IntIcons.check('w-5 h-5')}
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                                <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                                                     Existing Interests
                                                 </h3>
-                                                <p className="text-gray-700 mb-2">
+                                                <p className="mb-2" style={{ color: 'var(--color-text-muted)' }}>
                                                     These are activities you <strong>currently engage in</strong> that bring you joy and rejuvenation.
                                                 </p>
-                                                <p className="text-gray-500 text-sm">
+                                                <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>
                                                     Examples: Reading, hiking, cooking, playing guitar, watching movies, working out,
                                                     photography, gardening, gaming, painting...
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-start gap-4 p-7 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border border-blue-100">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-white flex-shrink-0 shadow-lg shadow-blue-500/20">
+                                        <div className="flex items-start gap-4 p-7 rounded-2xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                            <div
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                                style={{ background: 'rgba(100,120,255,0.15)', border: '1px solid rgba(100,120,255,0.3)', color: 'rgba(100,120,255,0.9)' }}
+                                            >
                                                 {IntIcons.star('w-5 h-5')}
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                                <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text)' }}>
                                                     Interests to Explore
                                                 </h3>
-                                                <p className="text-gray-700 mb-2">
+                                                <p className="mb-2" style={{ color: 'var(--color-text-muted)' }}>
                                                     These are activities you'd like to <strong>try over the next 3 months</strong>—things that spark your curiosity.
                                                 </p>
-                                                <p className="text-gray-500 text-sm">
+                                                <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>
                                                     Examples: Pottery class, learning an instrument, rock climbing, podcasting,
                                                     woodworking, yoga, creative writing, martial arts...
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="p-7 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+                                        <div className="p-7 rounded-2xl" style={{ background: 'rgba(0,200,100,0.07)', border: '1px solid rgba(0,200,100,0.2)' }}>
                                             <div className="flex items-center gap-2 mb-3">
-                                                <span className="text-emerald-500">{IntIcons.sparkle('w-5 h-5')}</span>
-                                                <h3 className="text-lg font-bold text-gray-900">The Ultimate Sweet Spot</h3>
+                                                <span style={{ color: 'rgba(0,200,100,0.8)' }}>{IntIcons.sparkle('w-5 h-5')}</span>
+                                                <h3 className="text-lg font-medium" style={{ color: 'var(--color-text)' }}>The Ultimate Sweet Spot</h3>
                                             </div>
-                                            <p className="text-gray-700 mb-4 text-sm">
+                                            <p className="mb-4 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                 As you go through life, look for opportunities to combine interests that:
                                             </p>
-                                            <ul className="space-y-2 text-gray-700 text-sm">
+                                            <ul className="space-y-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
+                                                    <span style={{ color: 'rgba(0,200,100,0.8)' }} className="font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span>Bring you <strong>joy</strong> (you genuinely enjoy them)</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
+                                                    <span style={{ color: 'rgba(0,200,100,0.8)' }} className="font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span>Provide <strong>rejuvenation</strong> (you feel energized, not drained)</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
+                                                    <span style={{ color: 'rgba(0,200,100,0.8)' }} className="font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span>Deploy your <strong>creativity</strong> (you can express yourself)</span>
                                                 </li>
                                                 <li className="flex items-start gap-2">
-                                                    <span className="text-green-500 font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
+                                                    <span style={{ color: 'rgba(0,200,100,0.8)' }} className="font-bold mt-0.5">{IntIcons.check('w-4 h-4')}</span>
                                                     <span><strong>Benefit others</strong> (your interest helps people)</span>
                                                 </li>
                                             </ul>
-                                            <p className="text-emerald-700 font-semibold mt-4 text-sm">
+                                            <p className="font-semibold mt-4 text-sm" style={{ color: 'rgba(0,200,100,0.8)' }}>
                                                 When all four align, you've found deep fulfillment.
                                             </p>
                                         </div>
@@ -626,7 +669,8 @@ export default function InterestsWorksheet() {
                                     <div className="mt-10">
                                         <button
                                             onClick={() => setCurrentStep(5)}
-                                            className="w-full bg-gradient-to-r from-pink-600 to-orange-600 text-white px-8 py-5 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-pink-600/20 transition-all transform hover:scale-105"
+                                            className="w-full px-8 py-5 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
+                                            style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
                                             Ready to Select Your Interests →
                                         </button>
@@ -639,10 +683,11 @@ export default function InterestsWorksheet() {
                     {/* Step 5: The Worksheet */}
                     {/* Step 5: Enhanced Unified Interests Selector */}
                     {currentStep === 5 && (
-                        <div className="py-8 animate-fade-in">
+                        <div className="py-8 animate-slide-in-up">
                             <button
                                 onClick={() => setCurrentStep(4)}
-                                className="text-gray-600 hover:text-gray-900 flex items-center gap-2 mb-6 transition group"
+                                className="flex items-center gap-2 mb-6 transition hover:opacity-70 group"
+                                style={{ color: 'var(--color-text-muted)' }}
                             >
                                 <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -653,149 +698,130 @@ export default function InterestsWorksheet() {
                             {/* Header */}
                             <div className="mb-8">
                                 <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-pink-600 via-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-600/20">
-                                        <svg className="w-9 h-9 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <div
+                                        className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                                        style={{ background: 'rgba(255,80,160,0.15)', border: '1px solid rgba(255,80,160,0.3)', color: 'rgba(255,80,160,0.9)' }}
+                                    >
+                                        <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Your Interests</h1>
-                                        <p className="text-gray-600">Discover what brings you joy and what you want to explore</p>
+                                        <h1 className="text-3xl md:text-4xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Your Interests</h1>
+                                        <p style={{ color: 'var(--color-text-muted)' }}>Discover what brings you joy and what you want to explore</p>
                                     </div>
                                 </div>
 
                                 {/* Enhanced Progress Tracker */}
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/20">
+                                <div
+                                    className="rounded-2xl p-6"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                                >
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-sm font-bold text-gray-700">Your Progress</span>
-                                        <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                                        <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Your Progress</span>
+                                        <span className="text-2xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                                             {selectedExisting.size + selectedExploring.size} / 10
                                         </span>
                                     </div>
 
                                     {/* Dual Progress Bars */}
-                                    <div className="flex gap-3 mb-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs font-medium text-gray-600">✓ Existing</span>
-                                                <span className={`text-xs font-bold ${selectedExisting.size >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                    {selectedExisting.size}/5
-                                                </span>
-                                            </div>
-                                            <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
-                                                    style={{ width: `${Math.min(100, (selectedExisting.size / 5) * 100)}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs font-medium text-gray-600">⭐ Exploring</span>
-                                                <span className={`text-xs font-bold ${selectedExploring.size >= 3 ? 'text-green-600' : 'text-gray-400'}`}>
-                                                    {selectedExploring.size}/5
-                                                </span>
-                                            </div>
-                                            <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-                                                    style={{ width: `${Math.min(100, (selectedExploring.size / 5) * 100)}%` }}
-                                                />
-                                            </div>
-                                        </div>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        {[
+                                            { label: 'Existing', count: 5, type: 'existing' as const, color: 'rgba(0,200,100,0.8)' },
+                                            { label: 'Exploring', count: 5, type: 'exploring' as const, color: 'rgba(100,120,255,0.8)' }
+                                        ].map((milestone) => {
+                                            const currentCount = milestone.type === 'existing' ? selectedExisting.size : selectedExploring.size;
+                                            const isComplete = currentCount >= milestone.count;
+
+                                            return (
+                                                <div key={milestone.type} className="flex-1">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>{milestone.label}</span>
+                                                        <span className="text-xs font-semibold" style={{ color: isComplete ? milestone.color : 'var(--color-text-dim)' }}>
+                                                            {currentCount}/{milestone.count}
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-surface-2)' }}>
+                                                        <div
+                                                            className="h-full transition-all duration-500 rounded-full"
+                                                            style={{ width: `${Math.min(100, (currentCount / milestone.count) * 100)}%`, background: milestone.color }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Contextual Tip */}
-                                    <div className="flex items-start gap-2 bg-indigo-50 rounded-lg p-3">
-                                        <svg className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <div
+                                        className="flex items-start gap-2 rounded-lg p-3"
+                                        style={{ background: 'var(--color-surface-2)' }}
+                                    >
+                                        <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20" style={{ color: 'var(--color-text-dim)' }}>
                                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                         </svg>
-                                        <p className="text-xs text-indigo-800">
+                                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                                             {selectedExisting.size === 0 && selectedExploring.size === 0 ? (
-                                                <><strong>Getting started:</strong> Select 5 existing interests and 5 to explore.</>
+                                                <><strong>Getting started:</strong> Pick at least 5 existing interests and 5 to explore.</>
                                             ) : selectedExisting.size < 5 ? (
-                                                <><strong>Good start!</strong> Add {5 - selectedExisting.size} more existing interests for a complete picture.</>
-                                            ) : selectedExploring.size === 0 ? (
-                                                <><strong>Great existing interests!</strong> Now add {5 - selectedExploring.size} new things you want to explore.</>
+                                                <><strong>Nice start!</strong> Add {5 - selectedExisting.size} more existing interest{selectedExisting.size === 4 ? '' : 's'} to reach the minimum.</>
+                                            ) : selectedExploring.size < 5 ? (
+                                                <><strong>Great existing interests!</strong> Now add {5 - selectedExploring.size} more interests to explore.</>
                                             ) : (
-                                                <><strong>Excellent work!</strong> You can save now or keep refining your selections.</>
+                                                <><strong>Excellent work!</strong> You can save now, or keep exploring more interests.</>
                                             )}
                                         </p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Instructions Card - Brief */}
-                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 mb-4 border border-blue-200">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-gray-700 text-sm"><strong>Select your Interests from the following 9 categories</strong>…you can also add your own!</p>
-                                        <div className="flex flex-wrap gap-x-6 gap-y-1 mt-1">
-                                            <p className="text-gray-700 text-xs"><strong className="text-green-600">✓ Existing:</strong> Things you currently enjoy</p>
-                                            <p className="text-gray-700 text-xs"><strong className="text-blue-600">⭐ Explore:</strong> New things to try</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            {/* Search */}
+                            <div className="relative mb-6">
+                                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--color-text-dim)' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search 125+ interests..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm transition focus:outline-none"
+                                    style={{
+                                        background: 'var(--color-surface)',
+                                        border: '1px solid var(--color-border)',
+                                        color: 'var(--color-text)',
+                                    }}
+                                />
                             </div>
 
-                            {/* Search Bar */}
+                            {/* Category Navigation Tabs */}
                             <div className="mb-4">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Search 125+ interests..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full px-5 py-3 pl-12 rounded-xl border-2 border-gray-300 text-gray-900 focus:border-orange-500 focus:outline-none shadow-sm text-sm"
-                                    />
-                                    <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    {searchTerm && (
-                                        <button
-                                            onClick={() => setSearchTerm('')}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Category Tabs - Grouped: Most Common then Other */}
-                            <div className="mb-4">
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">⭐ Most Common</p>
-                                <div className="flex flex-wrap gap-2 mb-3">
+                                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-dim)' }}>Most Common</p>
+                                <div className="flex flex-wrap gap-2">
                                     {MOST_COMMON_CATEGORIES.map((category) => {
                                         const existingCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExisting.has(i)).length;
                                         const exploringCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExploring.has(i)).length;
                                         const totalSelected = existingCount + exploringCount;
-                                        const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === ORDERED_CATEGORIES[0]);
+                                        const isActive = expandedCategories.has(category);
 
                                         return (
                                             <button
                                                 key={category}
-                                                onClick={() => {
-                                                    setExpandedCategories(new Set([category]));
+                                                onClick={() => { setExpandedCategories(new Set([category])); }}
+                                                className="px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap"
+                                                style={{
+                                                    background: isActive ? 'var(--color-text)' : 'var(--color-surface)',
+                                                    color: isActive ? 'var(--color-bg)' : 'var(--color-text-muted)',
+                                                    border: `1px solid ${isActive ? 'transparent' : 'var(--color-border)'}`,
+                                                    transform: isActive ? 'scale(1.04)' : undefined,
                                                 }}
-                                                className={`
-                                                    px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap
-                                                    ${isActive
-                                                        ? `bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white shadow-lg scale-105`
-                                                        : 'bg-white/80 text-gray-700 border border-gray-200 hover:border-gray-400 hover:shadow-sm'
-                                                    }
-                                                `}
                                             >
                                                 {category}
                                                 {totalSelected > 0 && (
-                                                    <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/30' : 'bg-gray-200'}`}>
+                                                    <span
+                                                        className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                                                        style={{ background: isActive ? 'rgba(0,0,0,0.2)' : 'var(--color-surface-2)' }}
+                                                    >
                                                         {totalSelected}
                                                     </span>
                                                 )}
@@ -803,7 +829,7 @@ export default function InterestsWorksheet() {
                                         );
                                     })}
                                 </div>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Other</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider mb-2 mt-6" style={{ color: 'var(--color-text-dim)' }}>Other</p>
                                 <div className="flex flex-wrap gap-2">
                                     {OTHER_CATEGORIES.map((category) => {
                                         const existingCount = (INTERESTS_BY_CATEGORY[category as keyof typeof INTERESTS_BY_CATEGORY] || []).filter(i => selectedExisting.has(i)).length;
@@ -814,20 +840,21 @@ export default function InterestsWorksheet() {
                                         return (
                                             <button
                                                 key={category}
-                                                onClick={() => {
-                                                    setExpandedCategories(new Set([category]));
+                                                onClick={() => { setExpandedCategories(new Set([category])); }}
+                                                className="px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap"
+                                                style={{
+                                                    background: isActive ? 'var(--color-text)' : 'var(--color-surface)',
+                                                    color: isActive ? 'var(--color-bg)' : 'var(--color-text-muted)',
+                                                    border: `1px solid ${isActive ? 'transparent' : 'var(--color-border)'}`,
+                                                    transform: isActive ? 'scale(1.04)' : undefined,
                                                 }}
-                                                className={`
-                                                    px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap
-                                                    ${isActive
-                                                        ? `bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white shadow-lg scale-105`
-                                                        : 'bg-white/80 text-gray-700 border border-gray-200 hover:border-gray-400 hover:shadow-sm'
-                                                    }
-                                                `}
                                             >
                                                 {category}
                                                 {totalSelected > 0 && (
-                                                    <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/30' : 'bg-gray-200'}`}>
+                                                    <span
+                                                        className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                                                        style={{ background: isActive ? 'rgba(0,0,0,0.2)' : 'var(--color-surface-2)' }}
+                                                    >
                                                         {totalSelected}
                                                     </span>
                                                 )}
@@ -846,14 +873,14 @@ export default function InterestsWorksheet() {
                                     const filteredInterests = filterInterests(interests);
 
                                     return (
-                                        <div key={category} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden">
+                                        <div key={category} className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                                             {/* Category Header */}
                                             <div className={`p-4 bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white`}>
-                                                <h3 className="text-lg font-bold">{category}</h3>
-                                                <p className="text-white/80 text-xs">Click to add as existing or exploring</p>
+                                                <h3 className="text-lg font-semibold">{category}</h3>
+                                                <p className="text-white/70 text-xs">Click to add as existing or exploring</p>
                                             </div>
 
-                                            {/* Interests Grid - Compact */}
+                                            {/* Interests Grid */}
                                             <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                                                 {filteredInterests.map((interest) => {
                                                     const isExisting = selectedExisting.has(interest);
@@ -863,41 +890,53 @@ export default function InterestsWorksheet() {
                                                     return (
                                                         <div
                                                             key={interest}
-                                                            className={`
-                                                                group relative rounded-xl p-3 transition-all duration-200 border-2 cursor-pointer
-                                                                ${isExisting
-                                                                    ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-md border-green-600'
+                                                            className={['group relative rounded-xl p-3 transition-all duration-200 cursor-pointer', pulsingPill === interest ? 'animate-select-pulse' : ''].join(' ')}
+                                                            style={{
+                                                                background: isExisting
+                                                                    ? 'rgba(0,200,100,0.15)'
                                                                     : isExploring
-                                                                        ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-md border-blue-600'
-                                                                        : 'bg-white/70 text-gray-800 hover:bg-white hover:shadow-sm border-gray-200'
-                                                                }
-                                                            `}
+                                                                        ? 'rgba(100,120,255,0.15)'
+                                                                        : 'var(--color-surface-2)',
+                                                                border: isExisting
+                                                                    ? '1px solid rgba(0,200,100,0.4)'
+                                                                    : isExploring
+                                                                        ? '1px solid rgba(100,120,255,0.4)'
+                                                                        : '1px solid var(--color-border)',
+                                                            }}
                                                         >
                                                             {/* Interest Name */}
                                                             <div className="flex items-center justify-between mb-2">
-                                                                <span className={`font-medium text-xs ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                                                                <span
+                                                                    className="font-medium text-xs"
+                                                                    style={{ color: isSelected ? 'var(--color-text)' : 'var(--color-text-muted)' }}
+                                                                >
                                                                     {interest}
                                                                 </span>
                                                                 {isSelected && (
-                                                                    <span className="text-xs bg-white/30 rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                                                    <span
+                                                                        className="text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                                                        style={{ background: isExisting ? 'rgba(0,200,100,0.3)' : 'rgba(100,120,255,0.3)', color: 'var(--color-text)' }}
+                                                                    >
                                                                         {isExisting ? '✓' : '⭐'}
                                                                     </span>
                                                                 )}
                                                             </div>
 
-                                                            {/* Action Buttons - Compact */}
+                                                            {/* Action Buttons */}
                                                             <div>
                                                                 {!isSelected ? (
                                                                     <div className="grid grid-cols-2 gap-1">
                                                                         <button
-                                                                            onClick={() => toggleInterest(interest, 'existing')}
-                                                                            className="px-2 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg text-[10px] font-bold hover:shadow-md transition"
+                                                                            onClick={() => { triggerPillPulse(interest); toggleInterest(interest, 'existing'); }}
+                                                                            className="px-2 py-1 rounded-lg text-[10px] font-bold transition hover:opacity-80"
+                                                                            style={{ background: 'rgba(0,200,100,0.2)', color: 'rgba(0,200,100,0.9)' }}
                                                                         >
                                                                             + Existing
                                                                         </button>
                                                                         <button
-                                                                            onClick={() => toggleInterest(interest, 'exploring')}
-                                                                            className="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-[10px] font-bold hover:shadow-md transition"
+                                                                            onClick={() => { triggerPillPulse(interest); toggleInterest(interest, 'exploring'); }}
+                                                                            className="px-2 py-1 rounded-lg text-[10px] font-bold transition hover:opacity-80"
+                                                                            style={{ background: 'rgba(100,120,255,0.2)', color: 'rgba(100,120,255,0.9)' }}
                                                                         >
                                                                             + Explore
                                                                         </button>
@@ -906,20 +945,18 @@ export default function InterestsWorksheet() {
                                                                     <div className="grid grid-cols-2 gap-1">
                                                                         <button
                                                                             onClick={() => {
-                                                                                setSelectedExisting(prev => {
-                                                                                    const newSet = new Set(prev);
-                                                                                    newSet.delete(interest);
-                                                                                    return newSet;
-                                                                                });
+                                                                                setSelectedExisting(prev => { const s = new Set(prev); s.delete(interest); return s; });
                                                                                 setSelectedExploring(prev => new Set([...prev, interest]));
                                                                             }}
-                                                                            className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                            className="px-2 py-1 rounded-lg text-[10px] font-semibold transition hover:opacity-80"
+                                                                            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
                                                                         >
                                                                             → Explore
                                                                         </button>
                                                                         <button
                                                                             onClick={() => toggleInterest(interest, 'existing')}
-                                                                            className="px-2 py-1 bg-white/20 hover:bg-red-500 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                            className="px-2 py-1 rounded-lg text-[10px] font-semibold transition hover:bg-red-500/20"
+                                                                            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
                                                                         >
                                                                             Remove
                                                                         </button>
@@ -928,20 +965,18 @@ export default function InterestsWorksheet() {
                                                                     <div className="grid grid-cols-2 gap-1">
                                                                         <button
                                                                             onClick={() => {
-                                                                                setSelectedExploring(prev => {
-                                                                                    const newSet = new Set(prev);
-                                                                                    newSet.delete(interest);
-                                                                                    return newSet;
-                                                                                });
+                                                                                setSelectedExploring(prev => { const s = new Set(prev); s.delete(interest); return s; });
                                                                                 setSelectedExisting(prev => new Set([...prev, interest]));
                                                                             }}
-                                                                            className="px-2 py-1 bg-white/20 hover:bg-white/30 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                            className="px-2 py-1 rounded-lg text-[10px] font-semibold transition hover:opacity-80"
+                                                                            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
                                                                         >
                                                                             → Existing
                                                                         </button>
                                                                         <button
                                                                             onClick={() => toggleInterest(interest, 'exploring')}
-                                                                            className="px-2 py-1 bg-white/20 hover:bg-red-500 text-white rounded-lg text-[10px] font-semibold transition"
+                                                                            className="px-2 py-1 rounded-lg text-[10px] font-semibold transition hover:bg-red-500/20"
+                                                                            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
                                                                         >
                                                                             Remove
                                                                         </button>
@@ -957,11 +992,14 @@ export default function InterestsWorksheet() {
                                 })}
                             </div>
 
-                            {/* Quick-Add Popular Interests (secondary, below categories) */}
-                            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-5 mb-6 border border-yellow-200">
+                            {/* Quick-Add Popular Interests */}
+                            <div
+                                className="rounded-2xl p-5 mb-6"
+                                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                            >
                                 <div className="flex items-center gap-2 mb-3">
                                     <span className="text-lg">🔥</span>
-                                    <h3 className="font-bold text-gray-900 text-sm">Quick Add Popular Interests</h3>
+                                    <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Quick Add Popular Interests</h3>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {[
@@ -980,31 +1018,23 @@ export default function InterestsWorksheet() {
                                             <button
                                                 key={interest}
                                                 onClick={() => {
+                                                    triggerPillPulse(interest);
                                                     if (isSelected) {
                                                         if (isExisting) {
-                                                            setSelectedExisting(prev => {
-                                                                const newSet = new Set(prev);
-                                                                newSet.delete(interest);
-                                                                return newSet;
-                                                            });
+                                                            setSelectedExisting(prev => { const s = new Set(prev); s.delete(interest); return s; });
                                                         } else {
-                                                            setSelectedExploring(prev => {
-                                                                const newSet = new Set(prev);
-                                                                newSet.delete(interest);
-                                                                return newSet;
-                                                            });
+                                                            setSelectedExploring(prev => { const s = new Set(prev); s.delete(interest); return s; });
                                                         }
                                                     } else {
                                                         setSelectedExisting(prev => new Set([...prev, interest]));
                                                     }
                                                 }}
-                                                className={`
-                                                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                                                    ${isSelected
-                                                        ? 'bg-green-100 text-green-800 hover:bg-red-100 hover:text-red-800'
-                                                        : 'bg-white hover:bg-yellow-100 text-gray-700 hover:shadow-sm border border-yellow-300'
-                                                    }
-                                                `}
+                                                className={['px-3 py-1.5 rounded-lg text-xs font-medium transition-all', pulsingPill === interest ? 'animate-select-pulse' : ''].join(' ')}
+                                                style={{
+                                                    background: isSelected ? 'rgba(0,200,100,0.15)' : 'var(--color-surface-2)',
+                                                    color: isSelected ? 'rgba(0,200,100,0.9)' : 'var(--color-text-muted)',
+                                                    border: `1px solid ${isSelected ? 'rgba(0,200,100,0.3)' : 'var(--color-border)'}`,
+                                                }}
                                             >
                                                 {isSelected ? '✓' : '+'} {interest}
                                             </button>
@@ -1013,32 +1043,39 @@ export default function InterestsWorksheet() {
                                 </div>
                             </div>
 
-                            {/* Sticky Save Button */}
-                            <div className="sticky bottom-6 flex justify-center pt-6 z-30">
-                                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-5 shadow-[0_-4px_30px_rgb(0,0,0,0.15)] border-2 border-gray-200">
+                            {/* Save Button */}
+                            <div
+                                className="flex justify-center pt-8 mt-4"
+                                style={{ borderTop: '1px solid var(--color-border)' }}
+                            >
+                                <div
+                                    className="rounded-2xl p-5"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                                >
                                     <div className="flex flex-col sm:flex-row items-center gap-4">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedExisting.size >= 5 && selectedExploring.size >= 5
-                                                ? 'bg-green-100'
-                                                : 'bg-gray-100'
-                                                }`}>
+                                            <div
+                                                className="w-10 h-10 rounded-full flex items-center justify-center"
+                                                style={{
+                                                    background: selectedExisting.size >= 5 && selectedExploring.size >= 5
+                                                        ? 'rgba(0,200,100,0.15)' : 'var(--color-surface-2)'
+                                                }}
+                                            >
                                                 {selectedExisting.size >= 5 && selectedExploring.size >= 5 ? (
-                                                    <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" style={{ color: 'rgba(0,200,100,0.9)' }}>
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                     </svg>
                                                 ) : (
-                                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--color-text-dim)' }}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                                     </svg>
                                                 )}
                                             </div>
                                             <div className="text-left">
-                                                <p className="text-sm font-bold text-gray-900">
-                                                    {selectedExisting.size >= 5 && selectedExploring.size >= 5
-                                                        ? 'Looking Great!'
-                                                        : 'Keep Selecting...'}
+                                                <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+                                                    {selectedExisting.size >= 5 && selectedExploring.size >= 5 ? 'Looking Great!' : 'Keep Selecting...'}
                                                 </p>
-                                                <p className="text-xs text-gray-600">
+                                                <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
                                                     {selectedExisting.size} existing • {selectedExploring.size} exploring
                                                 </p>
                                             </div>
@@ -1056,13 +1093,12 @@ export default function InterestsWorksheet() {
                                                 URL.revokeObjectURL(url);
                                             }}
                                             disabled={selectedExisting.size === 0 && selectedExploring.size === 0}
-                                            className={`
-                                                px-6 py-3 rounded-full font-bold shadow-xl transition-all transform flex items-center gap-2
-                                                ${(selectedExisting.size === 0 && selectedExploring.size === 0)
-                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-2xl hover:scale-105'
-                                                }
-                                            `}
+                                            className="px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2 disabled:opacity-30"
+                                            style={{
+                                                background: 'var(--color-surface-2)',
+                                                border: '1px solid var(--color-border)',
+                                                color: 'var(--color-text-muted)',
+                                            }}
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1073,13 +1109,8 @@ export default function InterestsWorksheet() {
                                         <button
                                             onClick={saveInterests}
                                             disabled={saving || (selectedExisting.size === 0 && selectedExploring.size === 0)}
-                                            className={`
-                                                px-8 py-3 rounded-full font-bold shadow-xl transition-all transform
-                                                ${saving || (selectedExisting.size === 0 && selectedExploring.size === 0)
-                                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 text-white hover:shadow-2xl hover:shadow-green-600/30 hover:scale-105'
-                                                }
-                                            `}
+                                            className="px-8 py-3 rounded-full font-semibold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-30"
+                                            style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
                                             {saving ? (
                                                 <span className="flex items-center gap-2">
