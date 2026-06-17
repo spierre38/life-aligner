@@ -68,8 +68,11 @@ function AmbientOrb({
   highlightHue?: number;
 }) {
   const displayHue = isHighlighted ? (highlightHue ?? hue) : hue;
-  const iconColor = kind === 'value' ? 'text-blue-300/50' : 'text-rose-300/50';
-  const textColor = isHighlighted ? 'text-white font-bold drop-shadow-md' : iconColor;
+  // Use strong, saturated colors for text so it's readable on both light and dark canvas
+  const textStyle: React.CSSProperties = isHighlighted
+    ? { color: '#fff', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }
+    : { color: `hsl(${displayHue}, 70%, ${kind === 'value' ? '45%' : '48%'})` };
+
   return (
     <div
       className={`absolute pointer-events-none select-none transition-all duration-300 ${reducedMotion ? '' : 'amb-drift'} ${isHighlighted ? 'scale-125 z-20' : 'z-0'}`}
@@ -86,14 +89,17 @@ function AmbientOrb({
         style={{
           background: isHighlighted
             ? `radial-gradient(circle, hsla(${displayHue},90%,60%,0.95) 0%, hsla(${displayHue},90%,40%,0.7) 70%, transparent 100%)`
-            : `radial-gradient(circle, hsla(${displayHue},50%,60%,0.15) 0%, hsla(${displayHue},50%,40%,0.05) 70%, transparent 100%)`,
+            : `radial-gradient(circle, hsla(${displayHue},55%,55%,0.35) 0%, hsla(${displayHue},45%,45%,0.15) 70%, transparent 100%)`,
           border: isHighlighted
             ? `2px solid hsla(${displayHue},100%,80%,0.9)`
-            : `1px solid hsla(${displayHue},40%,70%,0.1)`,
+            : `1px solid hsla(${displayHue},50%,55%,0.25)`,
           boxShadow: isHighlighted ? `0 0 35px hsla(${displayHue},90%,60%,0.8), inset 0 0 15px hsla(${displayHue},100%,80%,0.5)` : 'none',
         }}
       >
-        <span className={`transition-all duration-300 ${textColor} text-center leading-tight px-1 ${isHighlighted ? 'text-[11px]' : 'text-[9px] font-medium'}`}>
+        <span
+          className={`transition-all duration-300 text-center leading-tight px-1 ${isHighlighted ? 'text-[11px]' : 'text-[9px] font-semibold'}`}
+          style={textStyle}
+        >
           {label}
         </span>
       </div>
@@ -243,7 +249,8 @@ export default function BubbleCanvas({
   return (
     <div
       ref={containerRef}
-      className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pt-16"
+      className="min-h-screen pt-16"
+      style={{ background: 'var(--mesh-canvas)' }}
     >
       {/* Ambient drift animation */}
       <style>{`
@@ -259,12 +266,12 @@ export default function BubbleCanvas({
       {/* ── Empty state ─────────────────────────────────────────────── */}
       {activeGoals.length === 0 && (
         <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-6">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white/60 text-sm font-medium px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full mb-6" style={{ background: 'var(--color-surface)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
             <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
             All goals completed or removed
           </div>
-          <h2 className="text-3xl font-bold text-white mb-3">Your canvas is clear</h2>
-          <p className="text-slate-400 mb-8 max-w-sm">
+          <h2 className="text-3xl font-bold mb-3" style={{ color: 'var(--color-text)' }}>Your canvas is clear</h2>
+          <p className="mb-8 max-w-sm" style={{ color: 'var(--color-text-muted)' }}>
             Start your journey by adding a broad goal, or jump straight into a specific activity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -310,20 +317,20 @@ export default function BubbleCanvas({
             <div className="mb-6 space-y-3">
               {savedValues.length > 0 && (
                 <div>
-                  <p className="text-blue-300/60 text-[10px] font-bold uppercase tracking-wider mb-1">Your Values</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgb(96,165,250)' }}>Your Values</p>
                   <div className="flex flex-wrap gap-1.5">
                     {savedValues.map(v => (
-                      <span key={v} className="bg-blue-500/15 text-blue-300/70 text-[10px] font-medium px-2 py-0.5 rounded-full border border-blue-400/10">{v}</span>
+                      <span key={v} className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(59,130,246,0.15)', color: 'rgb(96,165,250)', border: '1px solid rgba(59,130,246,0.2)' }}>{v}</span>
                     ))}
                   </div>
                 </div>
               )}
               {savedInterests.length > 0 && (
                 <div>
-                  <p className="text-rose-300/60 text-[10px] font-bold uppercase tracking-wider mb-1">Your Interests</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'rgb(251,113,133)' }}>Your Interests</p>
                   <div className="flex flex-wrap gap-1.5">
                     {savedInterests.map(v => (
-                      <span key={v} className="bg-rose-500/15 text-rose-300/70 text-[10px] font-medium px-2 py-0.5 rounded-full border border-rose-400/10">{v}</span>
+                      <span key={v} className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: 'rgba(244,63,94,0.15)', color: 'rgb(251,113,133)', border: '1px solid rgba(244,63,94,0.2)' }}>{v}</span>
                     ))}
                   </div>
                 </div>

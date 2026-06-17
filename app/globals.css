@@ -6,33 +6,142 @@
 
 @import "./button-styles.css";
 
+/* ─── Tim 2026 Design System ─────────────────────────────────────────────────
+   Typography: Inter (from next/font/google, exposed as --font-inter)
+   Color palette: strictly White / Dark Grey / Black per the Tim Collins kit.
+   Mesh gradients: CSS equivalents of the kit's aurora gradient swatches.
+   Dark mode is the PRIMARY mode. Light mode overrides via [data-theme="light"].
+──────────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* ── Core palette (Tim Collins kit: KO color sheet) ── */
+  --tc-white:      #FFFFFF;
+  --tc-dark-grey:  #171717;
+  --tc-black:      #000000;
+
+  /* ── Semantic surface tokens (dark-first) ── */
+  --color-bg:        #050505;
+  --color-surface:   #111111;
+  --color-surface-2: #1a1a1a;
+  --color-border:    rgba(255,255,255,0.08);
+  --color-text:      #FFFFFF;
+  --color-text-muted: rgba(255,255,255,0.55);
+  --color-text-dim:   rgba(255,255,255,0.30);
+
+  /* ── Typography scale (Tim Collins kit: Typography — KO sheet) ── */
+  --font-primary: var(--font-inter, 'Inter', system-ui, sans-serif);
+  --font-mono:    var(--font-geist-mono, 'Geist Mono', monospace);
+  --font-brand:   var(--font-cormorant, 'Cormorant Garamond', serif);
+
+  --fs-h1:      clamp(2.5rem, 5vw, 4.05rem);   /* 64.68px → Inter Regular, -4% tracking */
+  --fs-h2:      clamp(2rem,   4vw, 3.03rem);   /* 48.54px, -3% */
+  --fs-h3:      clamp(1.5rem, 3vw, 2.15rem);   /* 34.40px, -2% */
+  --fs-h4:      clamp(1.2rem, 2vw, 1.52rem);   /* 24.30px, -2% */
+  --fs-body-l:  1.14rem;                        /* 18.24px, -2% */
+  --fs-body-m:  1.01rem;                        /* 16.22px, -2% */
+  --fs-body-s:  0.89rem;                        /* 14.18px, -2% */
+  --fs-body-xs: 0.76rem;                        /* 12.16px, -2% */
+
+  /* ── Mesh gradient catalog (CSS equivalents of kit aurora swatches) ── */
+  /* A1: Black + Magenta + Cyan — hero banner primary */
+  --mesh-a1:
+    radial-gradient(ellipse 80% 60% at 30% 65%, rgba(255,45,153,0.75) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 55% at 78% 28%, rgba(0,212,255,0.65) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 55% 80%, rgba(120,40,255,0.45) 0%, transparent 55%),
+    #000;
+
+  /* B1: Purple + Orange — Values card */
+  --mesh-b1:
+    radial-gradient(ellipse 75% 55% at 35% 65%, rgba(123,47,255,0.80) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 72% 28%, rgba(255,100,0,0.65) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 45% at 15% 20%, rgba(200,0,120,0.35) 0%, transparent 50%),
+    #0d0010;
+
+  /* D1: Deep Blue + Cyan — Life Categories card */
+  --mesh-d1:
+    radial-gradient(ellipse 75% 55% at 25% 68%, rgba(0,71,255,0.80) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 75% 28%, rgba(0,212,255,0.70) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 40% at 60% 80%, rgba(0,120,255,0.35) 0%, transparent 50%),
+    #000820;
+
+  /* E1: Green + Teal Aurora — Interests card */
+  --mesh-e1:
+    radial-gradient(ellipse 75% 55% at 38% 62%, rgba(0,204,106,0.80) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 72% 30%, rgba(0,184,212,0.65) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 45% at 20% 78%, rgba(0,150,80,0.40) 0%, transparent 50%),
+    #001a0d;
+
+  /* Canvas ambient: very subtle blue-purple for the roadmap canvas bg */
+  --mesh-canvas:
+    radial-gradient(ellipse 90% 70% at 20% 50%, rgba(80,0,200,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 80% 30%, rgba(0,160,255,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 60% at 50% 90%, rgba(200,0,100,0.06) 0%, transparent 60%),
+    #07070f;
+
+  /* ── Spacing & radius tokens ── */
+  --radius-sm:  8px;
+  --radius-md:  16px;
+  --radius-lg:  24px;
+  --radius-xl:  32px;
+
+  /* ── Transition ── */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Light mode overrides ────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --color-bg:         #F2F2F2;
+  --color-surface:    #FFFFFF;
+  --color-surface-2:  #F7F7F7;
+  --color-border:     rgba(0,0,0,0.08);
+  --color-text:       #111111;
+  --color-text-muted: rgba(0,0,0,0.55);
+  --color-text-dim:   rgba(0,0,0,0.35);
+
+  /* Softer mesh gradients for light mode */
+  --mesh-a1:
+    radial-gradient(ellipse 80% 60% at 30% 65%, rgba(180,30,120,0.35) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 55% at 78% 28%, rgba(0,140,200,0.30) 0%, transparent 60%),
+    #e8e0ff;
+
+  --mesh-b1:
+    radial-gradient(ellipse 75% 55% at 35% 65%, rgba(100,30,200,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 72% 28%, rgba(200,80,0,0.30) 0%, transparent 55%),
+    #f0e8ff;
+
+  --mesh-d1:
+    radial-gradient(ellipse 75% 55% at 25% 68%, rgba(0,50,200,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 75% 28%, rgba(0,160,220,0.30) 0%, transparent 55%),
+    #e0ecff;
+
+  --mesh-e1:
+    radial-gradient(ellipse 75% 55% at 38% 62%, rgba(0,150,70,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 72% 30%, rgba(0,130,160,0.30) 0%, transparent 55%),
+    #e0f7f0;
+
+  --mesh-canvas:
+    radial-gradient(ellipse 90% 70% at 20% 50%, rgba(120,80,255,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 80% 30%, rgba(0,120,255,0.04) 0%, transparent 65%),
+    #f0f0f8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --font-sans: var(--font-inter, var(--font-geist-sans));
+  --font-mono: var(--font-mono);
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-primary);
+  font-size: var(--fs-body-m);
+  letter-spacing: -0.02em;
+  transition: background-color 0.35s var(--ease-smooth), color 0.35s var(--ease-smooth);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
@@ -48,20 +157,28 @@ html {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
-  border-radius: 5px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb, #7c3aed);
+  background: rgba(255,255,255,0.28);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.28);
 }
 
 /* Section transitions */
@@ -439,11 +556,15 @@ section {
   animation: bounce-slow 2s ease-in-out infinite;
 }
 
-/* Focus visible for accessibility */
+/* Focus visible for accessibility — Tim 2026 monochrome */
 *:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid rgba(255,255,255,0.7);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+[data-theme="light"] *:focus-visible {
+  outline: 2px solid rgba(0,0,0,0.5);
 }
 
 @keyframes orbit {
@@ -506,6 +627,69 @@ section {
   animation-delay: 0.5s;
 }
 
+/* ─── Luxury Orb Animation Keyframes (Tim 2026) ──────────────────────────── */
+
+/* Gentle breathing for ambient orbs at rest */
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1);    opacity: var(--orb-opacity-rest, 0.18); }
+  50%       { transform: scale(0.94); opacity: calc(var(--orb-opacity-rest, 0.18) * 0.75); }
+}
+
+/* Pulsing glow ring for selected orbs */
+@keyframes orb-pulse {
+  0%   { box-shadow: 0 0 0 0    var(--orb-glow, rgba(255,255,255,0.5)),
+                     0 0 40px 10px var(--orb-glow, rgba(255,255,255,0.2)); }
+  60%  { box-shadow: 0 0 0 18px transparent,
+                     0 0 80px 30px var(--orb-glow, rgba(255,255,255,0.15)); }
+  100% { box-shadow: 0 0 0 0    transparent,
+                     0 0 40px 10px var(--orb-glow, rgba(255,255,255,0.2)); }
+}
+
+/* Slow aurora drift for the canvas background mesh */
+@keyframes aurora-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* SVG blob path morph — referenced inline on GoalBubble */
+@keyframes blob-morph {
+  0%, 100% { d: path("M 52,9 C 76,6 94,24 91,50 C 88,76 68,95 44,91 C 20,87 6,67 9,43 C 12,19 31,12 52,9 Z"); }
+  33%       { d: path("M 50,8 C 74,5 93,22 94,46 C 95,70 78,92 54,92 C 30,92 7,76 8,52 C 9,28 29,11 50,8 Z"); }
+  66%       { d: path("M 46,9 C 70,6 90,26 88,52 C 86,78 64,96 40,91 C 16,86 5,65 9,41 C 13,17 26,12 46,9 Z"); }
+}
+
+/* Satellite orbital rotation around goal bubble */
+@keyframes satellite-orbit {
+  from { transform: rotate(0deg) translateX(8px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(8px) rotate(-360deg); }
+}
+
+/* Shimmer glow sweep on selected orbs */
+@keyframes shimmer-glow {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* Canvas zoom-in when opening a goal detail */
+@keyframes canvas-zoom {
+  from { transform: scale(1);    opacity: 1; }
+  to   { transform: scale(1.06); opacity: 0; }
+}
+
+/* Particle ring orbiting a goal bubble */
+@keyframes particle-ring {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-orb-breathe     { animation: orb-breathe 5s ease-in-out infinite; }
+.animate-orb-pulse       { animation: orb-pulse 2.4s ease-in-out infinite; }
+.animate-aurora-shift    { animation: aurora-shift 20s ease infinite; }
+.animate-satellite-orbit { animation: satellite-orbit 18s linear infinite; }
+.animate-particle-ring   { animation: particle-ring 12s linear infinite; }
+.animate-canvas-zoom     { animation: canvas-zoom 0.5s var(--ease-smooth) forwards; }
+
 /* Accessibility: disable animations for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
 
@@ -529,7 +713,13 @@ section {
   .animate-pulse-glow,
   .animate-monument-rise,
   .animate-slide-down,
-  .animate-bounce-slow {
+  .animate-bounce-slow,
+  .animate-orb-breathe,
+  .animate-orb-pulse,
+  .animate-aurora-shift,
+  .animate-satellite-orbit,
+  .animate-particle-ring,
+  .animate-canvas-zoom {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

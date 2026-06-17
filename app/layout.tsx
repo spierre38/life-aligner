@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Cormorant_Garamond } from "next/font/google";
+import { Inter, Geist_Mono, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/app/components/Toast";
+import { ThemeProvider } from "@/app/components/ThemeProvider";
 import { GoogleAnalytics } from "@/app/components/GoogleAnalytics";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "react-hot-toast";
@@ -9,10 +10,13 @@ import ServiceWorkerRegistrar from "@/app/components/ServiceWorkerRegistrar";
 import InstallPromptBanner from "@/app/components/InstallPromptBanner";
 import ScrollToTop from "@/app/components/ScrollToTop";
 
-// Body font — unchanged
-const geistSans = Geist({
-    variable: "--font-geist-sans",
+// Tim 2026 primary font — matches the kit's typography spec exactly.
+// Exposed as --font-inter, used by globals.css --font-primary token.
+const inter = Inter({
+    variable: "--font-inter",
     subsets: ["latin"],
+    weight: ["300", "400", "500", "600", "700"],
+    display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -20,12 +24,10 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
 });
 
-// New brand font for the wordmark only — not body text.
-// Exposed as --font-cormorant, consumed by app/components/Wordmark.tsx.
+// Wordmark-only brand font — Cormorant Garamond stays for Wordmark.tsx.
 const cormorant = Cormorant_Garamond({
     variable: "--font-cormorant",
     subsets: ["latin"],
-    // We only need a couple of weights for the wordmark; fewer weights = smaller bundle.
     weight: ["500", "600"],
     display: "swap",
 });
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-    themeColor: "#4f46e5",
+    themeColor: "#000000",
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
@@ -58,7 +60,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" data-theme="dark">
             <head>
                 <link rel="manifest" href="/manifest.json" />
                 <link rel="apple-touch-icon" href="/icons/icon.svg" />
@@ -66,16 +68,28 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="apple-mobile-web-app-title" content="Tim Collins Framework" />
             </head>
-            <body className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable}`}>
-                <ServiceWorkerRegistrar />
-                <InstallPromptBanner />
-                <ScrollToTop />
-                <ToastProvider>
-                    {children}
-                </ToastProvider>
-                <Toaster />
-                <GoogleAnalytics measurementId="G-DHFVLL796L" />
-                <Analytics />
+            <body className={`${inter.variable} ${geistMono.variable} ${cormorant.variable}`}>
+                <ThemeProvider>
+                    <ServiceWorkerRegistrar />
+                    <InstallPromptBanner />
+                    <ScrollToTop />
+                    <ToastProvider>
+                        {children}
+                    </ToastProvider>
+                    <Toaster
+                        toastOptions={{
+                            style: {
+                                background: '#1a1a1a',
+                                color: '#ffffff',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '12px',
+                                fontFamily: 'var(--font-primary)',
+                            },
+                        }}
+                    />
+                    <GoogleAnalytics measurementId="G-DHFVLL796L" />
+                    <Analytics />
+                </ThemeProvider>
             </body>
         </html>
     );

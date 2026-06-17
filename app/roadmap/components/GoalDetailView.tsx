@@ -254,6 +254,12 @@ interface GoalDetailViewProps {
   onAddActivity: (goalId: string) => void;
   onCreateActivityInline: (goalId: string, title: string, includeToday: boolean) => void;
   onEditGoal: (goal: Goal) => void;
+  /** Mark the goal complete — opens CompletionModal */
+  onCompleteGoal: (goal: Goal) => void;
+  /** Soft-delete the goal after confirmation */
+  onDeleteGoal: (goalId: string) => void;
+  /** Add a journal entry to this goal */
+  onAddReflection: (goalId: string, text: string, mood?: 'great' | 'okay' | 'hard') => void;
 }
 
 // ─── Branch line SVG ──────────────────────────────────────────────────────────
@@ -424,10 +430,18 @@ export default function GoalDetailView({
   onAddActivity,
   onCreateActivityInline,
   onEditGoal,
+  onCompleteGoal,
+  onDeleteGoal,
+  onAddReflection,
 }: GoalDetailViewProps) {
   const [mounted, setMounted] = useState(false);
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  // Reflect tab state
+  const [rightTab, setRightTab] = useState<'ai' | 'reflect'>('ai');
+  const [reflectionText, setReflectionText] = useState('');
+  const [reflectionMood, setReflectionMood] = useState<'great' | 'okay' | 'hard' | undefined>(undefined);
+  const [savingReflection, setSavingReflection] = useState(false);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setMounted(true));
@@ -480,9 +494,10 @@ export default function GoalDetailView({
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 overflow-auto transition-all duration-500 ${
+      className={`fixed inset-0 z-50 overflow-auto transition-all duration-500 ${
         mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
       }`}
+      style={{ background: 'var(--mesh-canvas)' }}
     >
       <style>{`
         @keyframes detail-float {
@@ -492,8 +507,11 @@ export default function GoalDetailView({
         .detail-float { animation: detail-float 4s ease-in-out infinite; }
       `}</style>
 
-      {/* ── Top bar ────────────────────────────────────────────────── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
+      {/* ── Top bar ──────────────────────────────────────── */}
+      <div
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-xl border-b border-white/5"
+        style={{ background: 'rgba(5,5,5,0.82)' }}
+      >
         <button
           onClick={onClose}
           className="flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-medium"
@@ -503,7 +521,7 @@ export default function GoalDetailView({
           </svg>
           Back to canvas
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => onAddActivity(goal.id)}
             className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-full transition"
@@ -515,6 +533,27 @@ export default function GoalDetailView({
             className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition"
           >
             Edit goal
+          </button>
+          {/* Goal lifecycle buttons */}
+          <button
+            id="complete-goal-btn"
+            onClick={() => onCompleteGoal(goal)}
+            className="bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-full transition hover:bg-white/90"
+            title="Mark this goal complete and archive it as a Life Chapter"
+          >
+            ✔ Complete Goal
+          </button>
+          <button
+            id="delete-goal-btn"
+            onClick={() => {
+              if (window.confirm(`Delete goal "${goal.title}"? This cannot be undone.`)) {
+                onDeleteGoal(goal.id);
+              }
+            }}
+            className="bg-red-500/20 hover:bg-red-500/35 text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full transition"
+            title="Permanently delete this goal"
+          >
+            ✕ Delete
           </button>
         </div>
       </div>
@@ -754,8 +793,122 @@ export default function GoalDetailView({
           )}
         </div>
 
-        {/* ── AI Coaching sidebar ─────────────────────────────────── */}
-        <AiCoachPanel goal={goal} onCreateActivityInline={onCreateActivityInline} />
+        {/* ── Right panel: AI coach + Reflect tabs ──────────── */}
+        <div className="hidden lg:flex flex-col w-96 shrink-0 border-l border-white/8 overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: '64px' }}>
+          {/* Tab switcher */}
+          <div className="flex gap-1 px-4 pt-4 pb-2">
+            {(['ai', 'reflect'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setRightTab(tab)}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: rightTab === tab ? 'rgba(255,255,255,0.12)' : 'transparent',
+                  color: rightTab === tab ? '#fff' : 'rgba(255,255,255,0.4)',
+                }}
+              >
+                {tab === 'ai' ? '✨ AI Coach' : '📝 Reflect'}
+              </button>
+            ))}
+          </div>
+
+          {rightTab === 'ai' ? (
+            <AiCoachPanel goal={goal} onCreateActivityInline={onCreateActivityInline} />
+          ) : (
+            <div className="px-4 py-3 flex flex-col gap-4">
+              {/* New entry form */}
+              <div
+                className="rounded-2xl p-4"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">New Entry</p>
+                {/* Mood selector */}
+                <div className="flex gap-2 mb-3">
+                  {(['great', 'okay', 'hard'] as const).map(m => (
+                    <button
+                      key={m}
+                      onClick={() => setReflectionMood(prev => prev === m ? undefined : m)}
+                      className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
+                      style={{
+                        background: reflectionMood === m
+                          ? m === 'great' ? 'rgba(0,200,100,0.3)' : m === 'hard' ? 'rgba(255,80,80,0.25)' : 'rgba(255,255,255,0.12)'
+                          : 'rgba(255,255,255,0.05)',
+                        color: reflectionMood === m
+                          ? m === 'great' ? '#34d399' : m === 'hard' ? '#f87171' : '#fff'
+                          : 'rgba(255,255,255,0.35)',
+                        border: reflectionMood === m ? `1px solid ${m === 'great' ? 'rgba(0,200,100,0.4)' : m === 'hard' ? 'rgba(255,80,80,0.35)' : 'rgba(255,255,255,0.15)'}` : '1px solid transparent',
+                      }}
+                    >
+                      {m === 'great' ? '✦ Great' : m === 'hard' ? '⊘ Hard' : '~ Okay'}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  id="reflection-entry-textarea"
+                  value={reflectionText}
+                  onChange={e => setReflectionText(e.target.value)}
+                  placeholder="How's this goal going? What's on your mind..."
+                  rows={4}
+                  className="w-full rounded-xl p-3 text-white placeholder-white/25 resize-none text-xs leading-relaxed focus:outline-none transition-all"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', letterSpacing: '-0.01em' }}
+                  onFocus={e => (e.target as HTMLTextAreaElement).style.border = '1px solid rgba(255,255,255,0.2)'}
+                  onBlur={e => (e.target as HTMLTextAreaElement).style.border = '1px solid rgba(255,255,255,0.08)'}
+                />
+                <button
+                  id="save-reflection-btn"
+                  disabled={!reflectionText.trim() || savingReflection}
+                  onClick={async () => {
+                    if (!reflectionText.trim()) return;
+                    setSavingReflection(true);
+                    onAddReflection(goal.id, reflectionText.trim(), reflectionMood);
+                    setReflectionText('');
+                    setReflectionMood(undefined);
+                    await new Promise(r => setTimeout(r, 300));
+                    setSavingReflection(false);
+                  }}
+                  className="w-full mt-2 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-30"
+                  style={{ background: '#fff', color: '#000' }}
+                >
+                  {savingReflection ? 'Saving…' : 'Save Entry'}
+                </button>
+              </div>
+
+              {/* Past entries */}
+              <div>
+                <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Past Entries ({goal.reflections?.length ?? 0})</p>
+                {(!goal.reflections || goal.reflections.length === 0) ? (
+                  <p className="text-xs text-white/25 italic">No entries yet. Write your first reflection above.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {[...goal.reflections].reverse().map(r => (
+                      <div
+                        key={r.id}
+                        className="p-3 rounded-xl text-xs"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                      >
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-white/30">{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          {r.mood && (
+                            <span
+                              className="px-2 py-0.5 rounded-full"
+                              style={{
+                                background: r.mood === 'great' ? 'rgba(0,200,100,0.15)' : r.mood === 'hard' ? 'rgba(255,80,80,0.15)' : 'rgba(255,255,255,0.08)',
+                                color: r.mood === 'great' ? '#34d399' : r.mood === 'hard' ? '#f87171' : 'rgba(255,255,255,0.5)',
+                              }}
+                            >
+                              {r.mood === 'great' ? '✦ Great' : r.mood === 'hard' ? '⊘ Hard' : '~ Okay'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{r.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

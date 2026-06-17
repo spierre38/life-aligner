@@ -36,6 +36,7 @@ import EditGoalModal from './components/EditGoalModal';
 import GoalDetailView from './components/GoalDetailView';
 import AddActivityModal from './components/AddActivityModal';
 import ReviewActivitiesView from './components/ReviewActivitiesView';
+import { CompletionModal } from './components/CompletionModal';
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -60,6 +61,7 @@ export default function RoadmapPage() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [detailGoalId, setDetailGoalId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [completingGoal, setCompletingGoal] = useState<Goal | null>(null);
 
   const saveSeq = useRef(0);
 
@@ -178,6 +180,7 @@ export default function RoadmapPage() {
   const handleDeleteGoal = useCallback(async (goalId: string) => {
     setEditingGoal(null);
     setDetailGoalId(null);
+    setCompletingGoal(null);
     await persist({
       ...roadmap,
       goals: roadmap.goals.map(g =>
@@ -191,6 +194,52 @@ export default function RoadmapPage() {
         connectedGoalIds: a.connectedGoalIds.filter(id => id !== goalId),
       })),
     });
+    showToast.success('Goal deleted.');
+  }, [roadmap, persist]);
+
+  /** Open the CompletionModal for a goal */
+  const handleCompleteGoal = useCallback((goal: Goal) => {
+    setCompletingGoal(goal);
+  }, []);
+
+  /** Persist the goal as completed with an optional finalReflection */
+  const handleCompleteConfirm = useCallback(async (finalReflection: string) => {
+    if (!completingGoal) return;
+    const now = new Date().toISOString();
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === completingGoal.id
+          ? { ...g, status: 'completed' as const, completedAt: now, finalReflection: finalReflection || undefined }
+          : g
+      ),
+    });
+    setCompletingGoal(null);
+    setDetailGoalId(null);
+    showToast.success('Chapter saved to your Reflections ✨');
+  }, [completingGoal, roadmap, persist]);
+
+  /** Add a journal entry (reflection) to a goal */
+  const handleAddReflection = useCallback(async (
+    goalId: string,
+    text: string,
+    mood?: 'great' | 'okay' | 'hard'
+  ) => {
+    const entry = {
+      id: crypto.randomUUID(),
+      text,
+      date: new Date().toISOString(),
+      mood,
+    };
+    await persist({
+      ...roadmap,
+      goals: roadmap.goals.map(g =>
+        g.id === goalId
+          ? { ...g, reflections: [...(g.reflections ?? []), entry] }
+          : g
+      ),
+    });
+    showToast.success('Reflection saved →');
   }, [roadmap, persist]);
 
   const handlePositionChange = useCallback(async (
@@ -349,8 +398,10 @@ export default function RoadmapPage() {
     return (
       <>
         <AuthNavbar />
-        <div className="min-h-screen bg-gray-50 pt-16">
-          <div className="max-w-6xl mx-auto px-4 py-12"><SkeletonCard /></div>
+        <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
+          <div className="max-w-6xl mx-auto px-4 py-12">
+            <div className="h-64 rounded-3xl animate-pulse" style={{ background: 'var(--color-surface)' }} />
+          </div>
         </div>
       </>
     );
@@ -360,18 +411,19 @@ export default function RoadmapPage() {
     return (
       <>
         <AuthNavbar />
-        <div className="min-h-screen bg-gray-50 pt-16">
+        <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
           <div className="max-w-3xl mx-auto px-4 py-24">
-            <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            <div className="rounded-3xl p-8 md:p-12 text-center" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h2 className="text-2xl font-semibold mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
                 We couldn't load your Roadmap
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="mb-6" style={{ color: 'var(--color-text-muted)' }}>
                 Something went wrong fetching your data. Refreshing usually fixes it.
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="bg-gray-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-800 transition"
+                className="px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-80"
+                style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
               >
                 Refresh
               </button>
@@ -440,6 +492,18 @@ export default function RoadmapPage() {
           onAddActivity={(goalId) => { setAddActivityForGoalId(goalId); setAddActivityOpen(true); }}
           onCreateActivityInline={handleCreateActivityInline}
           onEditGoal={(g) => { setDetailGoalId(null); setEditingGoal(g); }}
+          onCompleteGoal={handleCompleteGoal}
+          onDeleteGoal={handleDeleteGoal}
+          onAddReflection={handleAddReflection}
+        />
+      )}
+
+      {/* Completion celebration modal */}
+      {completingGoal && (
+        <CompletionModal
+          goal={completingGoal}
+          onSave={handleCompleteConfirm}
+          onDismiss={() => setCompletingGoal(null)}
         />
       )}
 

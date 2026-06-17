@@ -6,26 +6,64 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { evaluateLifeFrameCompletion, type LifeFrameCompletion } from '@/lib/lifeframe-completion';
 import Wordmark from '@/app/components/Wordmark';
+import { useTheme } from '@/app/components/ThemeProvider';
 
 // Canonical order: Values → Interests → Life Categories.
-// Used to pick where a locked LifeFrame link should send the user.
 function routeForNextIncomplete(completion: LifeFrameCompletion | null): string {
     if (!completion) return '/workbook/values';
     switch (completion.nextIncomplete) {
-        case 'values':
-            return '/workbook/values';
-        case 'interests':
-            return '/workbook/interests';
-        case 'life_categories':
-            return '/workbook/life-categories';
-        default:
-            return '/workbook/lifeframe';
+        case 'values':         return '/workbook/values';
+        case 'interests':      return '/workbook/interests';
+        case 'life_categories': return '/workbook/life-categories';
+        default:               return '/workbook/lifeframe';
     }
+}
+
+// ─── Theme Toggle Icon ──────────────────────────────────────────────────────
+function ThemeToggle() {
+    const { theme, toggleTheme, isDark } = useTheme();
+
+    return (
+        <button
+            id="theme-toggle-btn"
+            onClick={toggleTheme}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDark ? 'Light mode' : 'Dark mode'}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300"
+            style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                color: 'var(--color-text-muted)',
+            }}
+            onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)';
+                (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text)';
+            }}
+            onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)';
+                (e.currentTarget as HTMLButtonElement).style.color = 'var(--color-text-muted)';
+            }}
+        >
+            {isDark ? (
+                // Sun icon
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+            ) : (
+                // Moon icon
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+            )}
+        </button>
+    );
 }
 
 export default function AuthNavbar() {
     const router = useRouter();
     const pathname = usePathname();
+    const { isDark } = useTheme();
     const [user, setUser] = useState<any>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -77,35 +115,41 @@ export default function AuthNavbar() {
 
     if (!user) return null;
 
-    // Shared class helper so desktop and mobile styles stay in sync.
-    // Active state = soft gray pill (matches the PDF, not indigo).
-    // whitespace-nowrap prevents short labels like "To-Do" from wrapping
-    // when the centered nav column gets tight at smaller desktop widths.
+    // Tim 2026 nav link styles — white text on dark, tracks active state with
+    // a subtle white pill vs. dim text for inactive.
     const linkClass = (active: boolean, muted = false) =>
-        `px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+        `px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 tracking-tight ${
             muted
-                ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                ? 'opacity-35 cursor-default'
                 : active
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/65 hover:text-white hover:bg-white/06'
         }`;
 
+    const navBg = 'rgba(5,5,5,0.85)';
+    const navBorder = 'rgba(255,255,255,0.07)';
+
     return (
-        <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <nav
+            className="sticky top-0 z-50 backdrop-blur-xl"
+            style={{
+                background: navBg,
+                borderBottom: `1px solid ${navBorder}`,
+            }}
+        >
             <div className="max-w-7xl mx-auto px-6">
-                {/* Three-zone grid: wordmark | centered nav | user block.
-                    grid-cols-3 guarantees the middle column is visually centered
-                    regardless of how wide the left or right columns are. */}
+                {/* Three-zone grid: wordmark | centered nav | user block */}
                 <div className="grid grid-cols-3 items-center h-16">
+
                     {/* Left: wordmark */}
                     <div className="flex items-center">
                         <Link href="/dashboard" className="flex items-center">
-                            <Wordmark size="sm" />
+                            <Wordmark size="sm" colorClassName="text-white" />
                         </Link>
                     </div>
 
                     {/* Middle: centered nav links (desktop only) */}
-                    <div className="hidden md:flex items-center justify-center gap-1">
+                    <div className="hidden md:flex items-center justify-center gap-0.5">
                         <Link href="/dashboard" className={linkClass(isActive('/dashboard'))}>
                             Dashboard
                         </Link>
@@ -126,32 +170,51 @@ export default function AuthNavbar() {
                         <Link href="/todo" className={linkClass(isActive('/todo'))}>
                             To-Do
                         </Link>
+                        <Link
+                            href={lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute}
+                            className={linkClass(isActive('/reflections'), !lifeFrameUnlocked)}
+                            aria-label="Life Chapters — your completed goals"
+                        >
+                            Chapters
+                        </Link>
                         <Link href="/resources" className={linkClass(isActive('/resources'))}>
                             Resources
                         </Link>
                     </div>
 
-                    {/* Right: user block + mobile hamburger */}
-                    <div className="flex items-center justify-end gap-3">
+                    {/* Right: theme toggle + user block + mobile hamburger */}
+                    <div className="flex items-center justify-end gap-2">
+                        {/* Theme toggle */}
+                        <ThemeToggle />
+
+                        {/* Desktop user menu */}
                         <div className="hidden md:block relative">
                             <button
+                                id="user-menu-btn"
                                 onClick={() => setShowUserMenu(!showUserMenu)}
-                                className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-all"
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-200"
+                                style={{ background: showUserMenu ? 'rgba(255,255,255,0.08)' : 'transparent' }}
                                 aria-haspopup="true"
                                 aria-expanded={showUserMenu}
+                                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'}
+                                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = showUserMenu ? 'rgba(255,255,255,0.08)' : 'transparent'}
                             >
-                                <span className="text-sm font-medium text-gray-900 hidden lg:block">
-                                    {user?.user_metadata?.full_name || 'User'}
+                                <span className="text-sm font-medium text-white/80 hidden lg:block tracking-tight">
+                                    {user?.user_metadata?.full_name?.split(' ')[0] || 'Account'}
                                 </span>
-                                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                {/* Avatar */}
+                                <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                                    style={{
+                                        background: 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)',
+                                    }}
+                                >
                                     {user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
                                         user?.email?.[0]?.toUpperCase() || 'U'}
                                 </div>
                                 <svg
-                                    className={`w-4 h-4 text-gray-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                                    className={`w-3.5 h-3.5 text-white/40 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`}
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 >
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -160,70 +223,59 @@ export default function AuthNavbar() {
                             {showUserMenu && (
                                 <>
                                     <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-                                    <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-2xl border border-gray-200 py-2 z-50">
-                                        <div className="px-4 py-3 border-b border-gray-100">
-                                            <div className="text-sm font-semibold text-gray-900">
+                                    <div
+                                        className="absolute right-0 mt-2 w-60 rounded-2xl py-2 z-50"
+                                        style={{
+                                            background: '#111111',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+                                        }}
+                                    >
+                                        <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                                            <div className="text-sm font-semibold text-white">
                                                 {user?.user_metadata?.full_name || 'User'}
                                             </div>
-                                            <div className="text-xs text-gray-500 truncate">
+                                            <div className="text-xs text-white/40 truncate mt-0.5">
                                                 {user?.email}
                                             </div>
                                         </div>
-                                        <div className="py-1">
+
+                                        {[
+                                            { href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute, label: 'View LifeFrame' },
+                                            { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap' },
+                                            { href: lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute, label: 'Life Chapters' },
+                                            { href: '/todo', label: 'To-Do List' },
+                                            { href: '/resources', label: 'Resources' },
+                                            { href: '/community', label: 'Community' },
+                                        ].map(item => (
                                             <Link
-                                                href={lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute}
+                                                key={item.href + item.label}
+                                                href={item.href}
                                                 onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                                className="block px-4 py-2.5 text-sm text-white/70 transition-colors duration-150"
+                                                style={{ letterSpacing: '-0.01em' }}
+                                                onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.05)'}
+                                                onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'}
                                             >
-                                                View LifeFrame
+                                                {item.label}
                                             </Link>
-                                            <Link
-                                                href={lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute}
-                                                onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                            >
-                                                My Roadmap
-                                            </Link>
-                                            <Link
-                                                href="/todo"
-                                                onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                            >
-                                                To-Do List
-                                            </Link>
-                                            <Link
-                                                href="/resources"
-                                                onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Resources
-                                            </Link>
-                                            <Link
-                                                href="/community"
-                                                onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Community
-                                            </Link>
-                                            <Link
-                                                href="/community?tab=partners"
-                                                onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Partners
-                                            </Link>
-                                        </div>
-                                        <div className="border-t border-gray-100 py-1">
+                                        ))}
+
+                                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: '4px', paddingTop: '4px' }}>
                                             <Link
                                                 href="/settings"
                                                 onClick={() => setShowUserMenu(false)}
-                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                                className="block px-4 py-2.5 text-sm text-white/70"
+                                                onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.05)'}
+                                                onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'}
                                             >
                                                 Settings
                                             </Link>
                                             <button
                                                 onClick={() => { setShowUserMenu(false); handleSignOut(); }}
-                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                className="w-full text-left px-4 py-2.5 text-sm text-red-400 transition-colors duration-150"
+                                                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,80,80,0.08)'}
+                                                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'transparent'}
                                             >
                                                 Sign Out
                                             </button>
@@ -233,12 +285,14 @@ export default function AuthNavbar() {
                             )}
                         </div>
 
+                        {/* Mobile hamburger */}
                         <button
                             onClick={() => setShowMobileMenu(!showMobileMenu)}
-                            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition"
+                            className="md:hidden p-2 rounded-lg transition-all duration-200"
+                            style={{ color: 'rgba(255,255,255,0.7)' }}
                             aria-label="Toggle navigation menu"
                         >
-                            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 {showMobileMenu ? (
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 ) : (
@@ -251,46 +305,46 @@ export default function AuthNavbar() {
 
                 {/* Mobile menu */}
                 {showMobileMenu && (
-                    <div className="md:hidden py-4 border-t border-gray-200">
-                        <div className="space-y-1">
-                            <Link href="/dashboard" onClick={() => setShowMobileMenu(false)} className={`block ${linkClass(isActive('/dashboard'))}`}>
-                                Dashboard
-                            </Link>
-                            <Link
-                                href={lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute}
-                                onClick={() => setShowMobileMenu(false)}
-                                className={`block ${linkClass(isPathPrefix('/workbook'), !lifeFrameUnlocked)}`}
-                            >
-                                LifeFrame
-                            </Link>
-                            <Link
-                                href={lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute}
-                                onClick={() => setShowMobileMenu(false)}
-                                className={`block ${linkClass(isActive('/roadmap'), !lifeFrameUnlocked)}`}
-                            >
-                                Roadmap
-                            </Link>
-                            <Link href="/todo" onClick={() => setShowMobileMenu(false)} className={`block ${linkClass(isActive('/todo'))}`}>
-                                To-Do
-                            </Link>
-                            <Link href="/resources" onClick={() => setShowMobileMenu(false)} className={`block ${linkClass(isActive('/resources'))}`}>
-                                Resources
-                            </Link>
+                    <div className="md:hidden py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                        <div className="space-y-0.5">
+                            {[
+                                { href: '/dashboard', label: 'Dashboard', active: isActive('/dashboard') },
+                                {
+                                    href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute,
+                                    label: 'LifeFrame', active: isPathPrefix('/workbook'), muted: !lifeFrameUnlocked
+                                },
+                                {
+                                    href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute,
+                                    label: 'Roadmap', active: isActive('/roadmap'), muted: !lifeFrameUnlocked
+                                },
+                                { href: '/todo', label: 'To-Do', active: isActive('/todo') },
+                                {
+                                    href: lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute,
+                                    label: 'Chapters', active: isActive('/reflections'), muted: !lifeFrameUnlocked
+                                },
+                                { href: '/resources', label: 'Resources', active: isActive('/resources') },
+                            ].map(item => (
+                                <Link
+                                    key={item.href + item.label}
+                                    href={item.href}
+                                    onClick={() => setShowMobileMenu(false)}
+                                    className={`block ${linkClass(item.active, item.muted)}`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
                         </div>
-                        <div className="border-t border-gray-200 mt-4 pt-4 space-y-1">
-                            <Link href="/community" onClick={() => setShowMobileMenu(false)} className={`block ${linkClass(isActive('/community'))}`}>
-                                Community
-                            </Link>
+                        <div className="mt-4 pt-4 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
                             <Link
                                 href="/settings"
                                 onClick={() => setShowMobileMenu(false)}
-                                className="block px-4 py-2 rounded-lg font-medium text-sm text-gray-600 hover:bg-gray-50"
+                                className="block px-4 py-2 text-sm font-medium text-white/50 hover:text-white transition-colors"
                             >
                                 Settings
                             </Link>
                             <button
                                 onClick={() => { setShowMobileMenu(false); handleSignOut(); }}
-                                className="w-full text-left px-4 py-2 rounded-lg font-medium text-sm text-red-600 hover:bg-red-50"
+                                className="w-full text-left px-4 py-2 text-sm font-medium text-red-400"
                             >
                                 Sign Out
                             </button>

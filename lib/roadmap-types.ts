@@ -188,6 +188,30 @@ export interface Goal {
 
   /** ISO-8601 timestamp of the most recent update to this goal. */
   updatedAt: string;
+
+  // ── Journaling & Reflections ─────────────────────────────────────────────
+
+  /**
+   * Time-stamped journal entries written by the user while this goal is active.
+   * These are displayed in the "Reflect" section of GoalDetailView and
+   * carried forward to the Chapters / Reflections page on completion.
+   */
+  reflections?: Array<{
+    /** Stable UUID. */
+    id: string;
+    /** The journal entry text. */
+    text: string;
+    /** ISO-8601 timestamp. */
+    date: string;
+    /** Optional mood indicator. */
+    mood?: 'great' | 'okay' | 'hard';
+  }>;
+
+  /**
+   * Written at completion time ("What did you learn from this chapter?").
+   * Displayed as the headline insight on the ChapterCard in the Reflections page.
+   */
+  finalReflection?: string;
 }
 
 // ─── Legacy types (for migration) ────────────────────────────────────────────
