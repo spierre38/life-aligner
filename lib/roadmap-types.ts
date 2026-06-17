@@ -196,22 +196,46 @@ export interface Goal {
    * These are displayed in the "Reflect" section of GoalDetailView and
    * carried forward to the Chapters / Reflections page on completion.
    */
-  reflections?: Array<{
-    /** Stable UUID. */
-    id: string;
-    /** The journal entry text. */
-    text: string;
-    /** ISO-8601 timestamp. */
-    date: string;
-    /** Optional mood indicator. */
-    mood?: 'great' | 'okay' | 'hard';
-  }>;
+  reflections?: Reflection[];
 
   /**
    * Written at completion time ("What did you learn from this chapter?").
    * Displayed as the headline insight on the ChapterCard in the Reflections page.
    */
   finalReflection?: string;
+
+  // ── Chapter customization ───────────────────────────────────────────────
+
+  /**
+   * Optional custom cover image URL (Supabase Storage) for the chapter card.
+   * When set, replaces the default mesh gradient in the ChapterCard header.
+   */
+  coverImageUrl?: string;
+
+  /**
+   * A user-chosen quote or one-liner that represents this chapter.
+   * Displayed prominently on the chapter card.
+   */
+  chapterQuote?: string;
+}
+
+// ─── Reflection (journal entry) ──────────────────────────────────────────────
+
+/**
+ * A single journal entry written during or after a goal's lifetime.
+ * Stored inside Goal.reflections[].
+ */
+export interface Reflection {
+  /** Stable UUID. */
+  id: string;
+  /** The journal entry text. */
+  text: string;
+  /** ISO-8601 timestamp. */
+  date: string;
+  /** Optional mood indicator. */
+  mood?: 'great' | 'okay' | 'hard';
+  /** Optional image URLs (Supabase Storage). Up to 3 per entry. */
+  images?: string[];
 }
 
 // ─── Legacy types (for migration) ────────────────────────────────────────────

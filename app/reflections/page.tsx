@@ -1,24 +1,25 @@
 'use client';
 
 /**
- * /reflections — Life Chapters
+ * /reflections — Life Chapters (Premium)
  *
  * A vertical timeline of every completed goal, rendered as "Chapters"
  * in the user's life story. Each card shows:
- *   - A mesh gradient cover (unique per index)
- *   - Goal title + duration
- *   - Stats: total reflections written, completion date
- *   - The user's final reflection (if written)
- *   - A link to write more reflections
+ *   - Custom cover photo or mesh gradient
+ *   - Chapter quote (user-defined)
+ *   - Mood timeline visualization
+ *   - Image gallery in journal entries
+ *   - Year group headers
+ *   - Enhanced stats
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
-import type { Goal, RoadmapData } from '@/lib/roadmap-types';
+import type { Goal, Reflection, RoadmapData } from '@/lib/roadmap-types';
 
 // Mesh gradient rotation — each chapter gets a distinct aurora color
 const CHAPTER_MESHES = [
@@ -26,17 +27,15 @@ const CHAPTER_MESHES = [
   'var(--mesh-e1)',  // Green + Teal
   'var(--mesh-d1)',  // Blue + Cyan
   'var(--mesh-a1)',  // Magenta + Cyan
-  'var(--mesh-b1)',
-  'var(--mesh-e1)',
 ];
 
 function formatDuration(createdAt: string, completedAt?: string): string {
   const start = new Date(createdAt);
   const end = completedAt ? new Date(completedAt) : new Date();
   const days = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  if (days < 7) return `${days} days`;
-  if (days < 30) return `${Math.round(days / 7)} weeks`;
-  if (days < 365) return `${Math.round(days / 30)} months`;
+  if (days < 7) return `${days} day${days !== 1 ? 's' : ''}`;
+  if (days < 30) return `${Math.round(days / 7)} week${Math.round(days / 7) !== 1 ? 's' : ''}`;
+  if (days < 365) return `${Math.round(days / 30)} month${Math.round(days / 30) !== 1 ? 's' : ''}`;
   return `${(days / 365).toFixed(1)} years`;
 }
 
@@ -44,14 +43,117 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+function formatYear(iso: string): string {
+  return new Date(iso).getFullYear().toString();
+}
+
+// ─── Mood Timeline ───────────────────────────────────────────────────────────
+
+const MOOD_COLORS: Record<string, string> = {
+  great: '#34d399',
+  okay:  '#fbbf24',
+  hard:  '#f87171',
+};
+
+function MoodTimeline({ reflections }: { reflections: Reflection[] }) {
+  const withMood = reflections.filter(r => r.mood);
+  if (withMood.length < 2) return null;
+
+  return (
+    <div className="mb-5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-dim)' }}>
+        Mood Journey
+      </p>
+      <div className="flex items-end gap-1 h-8">
+        {withMood.map((r, i) => {
+          const height = r.mood === 'great' ? '100%' : r.mood === 'okay' ? '60%' : '30%';
+          return (
+            <div
+              key={r.id}
+              className="flex-1 rounded-full transition-all duration-300 hover:opacity-80"
+              style={{
+                height,
+                background: MOOD_COLORS[r.mood!],
+                opacity: 0.7,
+                minWidth: 4,
+                maxWidth: 12,
+                animationDelay: `${i * 50}ms`,
+              }}
+              title={`${formatDate(r.date)} — ${r.mood}`}
+            />
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-1">
+        <span className="text-[9px]" style={{ color: 'var(--color-text-dim)' }}>Start</span>
+        <span className="text-[9px]" style={{ color: 'var(--color-text-dim)' }}>End</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Image Gallery ───────────────────────────────────────────────────────────
+
+function ImageGallery({ images }: { images: string[] }) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
+  if (!images || images.length === 0) return null;
+
+  return (
+    <>
+      <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hide pb-1">
+        {images.map((url, i) => (
+          <button
+            key={i}
+            onClick={() => setLightbox(url)}
+            className="flex-shrink-0 rounded-xl overflow-hidden transition-transform hover:scale-105"
+            style={{ width: 80, height: 80 }}
+          >
+            <img
+              src={url}
+              alt={`Reflection image ${i + 1}`}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+          onClick={() => setLightbox(null)}
+        >
+          <img
+            src={lightbox}
+            alt="Reflection image expanded"
+            className="max-w-[90vw] max-h-[85vh] rounded-2xl shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute top-6 right-6 text-white/70 hover:text-white text-2xl w-10 h-10 rounded-full flex items-center justify-center transition"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ─── Chapter Card ────────────────────────────────────────────────────────────
 
 function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const mesh = CHAPTER_MESHES[index % CHAPTER_MESHES.length];
-  const reflectionCount = goal.reflections?.length ?? 0;
+  const reflections = goal.reflections ?? [];
+  const reflectionCount = reflections.length;
   const duration = formatDuration(goal.createdAt, goal.completedAt);
   const completedDate = goal.completedAt ? formatDate(goal.completedAt) : null;
+  const hasCover = !!goal.coverImageUrl;
 
   return (
     <article
@@ -59,14 +161,25 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
       style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.15)',
       }}
     >
-      {/* Chapter number + mesh gradient header */}
-      <div className="relative h-48 md:h-56" style={{ background: mesh }}>
+      {/* Chapter cover — custom image or mesh gradient */}
+      <div
+        className="relative h-48 md:h-56"
+        style={{
+          background: hasCover ? `url(${goal.coverImageUrl}) center/cover no-repeat` : mesh,
+        }}
+      >
+        {/* Dark overlay for text readability on both cover types */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.2) 100%)' }}
+        />
+
         {/* Chapter number badge */}
         <div
-          className="absolute top-5 left-5 text-xs font-semibold px-3 py-1.5 rounded-full"
+          className="absolute top-5 left-5 text-xs font-semibold px-3 py-1.5 rounded-full z-10"
           style={{ background: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)' }}
         >
           Chapter {index + 1}
@@ -75,7 +188,7 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
         {/* Completed badge */}
         {completedDate && (
           <div
-            className="absolute top-5 right-5 text-xs font-medium px-3 py-1.5 rounded-full"
+            className="absolute top-5 right-5 text-xs font-medium px-3 py-1.5 rounded-full z-10"
             style={{ background: 'rgba(0,0,0,0.4)', color: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(8px)' }}
           >
             Completed {completedDate}
@@ -83,7 +196,7 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
         )}
 
         {/* Goal title overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-6" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)' }}>
+        <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
           <h2
             className="font-normal text-white leading-tight"
             style={{ fontSize: 'var(--fs-h4)', letterSpacing: '-0.02em' }}
@@ -96,6 +209,18 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
 
       {/* Card body */}
       <div className="p-6">
+        {/* Chapter quote */}
+        {goal.chapterQuote && (
+          <div className="mb-5 pl-4" style={{ borderLeft: '3px solid var(--color-text-dim)' }}>
+            <p
+              className="text-lg italic leading-relaxed"
+              style={{ color: 'var(--color-text-muted)', letterSpacing: '-0.01em' }}
+            >
+              "{goal.chapterQuote}"
+            </p>
+          </div>
+        )}
+
         {/* Stats row */}
         <div className="flex gap-6 mb-5">
           <div>
@@ -108,7 +233,18 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
               <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Life Areas</div>
             </div>
           )}
+          {reflections.filter(r => r.images?.length).length > 0 && (
+            <div>
+              <div className="text-2xl font-light" style={{ color: 'var(--color-text)' }}>
+                {reflections.reduce((sum, r) => sum + (r.images?.length ?? 0), 0)}
+              </div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Photos</div>
+            </div>
+          )}
         </div>
+
+        {/* Mood timeline */}
+        <MoodTimeline reflections={reflections} />
 
         {/* Final reflection */}
         {goal.finalReflection && (
@@ -141,7 +277,7 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
 
             {expanded && (
               <div className="mt-3 space-y-3">
-                {[...(goal.reflections ?? [])].reverse().map(r => (
+                {[...reflections].reverse().map(r => (
                   <div
                     key={r.id}
                     className="p-3 rounded-xl text-sm"
@@ -153,14 +289,15 @@ function ChapterCard({ goal, index }: { goal: Goal; index: number }) {
                       </span>
                       {r.mood && (
                         <span className="text-xs px-2 py-0.5 rounded-full" style={{
-                          background: r.mood === 'great' ? 'rgba(0,200,100,0.15)' : r.mood === 'hard' ? 'rgba(255,80,80,0.15)' : 'rgba(255,255,255,0.08)',
-                          color: r.mood === 'great' ? '#34d399' : r.mood === 'hard' ? '#f87171' : 'rgba(255,255,255,0.5)',
+                          background: r.mood === 'great' ? 'rgba(0,200,100,0.15)' : r.mood === 'hard' ? 'rgba(255,80,80,0.15)' : 'rgba(255,200,0,0.15)',
+                          color: MOOD_COLORS[r.mood],
                         }}>
                           {r.mood === 'great' ? '✦ Great' : r.mood === 'hard' ? '⊘ Hard' : '~ Okay'}
                         </span>
                       )}
                     </div>
                     <p className="leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{r.text}</p>
+                    {r.images && <ImageGallery images={r.images} />}
                   </div>
                 ))}
               </div>
@@ -193,6 +330,7 @@ export default function ReflectionsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [chapters, setChapters] = useState<Goal[]>([]);
+  const [activeSince, setActiveSince] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -219,11 +357,20 @@ export default function ReflectionsPage() {
       const completed = (roadmap?.goals ?? [])
         .filter(g => g.status === 'completed')
         .sort((a, b) => {
-          // Most recently completed first
           const aDate = a.completedAt ?? a.updatedAt;
           const bDate = b.completedAt ?? b.updatedAt;
           return new Date(bDate).getTime() - new Date(aDate).getTime();
         });
+
+      // Find earliest goal creation date
+      const allGoals = roadmap?.goals ?? [];
+      if (allGoals.length > 0) {
+        const earliest = allGoals.reduce((min, g) =>
+          new Date(g.createdAt) < new Date(min) ? g.createdAt : min,
+          allGoals[0].createdAt
+        );
+        setActiveSince(earliest);
+      }
 
       setChapters(completed);
       setLoading(false);
@@ -232,6 +379,31 @@ export default function ReflectionsPage() {
     load();
     return () => { mounted = false; };
   }, [router]);
+
+  // Group chapters by year
+  const groupedByYear = useMemo(() => {
+    const groups: Record<string, Goal[]> = {};
+    for (const ch of chapters) {
+      const year = ch.completedAt ? formatYear(ch.completedAt) : formatYear(ch.updatedAt);
+      if (!groups[year]) groups[year] = [];
+      groups[year].push(ch);
+    }
+    // Sort years descending
+    return Object.entries(groups).sort(([a], [b]) => Number(b) - Number(a));
+  }, [chapters]);
+
+  // Enhanced stats
+  const totalReflections = chapters.reduce((sum, g) => sum + (g.reflections?.length ?? 0), 0);
+  const totalPhotos = chapters.reduce((sum, g) =>
+    sum + (g.reflections ?? []).reduce((s, r) => s + (r.images?.length ?? 0), 0), 0);
+  const longestChapter = chapters.length > 0
+    ? chapters.reduce((longest, g) => {
+        const days = Math.round(
+          (new Date(g.completedAt ?? g.updatedAt).getTime() - new Date(g.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return days > longest.days ? { title: g.title, days } : longest;
+      }, { title: '', days: 0 })
+    : null;
 
   return (
     <>
@@ -304,34 +476,74 @@ export default function ReflectionsPage() {
           {/* Chapter timeline */}
           {!loading && chapters.length > 0 && (
             <>
-              {/* Stats summary bar */}
+              {/* Enhanced stats summary bar */}
               <div
-                className="flex gap-8 mb-10 px-6 py-5 rounded-2xl"
+                className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 px-6 py-5 rounded-2xl"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
               >
                 <div>
                   <div className="text-3xl font-light" style={{ color: 'var(--color-text)' }}>{chapters.length}</div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Goals completed</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Chapters</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-light" style={{ color: 'var(--color-text)' }}>
-                    {chapters.reduce((sum, g) => sum + (g.reflections?.length ?? 0), 0)}
-                  </div>
+                  <div className="text-3xl font-light" style={{ color: 'var(--color-text)' }}>{totalReflections}</div>
                   <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Journal entries</div>
                 </div>
-                <div>
-                  <div className="text-3xl font-light" style={{ color: 'var(--color-text)' }}>
-                    {chapters.filter(g => g.finalReflection).length}
+                {totalPhotos > 0 && (
+                  <div>
+                    <div className="text-3xl font-light" style={{ color: 'var(--color-text)' }}>{totalPhotos}</div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Photos</div>
                   </div>
-                  <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Chapters reflected</div>
-                </div>
+                )}
+                {activeSince && (
+                  <div>
+                    <div className="text-sm font-medium mt-1" style={{ color: 'var(--color-text)' }}>
+                      {formatDate(activeSince).split(',')[0]}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Active since</div>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-8">
-                {chapters.map((goal, i) => (
-                  <ChapterCard key={goal.id} goal={goal} index={i} />
-                ))}
-              </div>
+              {/* Longest chapter callout */}
+              {longestChapter && longestChapter.days > 0 && (
+                <div
+                  className="mb-8 px-5 py-3 rounded-xl flex items-center gap-3"
+                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                >
+                  <span className="text-lg">🏆</span>
+                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                    Longest chapter: <strong style={{ color: 'var(--color-text)' }}>{longestChapter.title}</strong> — {formatDuration('2000-01-01', new Date(Date.now() - longestChapter.days * 86400000).toISOString().replace(/T.*/, `T00:00:00.000Z`))}
+                  </span>
+                </div>
+              )}
+
+              {/* Year-grouped chapters */}
+              {groupedByYear.map(([year, goals]) => (
+                <div key={year} className="mb-10">
+                  {/* Year header */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <span
+                      className="text-sm font-semibold px-3 py-1 rounded-full"
+                      style={{ background: 'var(--color-surface)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+                    >
+                      {year}
+                    </span>
+                    <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
+                    <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
+                      {goals.length} {goals.length === 1 ? 'chapter' : 'chapters'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-8">
+                    {goals.map((goal, i) => {
+                      // Calculate global index for mesh gradient rotation
+                      const globalIdx = chapters.indexOf(goal);
+                      return <ChapterCard key={goal.id} goal={goal} index={globalIdx >= 0 ? globalIdx : i} />;
+                    })}
+                  </div>
+                </div>
+              ))}
 
               <div className="text-center mt-12">
                 <Link

@@ -164,6 +164,7 @@ export default function BubbleCanvas({
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [hoveredGoalId, setHoveredGoalId] = useState<string | null>(null);
+  const [flyTo, setFlyTo] = useState<{ goalId: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -245,6 +246,24 @@ export default function BubbleCanvas({
 
     return orbs;
   }, [savedValues, savedInterests, canvasSize.width, canvasHeight]);
+
+  // ── Fly-to handler: animate canvas toward clicked bubble, then open detail ──
+  const handleFlyToGoal = (goalId: string) => {
+    if (reducedMotion || isMobile) {
+      // Skip animation on mobile or reduced-motion
+      onOpenGoal(goalId);
+      return;
+    }
+    const pos = positions.get(goalId);
+    if (!pos) { onOpenGoal(goalId); return; }
+    setFlyTo({ goalId, x: pos.x, y: pos.y });
+    // After animation finishes, open the detail view
+    setTimeout(() => {
+      onOpenGoal(goalId);
+      // Reset after detail view mounts
+      setTimeout(() => setFlyTo(null), 100);
+    }, 480);
+  };
 
   return (
     <div
@@ -358,7 +377,15 @@ export default function BubbleCanvas({
       {activeGoals.length > 0 && !isMobile && (
         <div
           className="relative w-full overflow-hidden"
-          style={{ height: canvasHeight }}
+          style={{
+            height: canvasHeight,
+            transition: flyTo ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease' : 'none',
+            transform: flyTo
+              ? `scale(2.5) translate(${(canvasSize.width / 2 - flyTo.x) * 0.3}px, ${(canvasSize.height / 2 - flyTo.y) * 0.3}px)`
+              : 'scale(1) translate(0, 0)',
+            opacity: flyTo ? 0 : 1,
+            transformOrigin: flyTo ? `${flyTo.x}px ${flyTo.y}px` : 'center center',
+          }}
         >
           {/* Add goal FAB */}
           <div className="fixed top-20 right-6 z-40 flex gap-2">
@@ -432,7 +459,7 @@ export default function BubbleCanvas({
                 reducedMotion={reducedMotion}
                 activityCount={goalActs.length}
                 doneCount={goalActs.filter(a => a.completed).length}
-                onOpen={onOpenGoal}
+                onOpen={handleFlyToGoal}
                 onEdit={onEditGoal}
                 onDelete={onDeleteGoal}
                 onPositionChange={onPositionChange}
