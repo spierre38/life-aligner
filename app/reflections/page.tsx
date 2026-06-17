@@ -498,7 +498,7 @@ export default function ReflectionsPage() {
                 {activeSince && (
                   <div>
                     <div className="text-sm font-medium mt-1" style={{ color: 'var(--color-text)' }}>
-                      {formatDate(activeSince).split(',')[0]}
+                      {formatDate(activeSince)}
                     </div>
                     <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-dim)' }}>Active since</div>
                   </div>
@@ -513,7 +513,7 @@ export default function ReflectionsPage() {
                 >
                   <span className="text-lg">🏆</span>
                   <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    Longest chapter: <strong style={{ color: 'var(--color-text)' }}>{longestChapter.title}</strong> — {formatDuration('2000-01-01', new Date(Date.now() - longestChapter.days * 86400000).toISOString().replace(/T.*/, `T00:00:00.000Z`))}
+                    Longest chapter: <strong style={{ color: 'var(--color-text)' }}>{longestChapter.title}</strong> — {longestChapter.days < 7 ? `${longestChapter.days} days` : longestChapter.days < 30 ? `${Math.round(longestChapter.days / 7)} weeks` : longestChapter.days < 365 ? `${Math.round(longestChapter.days / 30)} months` : `${(longestChapter.days / 365).toFixed(1)} years`}
                   </span>
                 </div>
               )}

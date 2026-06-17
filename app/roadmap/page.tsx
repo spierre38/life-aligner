@@ -37,6 +37,7 @@ import GoalDetailView from './components/GoalDetailView';
 import AddActivityModal from './components/AddActivityModal';
 import ReviewActivitiesView from './components/ReviewActivitiesView';
 import { CompletionModal } from './components/CompletionModal';
+import { uploadReflectionImage } from '@/lib/reflection-images';
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -219,17 +220,35 @@ export default function RoadmapPage() {
     showToast.success('Chapter saved to your Reflections ✨');
   }, [completingGoal, roadmap, persist]);
 
-  /** Add a journal entry (reflection) to a goal */
+  /** Add a journal entry (reflection) to a goal, optionally with images */
   const handleAddReflection = useCallback(async (
     goalId: string,
     text: string,
-    mood?: 'great' | 'okay' | 'hard'
+    mood?: 'great' | 'okay' | 'hard',
+    images?: File[]
   ) => {
+    const entryId = crypto.randomUUID();
+
+    // Upload images if provided (gracefully handles missing bucket)
+    let imageUrls: string[] = [];
+    if (images && images.length > 0 && userId) {
+      const uploads = await Promise.all(
+        images.map(file =>
+          uploadReflectionImage(file, userId, goalId, entryId).catch(err => {
+            console.warn('[reflection] Image upload failed:', err);
+            return null;
+          })
+        )
+      );
+      imageUrls = uploads.filter((url): url is string => url !== null);
+    }
+
     const entry = {
-      id: crypto.randomUUID(),
+      id: entryId,
       text,
       date: new Date().toISOString(),
       mood,
+      ...(imageUrls.length > 0 ? { images: imageUrls } : {}),
     };
     await persist({
       ...roadmap,
@@ -239,8 +258,8 @@ export default function RoadmapPage() {
           : g
       ),
     });
-    showToast.success('Reflection saved →');
-  }, [roadmap, persist]);
+    showToast.success(imageUrls.length > 0 ? `Reflection saved with ${imageUrls.length} photo${imageUrls.length > 1 ? 's' : ''} →` : 'Reflection saved →');
+  }, [roadmap, persist, userId]);
 
   const handlePositionChange = useCallback(async (
     goalId: string,

@@ -258,8 +258,8 @@ interface GoalDetailViewProps {
   onCompleteGoal: (goal: Goal) => void;
   /** Soft-delete the goal after confirmation */
   onDeleteGoal: (goalId: string) => void;
-  /** Add a journal entry to this goal */
-  onAddReflection: (goalId: string, text: string, mood?: 'great' | 'okay' | 'hard') => void;
+  /** Add a journal entry to this goal (images are File objects to upload) */
+  onAddReflection: (goalId: string, text: string, mood?: 'great' | 'okay' | 'hard', images?: File[]) => void;
 }
 
 // ─── Branch line SVG ──────────────────────────────────────────────────────────
@@ -908,7 +908,7 @@ export default function GoalDetailView({
                   onClick={async () => {
                     if (!reflectionText.trim()) return;
                     setSavingReflection(true);
-                    onAddReflection(goal.id, reflectionText.trim(), reflectionMood);
+                    onAddReflection(goal.id, reflectionText.trim(), reflectionMood, pendingImages.length > 0 ? pendingImages : undefined);
                     setReflectionText('');
                     setReflectionMood(undefined);
                     setPendingImages([]);
