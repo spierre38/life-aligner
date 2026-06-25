@@ -308,15 +308,9 @@ export default function AddGoalModal({
         </div>
 
         {/* Scrollable Form */}
-        <form onSubmit={handleSubmit} className="px-8 py-7 space-y-5 overflow-y-auto flex-1">
-          {/* LifeFrame reference */}
-          <LifeFrameInset
-            categories={allCategories}
-            values={savedValues}
-            interests={savedInterests}
-          />
+        <form onSubmit={handleSubmit} className="px-8 py-7 space-y-6 overflow-y-auto flex-1">
 
-          {/* Title */}
+          {/* ── 1. Goal title ──────────────────────────────────────────────── */}
           <div>
             <label htmlFor="goal-title" className="block text-sm font-semibold text-gray-700 mb-2">
               Goal title <span className="text-red-500">*</span>
@@ -335,24 +329,79 @@ export default function AddGoalModal({
             <p className="text-xs text-gray-400 mt-1.5 text-right">{title.length}/140</p>
           </div>
 
-          {/* Why */}
+          {/* ── 2. Connections — choose what this goal aligns with ─────────── */}
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-1">Connect to your LifeFrame</p>
+              <p className="text-xs text-gray-400 mb-3">
+                Pick any that apply — these will anchor your "why" below.
+              </p>
+            </div>
+
+            <ChipPicker
+              label="Life Categories"
+              items={allCategories}
+              selected={selectedCategories}
+              onToggle={item => toggle(selectedCategories, setSelectedCategories, item)}
+              color="purple"
+            />
+            <ChipPicker
+              label="Values"
+              items={savedValues}
+              selected={selectedValues}
+              onToggle={item => toggle(selectedValues, setSelectedValues, item)}
+              color="blue"
+            />
+            <ChipPicker
+              label="Interests"
+              items={savedInterests}
+              selected={selectedInterests}
+              onToggle={item => toggle(selectedInterests, setSelectedInterests, item)}
+              color="rose"
+            />
+          </div>
+
+          {/* ── 3. Why does it matter — anchored by selections above ───────── */}
           <div>
             <label htmlFor="goal-why" className="block text-sm font-semibold text-gray-700 mb-2">
               Why does this matter?{' '}
               <span className="text-gray-400 font-normal">(optional)</span>
             </label>
+
+            {/* Anchor chips — show what they selected above as writing prompts */}
+            {(selectedCategories.length > 0 || selectedValues.length > 0 || selectedInterests.length > 0) && (
+              <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                {selectedCategories.map(c => (
+                  <span key={c} className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">
+                    {c}
+                  </span>
+                ))}
+                {selectedValues.map(v => (
+                  <span key={v} className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+                    {v}
+                  </span>
+                ))}
+                {selectedInterests.map(i => (
+                  <span key={i} className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-medium">
+                    {i}
+                  </span>
+                ))}
+              </div>
+            )}
+
             <textarea
               id="goal-why"
               value={why}
               onChange={e => setWhy(e.target.value)}
-              placeholder="The deeper reason behind this goal…"
-              maxLength={500}
-              rows={3}
+              placeholder="In one sentence, explain why this goal matters to you…"
+              maxLength={300}
+              rows={2}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
+            <p className="text-xs text-gray-400 mt-1 text-right">{why.length}/300</p>
           </div>
 
-          {/* ── Inline Activities ──────────────────────────────────────────── */}
+          {/* ── 4. Activities ──────────────────────────────────────────────── */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold text-gray-700">
@@ -468,30 +517,7 @@ export default function AddGoalModal({
             </div>
           </div>
 
-          {/* Chip pickers */}
-          <ChipPicker
-            label="Life Categories"
-            items={allCategories}
-            selected={selectedCategories}
-            onToggle={item => toggle(selectedCategories, setSelectedCategories, item)}
-            color="purple"
-          />
-          <ChipPicker
-            label="Values"
-            items={savedValues}
-            selected={selectedValues}
-            onToggle={item => toggle(selectedValues, setSelectedValues, item)}
-            color="blue"
-          />
-          <ChipPicker
-            label="Interests"
-            items={savedInterests}
-            selected={selectedInterests}
-            onToggle={item => toggle(selectedInterests, setSelectedInterests, item)}
-            color="rose"
-          />
-
-          {/* Actions */}
+          {/* ── Actions ────────────────────────────────────────────────────── */}
           <div className="flex gap-3 pt-1">
             <button
               type="button"
