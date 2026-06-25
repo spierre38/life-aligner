@@ -5,21 +5,10 @@ import webpush from 'web-push';
 /**
  * GET /api/notifications/send-daily
  *
- * Called by Vercel Cron every hour. Finds all subscriptions where it's
- * currently the user's chosen notification hour and sends a push with
- * today's task count.
- *
- * Vercel Cron in vercel.json:
- *   { "path": "/api/notifications/send-daily", "schedule": "0 * * * *" }
- *
+ * Called by Vercel Cron once daily at 8am UTC (Hobby plan).
+ * Sends a personalized Life Inbox digest to all enabled subscribers.
  * Secured by CRON_SECRET env var.
  */
-
-webpush.setVapidDetails(
-    'mailto:' + (process.env.VAPID_EMAIL ?? 'hello@example.com'),
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
-);
 
 // Service-role Supabase client (bypasses RLS to read all subscriptions)
 function getServiceClient() {
@@ -36,6 +25,18 @@ export async function GET(req: NextRequest) {
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Guard: env vars must exist at runtime
+    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+        return NextResponse.json({ error: 'VAPID keys not configured' }, { status: 500 });
+    }
+
+    // Set VAPID details here (runtime only — not at module load time)
+    webpush.setVapidDetails(
+        'mailto:' + (process.env.VAPID_EMAIL ?? 'hello@example.com'),
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY,
+    );
 
     const supabase = getServiceClient();
     const nowUTC = new Date();
