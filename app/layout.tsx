@@ -65,7 +65,21 @@ export default function RootLayout({
         <html lang="en" data-theme="dark">
             <head>
                 <link rel="manifest" href="/manifest.json" />
-                <link rel="apple-touch-icon" href="/icons/icon.svg" />
+
+                {/* iOS home screen icon */}
+                <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+
+                {/* iOS PWA splash screens */}
+                <link rel="apple-touch-startup-image"
+                    media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+                    href="/splash/apple-splash-1290-2796.png" />
+                <link rel="apple-touch-startup-image"
+                    media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+                    href="/splash/apple-splash-1170-2532.png" />
+                <link rel="apple-touch-startup-image"
+                    media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+                    href="/splash/apple-splash-828-1792.png" />
+
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="apple-mobile-web-app-title" content="Tim Collins Framework" />

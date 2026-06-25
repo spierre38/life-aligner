@@ -3,10 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import { uploadAvatar, removeAvatar } from '@/lib/avatar';
 import AuthNavbar from '@/app/components/AuthNavbar';
+
+const NotificationSettings = dynamic(() => import('@/app/components/NotificationSettings'), { ssr: false });
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -285,11 +288,16 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
+                    {/* ── Notifications ──────────────────────────────────── */}
+                    <div className="mb-4">
+                        <NotificationSettings />
+                    </div>
+
                     {/* Coming Soon */}
                     <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
                         <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">Coming Soon</p>
                         <ul className="space-y-1 text-sm text-amber-800">
-                            {['Password change', 'Notification preferences', 'Data export & backup', 'Account deletion'].map(f => (
+                            {['Password change', 'Data export & backup', 'Account deletion'].map(f => (
                                 <li key={f} className="flex items-center gap-2">
                                     <span className="text-amber-400">•</span> {f}
                                 </li>

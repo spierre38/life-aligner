@@ -1,13 +1,13 @@
-const CACHE_NAME = 'lifealigner-v1';
-const OFFLINE_URL = '/daily';
+const CACHE_NAME = 'lifealigner-v2';
+const OFFLINE_URL = '/dashboard';
 
 // Assets to pre-cache on install
 const PRECACHE_ASSETS = [
-  '/daily',
+  '/dashboard',
   '/manifest.json',
 ];
 
-// Install: pre-cache the app shell
+// ── Install ────────────────────────────────────────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate: clean up old caches
+// ── Activate: clean up old caches ─────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -29,18 +29,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: network-first, fall back to cache
+// ── Fetch: network-first, fall back to cache ───────────────────────────────────
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests and browser extension requests
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith(self.location.origin)) return;
-  // Skip Supabase API calls (let them fail naturally when offline)
   if (event.request.url.includes('supabase.co')) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful HTML/JS/CSS responses
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -50,10 +47,8 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Offline fallback
         return caches.match(event.request).then((cached) => {
           if (cached) return cached;
-          // For navigation requests, serve the daily page
           if (event.request.mode === 'navigate') {
             return caches.match(OFFLINE_URL);
           }
@@ -63,10 +58,60 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Background sync (future: queue activity logs when offline)
+// ── Push: receive and display notification ─────────────────────────────────────
+self.addEventListener('push', (event) => {
+  let data = { title: 'Life Aligner', body: 'Check your Life Inbox.', icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', tag: 'daily-digest', data: { url: '/todo' } };
+
+  if (event.data) {
+    try { data = { ...data, ...JSON.parse(event.data.text()) }; }
+    catch (e) { data.body = event.data.text(); }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:    data.body,
+      icon:    data.icon,
+      badge:   data.badge,
+      tag:     data.tag,
+      renotify: true,
+      data:    data.data,
+      actions: [
+        { action: 'open',    title: '📋 Open Inbox' },
+        { action: 'dismiss', title: 'Dismiss' },
+      ],
+    })
+  );
+});
+
+// ── Notification click: navigate to /todo ──────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'dismiss') return;
+
+  const targetUrl = event.notification.data?.url ?? '/todo';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If the app is already open, focus it and navigate
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.navigate(targetUrl);
+          return;
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+
+// ── Background sync (future) ───────────────────────────────────────────────────
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-activity-logs') {
-    // Placeholder for future write queue
     console.log('[SW] Background sync triggered');
   }
 });

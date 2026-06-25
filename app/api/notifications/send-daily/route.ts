@@ -1,0 +1,123 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import webpush from 'web-push';
+
+/**
+ * GET /api/notifications/send-daily
+ *
+ * Called by Vercel Cron every hour. Finds all subscriptions where it's
+ * currently the user's chosen notification hour and sends a push with
+ * today's task count.
+ *
+ * Vercel Cron in vercel.json:
+ *   { "path": "/api/notifications/send-daily", "schedule": "0 * * * *" }
+ *
+ * Secured by CRON_SECRET env var.
+ */
+
+webpush.setVapidDetails(
+    'mailto:' + (process.env.VAPID_EMAIL ?? 'hello@example.com'),
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+);
+
+// Service-role Supabase client (bypasses RLS to read all subscriptions)
+function getServiceClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+}
+
+export async function GET(req: NextRequest) {
+    // Verify cron secret
+    const authHeader = req.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabase = getServiceClient();
+    const nowUTC = new Date();
+    const currentHour = nowUTC.getUTCHours();
+
+    // Find subscriptions where it's the user's notification hour (UTC comparison)
+    // In production you'd compare against timezone-converted hours; for simplicity
+    // we match UTC hour which works well for users in ET (UTC-4/5).
+    const { data: subscriptions, error } = await supabase
+        .from('push_subscriptions')
+        .select('*, user_id')
+        .eq('enabled', true)
+        .eq('notify_hour', currentHour);
+
+    if (error) {
+        console.error('[send-daily] fetch error:', error);
+        return NextResponse.json({ error: 'DB error' }, { status: 500 });
+    }
+
+    if (!subscriptions || subscriptions.length === 0) {
+        return NextResponse.json({ sent: 0, message: 'No subscriptions for this hour' });
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const sub of subscriptions) {
+        // Count pending tasks for this user using the workbook
+        const { data: taskData } = await supabase
+            .from('workbook_entries')
+            .select('content')
+            .eq('user_id', sub.user_id)
+            .eq('category', 'todos')
+            .maybeSingle();
+
+        const manualTodos: any[] = (taskData?.content as any)?.manual_todos ?? [];
+        const pendingCount = manualTodos.filter((t: any) => !t.completed).length;
+        const overdueCount = manualTodos.filter((t: any) => {
+            if (t.completed || !t.due_date) return false;
+            return new Date(t.due_date) < new Date();
+        }).length;
+
+        const pushSubscription = {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+        };
+
+        const title = overdueCount > 0
+            ? `⚠️ ${overdueCount} overdue task${overdueCount > 1 ? 's' : ''}`
+            : pendingCount > 0
+                ? `📋 ${pendingCount} task${pendingCount > 1 ? 's' : ''} in your Life Inbox`
+                : '✅ Life Inbox clear — great job!';
+
+        const body = overdueCount > 0
+            ? `You also have ${pendingCount} tasks pending today.`
+            : pendingCount > 0
+                ? 'Tap to open your Life Inbox and get started.'
+                : 'All caught up. Keep the momentum going.';
+
+        const payload = JSON.stringify({
+            title,
+            body,
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
+            tag: 'daily-digest',
+            renotify: true,
+            data: { url: '/todo' },
+        });
+
+        try {
+            await webpush.sendNotification(pushSubscription, payload);
+            sent++;
+        } catch (err: any) {
+            console.error('[send-daily] push failed for', sub.user_id, err.statusCode);
+            // 410 Gone = subscription expired; remove it
+            if (err.statusCode === 410) {
+                await supabase.from('push_subscriptions').delete()
+                    .eq('user_id', sub.user_id).eq('endpoint', sub.endpoint);
+            }
+            failed++;
+        }
+    }
+
+    return NextResponse.json({ sent, failed, hour: currentHour });
+}
