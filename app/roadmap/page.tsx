@@ -31,6 +31,7 @@ import type { Goal, Activity, SubActivity, RoadmapData } from '@/lib/roadmap-typ
 
 import FTUECategoryPicker from './components/FTUECategoryPicker';
 import BubbleCanvas from './components/BubbleCanvas';
+import MobileGoalList from './components/MobileGoalList';
 import AddGoalModal from './components/AddGoalModal';
 import EditGoalModal from './components/EditGoalModal';
 import GoalDetailView from './components/GoalDetailView';
@@ -64,6 +65,16 @@ export default function RoadmapPage() {
   const [detailGoalId, setDetailGoalId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [completingGoal, setCompletingGoal] = useState<Goal | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const saveSeq = useRef(0);
 
@@ -486,8 +497,8 @@ export default function RoadmapPage() {
         />
       )}
 
-      {/* Bubble Canvas */}
-      {activeGoals.length > 0 && (
+      {/* Bubble Canvas (desktop) / Mobile Goal List (mobile) */}
+      {activeGoals.length > 0 && !isMobile && (
         <BubbleCanvas
           roadmap={roadmap}
           savedValues={savedValues}
@@ -498,6 +509,14 @@ export default function RoadmapPage() {
           onDeleteGoal={handleDeleteGoal}
           onPositionChange={handlePositionChange}
           onOpenGoal={setDetailGoalId}
+          onReviewAll={() => setReviewOpen(true)}
+        />
+      )}
+      {activeGoals.length > 0 && isMobile && (
+        <MobileGoalList
+          roadmap={roadmap}
+          onOpenGoal={setDetailGoalId}
+          onAddGoal={() => setAddGoalOpen(true)}
           onReviewAll={() => setReviewOpen(true)}
         />
       )}

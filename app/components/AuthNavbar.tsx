@@ -316,72 +316,11 @@ export default function AuthNavbar() {
                             )}
                         </div>
 
-                        {/* Mobile hamburger */}
-                        <button
-                            onClick={() => setShowMobileMenu(!showMobileMenu)}
-                            className="md:hidden p-2 rounded-lg transition-all duration-200"
-                            style={{ color: 'rgba(255,255,255,0.7)' }}
-                            aria-label="Toggle navigation menu"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {showMobileMenu ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                )}
-                            </svg>
-                        </button>
+                        {/* Mobile hamburger — hidden: bottom nav handles mobile */}
                     </div>
                 </div>
 
-                {/* Mobile menu */}
-                {showMobileMenu && (
-                    <div className="md:hidden py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div className="space-y-0.5">
-                            {[
-                                { href: '/dashboard', label: 'Dashboard', active: isActive('/dashboard') },
-                                {
-                                    href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute,
-                                    label: 'LifeFrame', active: isPathPrefix('/workbook'), muted: !lifeFrameUnlocked
-                                },
-                                {
-                                    href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute,
-                                    label: 'Roadmap', active: isActive('/roadmap'), muted: !lifeFrameUnlocked
-                                },
-                                { href: '/todo', label: 'Inbox', active: isActive('/todo') },
-                                {
-                                    href: lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute,
-                                    label: 'Chapters', active: isActive('/reflections'), muted: !lifeFrameUnlocked
-                                },
-                                { href: '/resources', label: 'Resources', active: isActive('/resources') },
-                            ].map(item => (
-                                <Link
-                                    key={item.href + item.label}
-                                    href={item.href}
-                                    onClick={() => setShowMobileMenu(false)}
-                                    className={`block ${linkClass(item.active, item.muted)}`}
-                                >
-                                    {item.label}
-                                </Link>
-                            ))}
-                        </div>
-                        <div className="mt-4 pt-4 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                            <Link
-                                href="/settings"
-                                onClick={() => setShowMobileMenu(false)}
-                                className="block px-4 py-2 text-sm font-medium text-white/50 hover:text-white transition-colors"
-                            >
-                                Settings
-                            </Link>
-                            <button
-                                onClick={() => { setShowMobileMenu(false); handleSignOut(); }}
-                                className="w-full text-left px-4 py-2 text-sm font-medium text-red-400"
-                            >
-                                Sign Out
-                            </button>
-                        </div>
-                    </div>
-                )}
+                {/* Mobile menu — replaced by MobileBottomNav */}
             </div>
         </nav>
     );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +11,7 @@ import {
     URGENCY_COLOR, URGENCY_LABEL, URGENCY_ORDER, bucketToDate, computeUrgency,
 } from '@/lib/todos';
 import { showToast } from '@/lib/toast';
+import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 
 // ─── Life Category helpers ─────────────────────────────────────────────────────
 
@@ -186,7 +187,7 @@ function UrgencyChip({ urgency }: { urgency: UrgencyLevel }) {
     );
 }
 
-// ─── Task Row ──────────────────────────────────────────────────────────────────
+// ─── Task Row (swipeable on mobile, static on desktop) ───────────────────────
 
 function TaskRow({
     todo,
@@ -197,73 +198,149 @@ function TaskRow({
     onToggle: (t: TodoItem) => void;
     onDelete: (t: TodoItem) => void;
 }) {
-    const [expanded, setExpanded] = useState(false);
+    const [swipeX, setSwipeX] = useState(0);
+    const [swiping, setSwiping] = useState(false);
+    const startX = useRef(0);
+    const THRESHOLD = 80;
+
+    const haptic = (ms = 10) => {
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            navigator.vibrate(ms);
+        }
+    };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        startX.current = e.touches[0].clientX;
+        setSwiping(true);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!swiping) return;
+        const dx = e.touches[0].clientX - startX.current;
+        setSwipeX(Math.max(-120, Math.min(120, dx)));
+    };
+
+    const handleTouchEnd = () => {
+        setSwiping(false);
+        if (swipeX > THRESHOLD) {
+            haptic(12);
+            onToggle(todo);
+        } else if (swipeX < -THRESHOLD && todo.source === 'manual') {
+            haptic(20);
+            onDelete(todo);
+        }
+        setSwipeX(0);
+    };
+
+    const swipeProgress = Math.abs(swipeX) / THRESHOLD;
+    const isCompleteSwipe = swipeX > 20;
+    const isDeleteSwipe   = swipeX < -20;
 
     return (
-        <div
-            className="rounded-2xl p-4 transition-all duration-200"
-            style={{
-                background: todo.completed ? 'rgba(255,255,255,0.02)' : 'var(--color-surface)',
-                border: `1px solid ${todo.completed ? 'var(--color-border)' : 'var(--color-border)'}`,
-                opacity: todo.completed ? 0.55 : 1,
-            }}
-        >
-            <div className="flex items-start gap-3">
-                {/* Checkbox */}
-                <button
-                    onClick={() => onToggle(todo)}
-                    className="flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-200 flex items-center justify-center"
-                    style={{
-                        borderColor: todo.completed ? 'rgba(0,200,100,0.6)' : 'var(--color-border)',
-                        background: todo.completed ? 'rgba(0,200,100,0.2)' : 'transparent',
-                    }}
+        <div className="relative overflow-hidden rounded-2xl">
+            {/* Swipe right: complete (green) */}
+            {isCompleteSwipe && (
+                <div
+                    className="absolute inset-0 flex items-center pl-5"
+                    style={{ background: `rgba(0,200,100,${Math.min(swipeProgress * 0.8, 0.25)})`, borderRadius: '1rem' }}
                 >
-                    {todo.completed && (
-                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'rgba(0,200,100,0.9)' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                    )}
-                </button>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span
-                            className="text-sm font-medium"
-                            style={{
-                                color: 'var(--color-text)',
-                                textDecoration: todo.completed ? 'line-through' : 'none',
-                            }}
-                        >
-                            {todo.text}
-                        </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        {todo.urgency && !todo.completed && <UrgencyChip urgency={todo.urgency} />}
-                        {todo.goal_title && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-dim)' }}>
-                                ↗ {todo.goal_title}
-                            </span>
-                        )}
-                    </div>
+                    <svg className="w-5 h-5" fill="none" stroke="rgba(0,200,100,0.9)" strokeWidth={2.5} viewBox="0 0 24 24"
+                        style={{ opacity: Math.min(swipeProgress, 1) }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                 </div>
+            )}
+            {/* Swipe left: delete (red) */}
+            {isDeleteSwipe && todo.source === 'manual' && (
+                <div
+                    className="absolute inset-0 flex items-center justify-end pr-5"
+                    style={{ background: `rgba(239,68,68,${Math.min(swipeProgress * 0.8, 0.25)})`, borderRadius: '1rem' }}
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="rgba(239,68,68,0.9)" strokeWidth={2} viewBox="0 0 24 24"
+                        style={{ opacity: Math.min(swipeProgress, 1) }}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1m-6 0h6" />
+                    </svg>
+                </div>
+            )}
 
-                {/* Delete */}
-                {todo.source === 'manual' && (
+            {/* Card content */}
+            <div
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className="p-4"
+                style={{
+                    background: todo.completed ? 'rgba(255,255,255,0.02)' : 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '1rem',
+                    opacity: todo.completed ? 0.55 : 1,
+                    transform: `translateX(${swipeX}px)`,
+                    transition: swiping ? 'none' : 'transform 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                    willChange: 'transform',
+                    touchAction: 'pan-y',
+                }}
+            >
+                <div className="flex items-start gap-3">
+                    {/* Checkbox */}
                     <button
-                        onClick={() => onDelete(todo)}
-                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all opacity-30 hover:opacity-80"
-                        style={{ color: 'var(--color-text-muted)' }}
+                        onClick={() => { haptic(10); onToggle(todo); }}
+                        className="flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-200 flex items-center justify-center"
+                        style={{
+                            borderColor: todo.completed ? 'rgba(0,200,100,0.6)' : 'var(--color-border)',
+                            background: todo.completed ? 'rgba(0,200,100,0.2)' : 'transparent',
+                        }}
                     >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        {todo.completed && (
+                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'rgba(0,200,100,0.9)' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
                     </button>
-                )}
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span
+                                className="text-sm font-medium"
+                                style={{
+                                    color: 'var(--color-text)',
+                                    textDecoration: todo.completed ? 'line-through' : 'none',
+                                }}
+                            >
+                                {todo.text}
+                            </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {todo.urgency && !todo.completed && <UrgencyChip urgency={todo.urgency} />}
+                            {todo.goal_title && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-dim)' }}>
+                                    ↗ {todo.goal_title}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[10px] mt-1.5 md:hidden" style={{ color: 'var(--color-text-dim)' }}>
+                            Swipe → complete · ← delete
+                        </p>
+                    </div>
+
+                    {/* Desktop delete button */}
+                    {todo.source === 'manual' && (
+                        <button
+                            onClick={() => onDelete(todo)}
+                            className="flex-shrink-0 w-6 h-6 rounded-full items-center justify-center transition-all opacity-20 hover:opacity-70 hidden md:flex"
+                            style={{ color: 'var(--color-text-muted)' }}
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
 }
+
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
@@ -349,10 +426,37 @@ export default function LifeInboxPage() {
     const totalPending = todos.filter(t => !t.completed).length;
     const completedToday = todos.filter(t => t.completed && t.completed_at?.startsWith(new Date().toISOString().split('T')[0])).length;
 
+    // Pull to refresh
+    const { pullDistance, isRefreshing, containerProps } = usePullToRefresh({
+        onRefresh: loadTodos,
+        threshold: 72,
+    });
+
     return (
         <>
             <AuthNavbar />
-            <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
+            <div
+                className="min-h-screen pt-16"
+                style={{ background: 'var(--color-bg)' }}
+                {...containerProps}
+            >
+                {/* Pull-to-refresh indicator */}
+                {(pullDistance > 0 || isRefreshing) && (
+                    <div
+                        className="flex items-center justify-center overflow-hidden transition-all duration-200"
+                        style={{ height: `${pullDistance}px`, maxHeight: '72px' }}
+                    >
+                        <div
+                            className="w-6 h-6 rounded-full"
+                            style={{
+                                border: '2px solid var(--color-border)',
+                                borderTopColor: isRefreshing ? '#6366f1' : `rgba(99,102,241,${pullDistance / 72})`,
+                                animation: isRefreshing ? 'spin 0.7s linear infinite' : 'none',
+                                transform: isRefreshing ? undefined : `rotate(${(pullDistance / 72) * 270}deg)`,
+                            }}
+                        />
+                    </div>
+                )}
                 <div className="max-w-2xl mx-auto px-4 py-8">
 
                     {/* Header */}
