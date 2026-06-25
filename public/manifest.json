@@ -1,13 +1,13 @@
 {
-  "name": "LifeAligner",
+  "name": "Tim Collins Framework",
   "short_name": "LifeAligner",
   "description": "Align your goals with your values and purpose",
-  "start_url": "/daily",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f0a2e",
-  "theme_color": "#4f46e5",
+  "background_color": "#0a0a0a",
+  "theme_color": "#6366f1",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -26,14 +26,22 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "Today's Focus",
-      "url": "/daily?tab=today",
-      "description": "View today's focus activities"
+      "name": "Life Inbox",
+      "url": "/todo",
+      "description": "View tasks due today and this week",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "My To-Do Pad",
-      "url": "/daily?tab=pad",
-      "description": "Check your to-do list"
+      "name": "My Roadmap",
+      "url": "/roadmap",
+      "description": "Check your goals and roadmap",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your dashboard",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { evaluateLifeFrameCompletion, type LifeFrameCompletion } from '@/lib/lifeframe-completion';
+import { getUrgentTodoCount } from '@/lib/todos';
 import Wordmark from '@/app/components/Wordmark';
 import { useTheme } from '@/app/components/ThemeProvider';
 
@@ -68,6 +69,7 @@ export default function AuthNavbar() {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
+    const [urgentCount, setUrgentCount] = useState(0);
 
     useEffect(() => {
         let mounted = true;
@@ -89,6 +91,9 @@ export default function AuthNavbar() {
         };
 
         load();
+
+        // Load urgent task count for bell badge
+        getUrgentTodoCount().then(setUrgentCount).catch(() => {});
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (!mounted) return;
@@ -168,7 +173,7 @@ export default function AuthNavbar() {
                             Roadmap
                         </Link>
                         <Link href="/todo" className={linkClass(isActive('/todo'))}>
-                            To-Do
+                            Inbox
                         </Link>
                         <Link
                             href={lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute}
@@ -182,10 +187,36 @@ export default function AuthNavbar() {
                         </Link>
                     </div>
 
-                    {/* Right: theme toggle + user block + mobile hamburger */}
+                    {/* Right: theme toggle + bell + user block + mobile hamburger */}
                     <div className="flex items-center justify-end gap-2">
                         {/* Theme toggle */}
                         <ThemeToggle />
+
+                        {/* Notification bell */}
+                        <Link
+                            href="/todo"
+                            id="inbox-bell-btn"
+                            aria-label={urgentCount > 0 ? `${urgentCount} urgent tasks` : 'Life Inbox'}
+                            className="relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200"
+                            style={{
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(255,255,255,0.10)',
+                                color: urgentCount > 0 ? '#f97316' : 'rgba(255,255,255,0.5)',
+                            }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                            {urgentCount > 0 && (
+                                <span
+                                    className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
+                                    style={{ background: '#f97316', color: 'white' }}
+                                >
+                                    {urgentCount > 9 ? '9+' : urgentCount}
+                                </span>
+                            )}
+                        </Link>
 
                         {/* Desktop user menu */}
                         <div className="hidden md:block relative">
@@ -317,7 +348,7 @@ export default function AuthNavbar() {
                                     href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute,
                                     label: 'Roadmap', active: isActive('/roadmap'), muted: !lifeFrameUnlocked
                                 },
-                                { href: '/todo', label: 'To-Do', active: isActive('/todo') },
+                                { href: '/todo', label: 'Inbox', active: isActive('/todo') },
                                 {
                                     href: lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute,
                                     label: 'Chapters', active: isActive('/reflections'), muted: !lifeFrameUnlocked

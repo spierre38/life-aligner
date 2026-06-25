@@ -11,6 +11,7 @@ import {
     type LifeFrameCompletion,
 } from '@/lib/lifeframe-completion';
 import dynamic from 'next/dynamic';
+import { getAllTodos, type TodoItem, URGENCY_COLOR } from '@/lib/todos';
 
 // Welcome-flow components — lazy-loaded so first-time experience doesn't
 // bloat the main dashboard bundle.
@@ -184,6 +185,7 @@ export default function DashboardPage() {
     const [loadError, setLoadError] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
     const [showVideoIntro, setShowVideoIntro] = useState(false);
+    const [urgentTodos, setUrgentTodos] = useState<TodoItem[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
 
@@ -234,6 +236,14 @@ export default function DashboardPage() {
         };
 
         load();
+
+        // Load urgent tasks for Today's Focus card
+        getAllTodos().then(({ data }) => {
+            if (data) {
+                setUrgentTodos(data.filter(t => !t.completed && (t.urgency === 'overdue' || t.urgency === 'today')));
+            }
+        }).catch(() => {});
+
         return () => { mounted = false; };
     }, [router]);
 
@@ -358,6 +368,73 @@ export default function DashboardPage() {
                             </Link>
                         </div>
                     </section>
+
+                    {/* ── Today's Focus Card (only when tasks need attention) ── */}
+                    {urgentTodos.length > 0 && (
+                        <section className="mb-10" aria-label="Today's Focus">
+                            <div
+                                className="rounded-2xl p-5"
+                                style={{
+                                    background: 'var(--color-surface)',
+                                    border: '1px solid rgba(249,115,22,0.3)',
+                                    boxShadow: '0 4px 24px rgba(249,115,22,0.08)',
+                                }}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-base">🔔</span>
+                                        <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+                                            Today's Focus
+                                        </h2>
+                                        <span
+                                            className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                            style={{ background: 'rgba(249,115,22,0.2)', color: '#f97316' }}
+                                        >
+                                            {urgentTodos.length} pending
+                                        </span>
+                                    </div>
+                                    <Link
+                                        href="/todo"
+                                        className="text-xs font-medium transition-opacity hover:opacity-70"
+                                        style={{ color: 'var(--color-text-dim)' }}
+                                    >
+                                        View all →
+                                    </Link>
+                                </div>
+                                <div className="space-y-2">
+                                    {urgentTodos.slice(0, 4).map(todo => (
+                                        <div
+                                            key={todo.id}
+                                            className="flex items-center gap-3 py-2"
+                                            style={{ borderBottom: '1px solid var(--color-border)' }}
+                                        >
+                                            <div
+                                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                                style={{ background: URGENCY_COLOR[todo.urgency ?? 'today'].dot }}
+                                            />
+                                            <span className="flex-1 text-sm" style={{ color: 'var(--color-text)' }}>
+                                                {todo.text}
+                                            </span>
+                                            {todo.category && (
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-dim)' }}>
+                                                    {todo.category}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                {urgentTodos.length > 4 && (
+                                    <Link
+                                        href="/todo"
+                                        className="block text-center text-xs mt-3 transition-opacity hover:opacity-70"
+                                        style={{ color: 'var(--color-text-dim)' }}
+                                    >
+                                        + {urgentTodos.length - 4} more in Life Inbox
+                                    </Link>
+                                )}
+                            </div>
+                        </section>
+                    )}
 
                     {/* ── Journey cards ────────────────────────────────── */}
                     <section className="mb-14" aria-labelledby="journey-heading">

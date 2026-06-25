@@ -1,1013 +1,489 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, toggleTodoVisibility, TodoItem } from '@/lib/todos';
-import { supabase } from '@/lib/supabase';
-import { showToast } from '@/lib/toast';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import { supabase } from '@/lib/supabase';
+import {
+    getAllTodos, addManualTodo, deleteManualTodo, toggleTodoCompletion,
+    toggleSubGoalCompletion, addSubGoal,
+    type TodoItem, type DeadlineBucket, type UrgencyLevel,
+    URGENCY_COLOR, URGENCY_LABEL, URGENCY_ORDER, bucketToDate, computeUrgency,
+} from '@/lib/todos';
+import { showToast } from '@/lib/toast';
 
-export default function YellowPadPage() {
+// ─── Life Category helpers ─────────────────────────────────────────────────────
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+    Health: '💪', Relationships: '❤️', Career: '💼', Financial: '💰',
+    Community: '🤝', Purpose: '🌟', 'Personal Growth': '🌱',
+    Spirituality: '🕊️', Recreation: '🎯', Environment: '🌿',
+};
+
+function categoryEmoji(cat: string): string {
+    return CATEGORY_EMOJIS[cat] ?? '📌';
+}
+
+// ─── Deadline bucket selector ──────────────────────────────────────────────────
+
+const BUCKETS: { value: DeadlineBucket; label: string; color: string }[] = [
+    { value: 'today',     label: 'Today',     color: '#f97316' },
+    { value: 'tomorrow',  label: 'Tomorrow',  color: '#eab308' },
+    { value: 'this_week', label: 'This Week', color: '#6366f1' },
+    { value: 'someday',   label: 'Someday',   color: '#94a3b8' },
+];
+
+// ─── Add Task Modal ────────────────────────────────────────────────────────────
+
+function AddTaskModal({
+    onClose,
+    onAdd,
+    categories,
+}: {
+    onClose: () => void;
+    onAdd: (text: string, bucket: DeadlineBucket, category?: string) => Promise<void>;
+    categories: string[];
+}) {
+    const [text, setText] = useState('');
+    const [bucket, setBucket] = useState<DeadlineBucket>('today');
+    const [category, setCategory] = useState<string>(categories[0] ?? '');
+    const [saving, setSaving] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!text.trim()) return;
+        setSaving(true);
+        await onAdd(text.trim(), bucket, category || undefined);
+        setSaving(false);
+        onClose();
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
+            <div className="w-full max-w-md rounded-3xl p-6" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                <h2 className="text-lg font-semibold mb-5" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                    Add to Life Inbox
+                </h2>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Task text */}
+                    <textarea
+                        autoFocus
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        placeholder="What needs to be done? e.g. Pay car insurance"
+                        rows={2}
+                        className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none"
+                        style={{
+                            background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)',
+                            color: 'var(--color-text)',
+                        }}
+                    />
+
+                    {/* Life Category */}
+                    {categories.length > 0 && (
+                        <div>
+                            <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                                Life Category
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        type="button"
+                                        onClick={() => setCategory(cat)}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                                        style={{
+                                            background: category === cat ? 'rgba(99,102,241,0.2)' : 'var(--color-surface-2)',
+                                            border: `1px solid ${category === cat ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
+                                            color: category === cat ? '#818cf8' : 'var(--color-text-muted)',
+                                        }}
+                                    >
+                                        {categoryEmoji(cat)} {cat}
+                                    </button>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => setCategory('')}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                                    style={{
+                                        background: category === '' ? 'rgba(99,102,241,0.2)' : 'var(--color-surface-2)',
+                                        border: `1px solid ${category === '' ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
+                                        color: category === '' ? '#818cf8' : 'var(--color-text-muted)',
+                                    }}
+                                >
+                                    📋 General
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Deadline bucket */}
+                    <div>
+                        <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                            When
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {BUCKETS.map(b => (
+                                <button
+                                    key={b.value}
+                                    type="button"
+                                    onClick={() => setBucket(b.value)}
+                                    className="py-2 rounded-xl text-xs font-semibold transition-all"
+                                    style={{
+                                        background: bucket === b.value ? `${b.color}22` : 'var(--color-surface-2)',
+                                        border: `1px solid ${bucket === b.value ? b.color + '66' : 'var(--color-border)'}`,
+                                        color: bucket === b.value ? b.color : 'var(--color-text-muted)',
+                                    }}
+                                >
+                                    {b.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 py-3 rounded-xl text-sm font-medium transition-all"
+                            style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={!text.trim() || saving}
+                            className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
+                            style={{
+                                background: text.trim() ? 'rgba(99,102,241,1)' : 'rgba(99,102,241,0.3)',
+                                color: 'white',
+                            }}
+                        >
+                            {saving ? 'Adding…' : 'Add Task'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+// ─── Urgency Chip ──────────────────────────────────────────────────────────────
+
+function UrgencyChip({ urgency }: { urgency: UrgencyLevel }) {
+    const c = URGENCY_COLOR[urgency];
+    return (
+        <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+            style={{ background: c.bg, color: c.text }}
+        >
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: c.dot }} />
+            {URGENCY_LABEL[urgency]}
+        </span>
+    );
+}
+
+// ─── Task Row ──────────────────────────────────────────────────────────────────
+
+function TaskRow({
+    todo,
+    onToggle,
+    onDelete,
+}: {
+    todo: TodoItem;
+    onToggle: (t: TodoItem) => void;
+    onDelete: (t: TodoItem) => void;
+}) {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <div
+            className="rounded-2xl p-4 transition-all duration-200"
+            style={{
+                background: todo.completed ? 'rgba(255,255,255,0.02)' : 'var(--color-surface)',
+                border: `1px solid ${todo.completed ? 'var(--color-border)' : 'var(--color-border)'}`,
+                opacity: todo.completed ? 0.55 : 1,
+            }}
+        >
+            <div className="flex items-start gap-3">
+                {/* Checkbox */}
+                <button
+                    onClick={() => onToggle(todo)}
+                    className="flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 transition-all duration-200 flex items-center justify-center"
+                    style={{
+                        borderColor: todo.completed ? 'rgba(0,200,100,0.6)' : 'var(--color-border)',
+                        background: todo.completed ? 'rgba(0,200,100,0.2)' : 'transparent',
+                    }}
+                >
+                    {todo.completed && (
+                        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'rgba(0,200,100,0.9)' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </button>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <span
+                            className="text-sm font-medium"
+                            style={{
+                                color: 'var(--color-text)',
+                                textDecoration: todo.completed ? 'line-through' : 'none',
+                            }}
+                        >
+                            {todo.text}
+                        </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        {todo.urgency && !todo.completed && <UrgencyChip urgency={todo.urgency} />}
+                        {todo.goal_title && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-dim)' }}>
+                                ↗ {todo.goal_title}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Delete */}
+                {todo.source === 'manual' && (
+                    <button
+                        onClick={() => onDelete(todo)}
+                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all opacity-30 hover:opacity-80"
+                        style={{ color: 'var(--color-text-muted)' }}
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
+
+export default function LifeInboxPage() {
+    const router = useRouter();
     const [todos, setTodos] = useState<TodoItem[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
-    const [userName, setUserName] = useState('My');
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showSubGoalModal, setShowSubGoalModal] = useState<string | null>(null);
-    const [newTodoText, setNewTodoText] = useState('');
-    const [newSubGoalText, setNewSubGoalText] = useState('');
+    const [activeFilter, setActiveFilter] = useState<DeadlineBucket | 'all'>('all');
 
-    // Theme state
-    const [theme, setTheme] = useState<'yellow' | 'blue' | 'green' | 'dark' | 'pink'>('yellow');
-
-    // Load saved theme on mount
-    useEffect(() => {
-        const saved = localStorage.getItem('yellowpad-theme');
-        if (saved && ['yellow', 'blue', 'green', 'dark', 'pink'].includes(saved)) {
-            setTheme(saved as typeof theme);
-        }
-    }, []);
-
-    const changeTheme = (newTheme: typeof theme) => {
-        setTheme(newTheme);
-        localStorage.setItem('yellowpad-theme', newTheme);
-    };
-
-    const themes = {
-        yellow: {
-            bg: '#fef9c3', text: '#111827',
-            lineColor: '#94a3b8', marginColor: '#dc2626',
-            accentBg: 'bg-yellow-300 hover:bg-yellow-400 border-yellow-500',
-            accentText: 'text-gray-900',
-            checkBorder: 'border-gray-600', checkColor: 'text-gray-800',
-            hoverBg: 'hover:bg-yellow-200/50',
-            label: 'Classic', preview: '#fef9c3',
-            modalBg: 'bg-yellow-50 border-yellow-300',
-            inputBorder: 'border-yellow-400',
-        },
-        blue: {
-            bg: '#dbeafe', text: '#111827',
-            lineColor: '#93c5fd', marginColor: '#3b82f6',
-            accentBg: 'bg-blue-300 hover:bg-blue-400 border-blue-500',
-            accentText: 'text-gray-900',
-            checkBorder: 'border-blue-700', checkColor: 'text-blue-800',
-            hoverBg: 'hover:bg-blue-200/50',
-            label: 'Ocean', preview: '#dbeafe',
-            modalBg: 'bg-blue-50 border-blue-300',
-            inputBorder: 'border-blue-400',
-        },
-        green: {
-            bg: '#dcfce7', text: '#111827',
-            lineColor: '#86efac', marginColor: '#16a34a',
-            accentBg: 'bg-green-300 hover:bg-green-400 border-green-500',
-            accentText: 'text-gray-900',
-            checkBorder: 'border-green-700', checkColor: 'text-green-800',
-            hoverBg: 'hover:bg-green-200/50',
-            label: 'Forest', preview: '#dcfce7',
-            modalBg: 'bg-green-50 border-green-300',
-            inputBorder: 'border-green-400',
-        },
-        dark: {
-            bg: '#1e293b', text: '#e2e8f0',
-            lineColor: '#334155', marginColor: '#6366f1',
-            accentBg: 'bg-indigo-600 hover:bg-indigo-700 border-indigo-500',
-            accentText: 'text-white',
-            checkBorder: 'border-indigo-400', checkColor: 'text-indigo-300',
-            hoverBg: 'hover:bg-slate-700/50',
-            label: 'Midnight', preview: '#1e293b',
-            modalBg: 'bg-slate-800 border-indigo-500',
-            inputBorder: 'border-indigo-500',
-        },
-        pink: {
-            bg: '#fce7f3', text: '#111827',
-            lineColor: '#f9a8d4', marginColor: '#ec4899',
-            accentBg: 'bg-pink-300 hover:bg-pink-400 border-pink-500',
-            accentText: 'text-gray-900',
-            checkBorder: 'border-pink-600', checkColor: 'text-pink-700',
-            hoverBg: 'hover:bg-pink-200/50',
-            label: 'Rose', preview: '#fce7f3',
-            modalBg: 'bg-pink-50 border-pink-300',
-            inputBorder: 'border-pink-400',
-        },
-    };
-
-    const t = themes[theme];
-
-    // Editing states
-    const [editingTodo, setEditingTodo] = useState<string | null>(null);
-    const [editingSubGoal, setEditingSubGoal] = useState<string | null>(null);
-    const [editText, setEditText] = useState('');
-    const [showCompleted, setShowCompleted] = useState(false);
-    const [showHidden, setShowHidden] = useState(false);
-
-    // CSV Export
-    const exportToCSV = () => {
-        const headers = ['Priority', 'Task', 'Source', 'Status', 'Sub-Goals'];
-        const rows = todos.map((todo, idx) => {
-            const subGoals = (todo.sub_goals || []).map(sg => sg.text).join('; ');
-            return [
-                String(idx + 1),
-                todo.text,
-                todo.source || 'manual',
-                todo.completed ? 'Completed' : 'Active',
-                subGoals
-            ];
-        });
-        const csvContent = [headers, ...rows]
-            .map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
-            .join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `todo-list-${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
-        showToast.success('Exported to CSV!');
-    };
-
-    // Clear completed items
-    const clearCompleted = async () => {
-        const completedTodos = todos.filter(t => t.completed);
-        if (completedTodos.length === 0) return;
-        for (const todo of completedTodos) {
-            if (todo.source === 'manual' || !todo.source) {
-                await deleteManualTodo(todo.id);
-            } else {
-                await toggleTodoVisibility(todo.id, (todo.source as 'roadmap' | 'manual') || 'roadmap');
-            }
-        }
-        setTodos(prev => prev.filter(t => !t.completed));
-        showToast.success(`Cleared ${completedTodos.length} completed items`);
-    };
-
-    useEffect(() => {
-        loadUserAndTodos();
-    }, []);
-
-    const loadUserAndTodos = async () => {
+    // Load user's life categories from workbook
+    const loadCategories = useCallback(async () => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('full_name')
-                .eq('id', user.id)
-                .single();
-
-            if (profile?.full_name) {
-                setUserName(profile.full_name.split(' ')[0]);
-            }
+        if (!user) return;
+        const { data } = await supabase
+            .from('workbook_entries')
+            .select('content')
+            .eq('user_id', user.id)
+            .eq('category', 'life_categories')
+            .maybeSingle();
+        if (data?.content) {
+            const content = data.content as any;
+            const cats: string[] = content.selectedCategories ?? [];
+            setCategories(cats);
         }
+    }, []);
 
-        loadTodos();
-    };
-
-    const loadTodos = async () => {
+    const loadTodos = useCallback(async () => {
         setLoading(true);
         const { data, error } = await getAllTodos();
-
-        if (error) {
-            showToast.error('Failed to load todos');
-        } else {
-            const sorted = (data || []).sort((a, b) => {
-                // Sort only by priority — completed items stay in place
-                const aPriority = a.priority || 9999;
-                const bPriority = b.priority || 9999;
-                return aPriority - bPriority;
-            });
-            setTodos(sorted);
-        }
-
+        if (error) { showToast.error('Failed to load tasks'); }
+        else { setTodos(data ?? []); }
         setLoading(false);
+    }, []);
+
+    useEffect(() => {
+        const init = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { router.push('/login'); return; }
+            await Promise.all([loadCategories(), loadTodos()]);
+        };
+        init();
+    }, [loadCategories, loadTodos, router]);
+
+    const handleAdd = async (text: string, bucket: DeadlineBucket, category?: string) => {
+        const { error } = await addManualTodo(text, { bucket, category });
+        if (error) { showToast.error('Failed to add task'); }
+        else { showToast.success('Task added!'); await loadTodos(); }
     };
 
     const handleToggle = async (todo: TodoItem) => {
-        const { error } = await toggleTodoCompletion(todo.id, todo.source);
-        if (error) {
-            showToast.error('Failed to update');
-        } else {
-            loadTodos();
-        }
+        await toggleTodoCompletion(todo.id, todo.source);
+        await loadTodos();
     };
 
-    const handleSubGoalToggle = async (todo: TodoItem, subGoalId: string) => {
-        const { error } = await toggleSubGoalCompletion(todo.id, subGoalId, todo.source);
-        if (error) {
-            showToast.error('Failed to update');
-        } else {
-            loadTodos();
-        }
+    const handleDelete = async (todo: TodoItem) => {
+        await deleteManualTodo(todo.id);
+        showToast.success('Task removed');
+        await loadTodos();
     };
 
-    const handleToggleVisibility = async (todo: TodoItem) => {
-        if (!confirm(todo.hidden ? 'Show this on your To-Do pad again?' : 'Hide this from your To-Do pad?')) return;
-        
-        const { error } = await toggleTodoVisibility(todo.id, todo.source);
-        if (error) {
-            showToast.error('Failed to update visibility');
-        } else {
-            showToast.success(todo.hidden ? 'Added back to To-Do pad' : 'Hidden from To-Do pad');
-            loadTodos();
-        }
-    };
+    // Group todos by category, filtered by bucket
+    const filtered = todos.filter(t => {
+        if (activeFilter === 'all') return true;
+        const bucket: DeadlineBucket = t.urgency === 'overdue' ? 'today'
+            : t.urgency === 'today'     ? 'today'
+            : t.urgency === 'tomorrow'  ? 'tomorrow'
+            : t.urgency === 'this_week' ? 'this_week'
+            : 'someday';
+        return bucket === activeFilter;
+    });
 
-    const handleAddTodo = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newTodoText.trim()) return;
+    // Build category groups
+    const allCats = Array.from(new Set([
+        ...categories,
+        ...filtered.filter(t => t.category).map(t => t.category!),
+    ]));
+    const uncategorized = filtered.filter(t => !t.category);
 
-        const { error } = await addManualTodo(newTodoText.trim(), {
-            priority: todos.length + 1
-        });
-
-        if (error) {
-            showToast.error('Failed to add todo');
-        } else {
-            showToast.success('Todo added!');
-            setNewTodoText('');
-            setShowAddModal(false);
-            loadTodos();
-        }
-    };
-
-    const handleAddSubGoal = async (e: React.FormEvent, todoId: string, source: 'roadmap' | 'manual') => {
-        e.preventDefault();
-        if (!newSubGoalText.trim()) return;
-
-        const { error } = await addSubGoal(todoId, newSubGoalText.trim(), source);
-
-        if (error) {
-            showToast.error('Failed to add sub-goal');
-        } else {
-            showToast.success('Sub-goal added!');
-            setNewSubGoalText('');
-            setShowSubGoalModal(null);
-            loadTodos();
-        }
-    };
-
-    const handleDragEnd = (result: any) => {
-        if (!result.destination) return;
-
-        // Drag over the full visible list (completed items stay in place)
-        const visible = todos.filter(t => !t.hidden);
-        const hidden = todos.filter(t => t.hidden);
-        const [reorderedItem] = visible.splice(result.source.index, 1);
-        visible.splice(result.destination.index, 0, reorderedItem);
-
-        const reordered = visible.map((item, index) => ({
-            ...item,
-            priority: index + 1
-        }));
-
-        const merged = [...reordered, ...hidden];
-        setTodos(merged);
-        updateTodoOrder(merged);
-    };
-
-    const handleSubGoalDragEnd = (result: any, todoId: string) => {
-        if (!result.destination) return;
-
-        const todo = todos.find(t => t.id === todoId);
-        if (!todo || !todo.sub_goals) return;
-
-        const subGoals = Array.from(todo.sub_goals);
-        const [reorderedSubGoal] = subGoals.splice(result.source.index, 1);
-        subGoals.splice(result.destination.index, 0, reorderedSubGoal);
-
-        // Update the todo with new sub-goal order
-        updateSubGoalOrder(todoId, todo.source, subGoals);
-    };
-
-    const updateSubGoalOrder = async (todoId: string, source: 'roadmap' | 'manual', newSubGoals: any[]) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return { ...activity, sub_goals: newSubGoals };
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return { ...todo, sub_goals: newSubGoals };
-                }
-                return todo;
-            });
-        }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        loadTodos();
-    };
-
-    const startEditingTodo = (todo: TodoItem) => {
-        setEditingTodo(todo.id);
-        setEditText(todo.text);
-    };
-
-    const startEditingSubGoal = (subGoalId: string, text: string) => {
-        setEditingSubGoal(subGoalId);
-        setEditText(text);
-    };
-
-    const saveEditTodo = async (todoId: string, source: 'roadmap' | 'manual') => {
-        if (!editText.trim()) return;
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return { ...activity, text: editText.trim() };
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return { ...todo, text: editText.trim() };
-                }
-                return todo;
-            });
-        }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        setEditingTodo(null);
-        setEditText('');
-        loadTodos();
-        showToast.success('Updated!');
-    };
-
-    const saveEditSubGoal = async (todoId: string, subGoalId: string, source: 'roadmap' | 'manual') => {
-        if (!editText.trim()) return;
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        const updateSubGoal = (todo: any) => {
-            if (todo.sub_goals) {
-                todo.sub_goals = todo.sub_goals.map((sg: any) =>
-                    sg.id === subGoalId ? { ...sg, text: editText.trim() } : sg
-                );
-            }
-            return todo;
-        };
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return updateSubGoal(activity);
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return updateSubGoal(todo);
-                }
-                return todo;
-            });
-        }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        setEditingSubGoal(null);
-        setEditText('');
-        loadTodos();
-        showToast.success('Updated!');
-    };
-
-    const deleteSubGoal = async (todoId: string, subGoalId: string, source: 'roadmap' | 'manual') => {
-        if (!confirm('Delete this sub-goal?')) return;
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        const removeSubGoal = (todo: any) => {
-            if (todo.sub_goals) {
-                todo.sub_goals = todo.sub_goals.filter((sg: any) => sg.id !== subGoalId);
-            }
-            return todo;
-        };
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return removeSubGoal(activity);
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return removeSubGoal(todo);
-                }
-                return todo;
-            });
-        }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        loadTodos();
-        showToast.success('Deleted!');
-    };
-
-    const getSubGoalLabel = (priority: number, subIndex: number) => {
-        return `${priority}${String.fromCharCode(97 + subIndex)}`;
-    };
-
-    if (loading) {
-        return (
-            <>
-                <AuthNavbar />
-                <div className="min-h-screen pt-16 flex items-center justify-center" style={{ backgroundColor: t.bg }}>
-                    <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: t.marginColor, borderTopColor: 'transparent' }}></div>
-                        <p className="text-lg" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
-                            Loading your pad...
-                        </p>
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-    // All visible todos rendered together — completed items stay in place
-    const visibleTodos = todos.filter(todo => !todo.hidden);
-    const hiddenTodos = todos.filter(todo => todo.hidden);
+    // Stats
+    const urgentCount  = todos.filter(t => !t.completed && (t.urgency === 'overdue' || t.urgency === 'today')).length;
+    const totalPending = todos.filter(t => !t.completed).length;
+    const completedToday = todos.filter(t => t.completed && t.completed_at?.startsWith(new Date().toISOString().split('T')[0])).length;
 
     return (
         <>
             <AuthNavbar />
-            {/* FULL PAGE PAD */}
-            <div
-                className="min-h-screen pt-16 relative"
-                style={{
-                    backgroundColor: t.bg,
-                    color: t.text,
-                    backgroundImage: `
-                        repeating-linear-gradient(
-                            transparent,
-                            transparent 31px,
-                            ${t.lineColor} 31px,
-                            ${t.lineColor} 32px
-                        ),
-                        linear-gradient(90deg, transparent 0px, transparent 80px, ${t.marginColor} 80px, ${t.marginColor} 82px, transparent 82px)
-                    `,
-                    lineHeight: '32px'
-                }}
-            >
-                {/* Header Area */}
-                <div className="pl-28 pr-8 pt-3 pb-6">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <Link
-                                href="/dashboard"
-                                className="inline-flex items-center gap-1 font-bold text-sm mb-2 transition-colors opacity-70 hover:opacity-100"
-                                style={{ fontFamily: 'Courier New, monospace', color: t.text }}
-                            >
-                                ← DASHBOARD
-                            </Link>
-                            <h1
-                                className="text-5xl font-bold mb-1"
-                                style={{ fontFamily: 'Courier New, monospace', lineHeight: '1.2', color: t.text }}
-                            >
-                                {userName}'s Pad
-                            </h1>
-                            <p className="font-semibold mb-1" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
-                                Ongoing To-Do List
-                            </p>
-                            <p style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
-                                <span className="font-bold" style={{ color: '#2563eb' }}>Blue</span> = Roadmap •
-                                <span className="font-bold ml-2" style={{ color: '#15803d' }}>Green</span> = Manual
-                            </p>
-                        </div>
+            <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
+                <div className="max-w-2xl mx-auto px-4 py-8">
 
-                        <div className="flex items-center gap-3">
-                            {/* Theme Switcher */}
-                            <div className="flex items-center gap-1.5 bg-white/30 p-1.5 rounded-lg backdrop-blur-sm border border-white/20">
-                                {(Object.keys(themes) as Array<keyof typeof themes>).map(key => (
-                                    <button
-                                        key={key}
-                                        onClick={() => changeTheme(key)}
-                                        className={`w-7 h-7 rounded-md border-2 transition-all ${
-                                            theme === key
-                                                ? 'ring-2 ring-offset-1 ring-gray-500 scale-110'
-                                                : 'opacity-70 hover:opacity-100 hover:scale-105'
-                                        }`}
-                                        style={{ backgroundColor: themes[key].preview, borderColor: themes[key].marginColor }}
-                                        title={themes[key].label}
-                                    />
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={exportToCSV}
-                                className={`px-4 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
-                                style={{ fontFamily: 'Courier New, monospace' }}
-                                title="Export to CSV"
-                            >
-                                📥 CSV
-                            </button>
-
-                            {todos.filter(t => t.completed).length > 0 && (
-                                <button
-                                    onClick={clearCompleted}
-                                    className="px-4 py-3 border-2 border-red-300 rounded-lg font-bold shadow-md transition-all bg-red-100 hover:bg-red-200 text-red-700"
-                                    style={{ fontFamily: 'Courier New, monospace' }}
-                                >
-                                    🗑 Clear Done
-                                </button>
-                            )}
-
-                            <button
-                                onClick={() => setShowAddModal(true)}
-                                className={`px-6 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
-                                style={{ fontFamily: 'Courier New, monospace' }}
-                            >
-                                ✏️ ADD TODO
-                            </button>
-                        </div>
+                    {/* Header */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+                            Life Inbox
+                        </h1>
+                        <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>
+                            {totalPending} pending · {completedToday} done today
+                            {urgentCount > 0 && <span style={{ color: '#f97316' }}> · {urgentCount} need attention</span>}
+                        </p>
                     </div>
-                </div>
 
-                {/* Yellow Pad Content */}
-                <div className="pl-28 pr-8 pb-16">
-                    {todos.length === 0 ? (
-                        <div className="py-32 text-center">
-                            <div className="text-9xl mb-6">📝</div>
-                            <h2 className="text-4xl font-bold text-gray-800 mb-4" style={{ fontFamily: 'Courier New, monospace' }}>
-                                Empty Pad
-                            </h2>
-                            <p className="text-xl text-gray-600 mb-8" style={{ fontFamily: 'Courier New, monospace' }}>
-                                Click "ADD TODO" to get started
-                            </p>
+                    {/* Bucket filter tabs */}
+                    <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+                        {(['all', 'today', 'tomorrow', 'this_week', 'someday'] as const).map(f => {
+                            const isActive = activeFilter === f;
+                            const label = f === 'all' ? 'All' : URGENCY_LABEL[f === 'today' ? 'today' : f === 'tomorrow' ? 'tomorrow' : f === 'this_week' ? 'this_week' : 'someday'];
+                            const count = f === 'all' ? todos.filter(t => !t.completed).length
+                                : todos.filter(t => !t.completed && (t.urgency === f || (f === 'today' && t.urgency === 'overdue'))).length;
+                            return (
+                                <button
+                                    key={f}
+                                    onClick={() => setActiveFilter(f)}
+                                    className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                                    style={{
+                                        background: isActive ? 'rgba(99,102,241,0.2)' : 'var(--color-surface)',
+                                        border: `1px solid ${isActive ? 'rgba(99,102,241,0.4)' : 'var(--color-border)'}`,
+                                        color: isActive ? '#818cf8' : 'var(--color-text-muted)',
+                                    }}
+                                >
+                                    {label} {count > 0 && <span className="ml-1 opacity-60">{count}</span>}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Loading */}
+                    {loading && (
+                        <div className="flex items-center justify-center py-20">
+                            <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid var(--color-border)', borderTopColor: '#6366f1' }} />
                         </div>
-                    ) : (
-                        <DragDropContext onDragEnd={handleDragEnd}>
-                            <Droppable droppableId="todos">
-                                {(provided) => (
-                                    <div
-                                        {...provided.droppableProps}
-                                        ref={provided.innerRef}
-                                    >
-                                        {visibleTodos.map((todo, index) => (
-                                            <Draggable key={todo.id} draggableId={todo.id} index={index}>
-                                                {(provided, snapshot) => (
-                                                    <div
-                                                        ref={provided.innerRef}
-                                                        {...provided.draggableProps}
-                                                        className={`transition-opacity ${snapshot.isDragging ? 'opacity-75' : ''}`}
-                                                    >
-                                                        {/* Main Todo */}
-                                                        <div
-                                                            className="flex items-center gap-4 group"
-                                                            style={{
-                                                                minHeight: '32px',
-                                                                lineHeight: '32px',
-                                                                paddingTop: '0px',
-                                                                paddingBottom: '0px'
-                                                            }}
-                                                        >
-                                                            {/* Drag Handle */}
-                                                            <div {...provided.dragHandleProps} className="text-gray-400 hover:text-gray-600 cursor-move">
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                                                                </svg>
-                                                            </div>
-
-                                                            {/* Priority Number */}
-                                                            <div
-                                                                className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
-                                                                style={{
-                                                                    backgroundColor: (index + 1) <= 3 ? '#ef4444' : (index + 1) <= 6 ? '#f97316' : '#6b7280'
-                                                                }}
-                                                            >
-                                                                {index + 1}
-                                                            </div>
-
-                                                            {/* Checkbox */}
-                                                            <button
-                                                                onClick={() => handleToggle(todo)}
-                                                                className={`w-5 h-5 rounded border-2 flex-shrink-0 hover:opacity-80 transition-colors ${t.checkBorder}`}
-                                                            >
-                                                                {todo.completed && (
-                                                                    <svg className="w-full h-full text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                )}
-                                                            </button>
-
-                                                            {/* Todo Text (Editable) */}
-                                                            {editingTodo === todo.id ? (
-                                                                <input
-                                                                    type="text"
-                                                                    value={editText}
-                                                                    onChange={(e) => setEditText(e.target.value)}
-                                                                    onBlur={() => saveEditTodo(todo.id, todo.source)}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') saveEditTodo(todo.id, todo.source);
-                                                                        if (e.key === 'Escape') { setEditingTodo(null); setEditText(''); }
-                                                                    }}
-                                                                    className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
-                                                                    style={{ fontFamily: 'Courier New, monospace', fontSize: '18px', height: '28px' }}
-                                                                    autoFocus
-                                                                />
-                                                            ) : (
-                                                                <span
-                                                                    onClick={() => startEditingTodo(todo)}
-                                                                    className={`text-lg flex-1 cursor-pointer ${t.hoverBg} px-1 rounded ${todo.completed ? 'line-through opacity-50' : ''}`}
-                                                                    style={{
-                                                                        fontFamily: 'Courier New, monospace',
-                                                                        color: todo.completed
-                                                                            ? (theme === 'dark' ? '#64748b' : '#9ca3af')
-                                                                            : todo.source === 'roadmap' ? '#2563eb' : '#15803d'
-                                                                    }}
-                                                                >
-                                                                    {todo.text}
-                                                                </span>
-                                                            )}
-
-                                                            {/* Hide Button (for non-completed items) */}
-                                                            <button
-                                                                onClick={() => handleToggleVisibility(todo)}
-                                                                className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 border border-yellow-400 rounded text-xs font-bold transition-all ml-2"
-                                                                style={{ fontFamily: 'Courier New, monospace' }}
-                                                                title="Hide from To-Do Pad"
-                                                            >
-                                                                hide
-                                                            </button>
-
-                                                            {/* Add Sub-Goal Button */}
-                                                            <button
-                                                                onClick={() => setShowSubGoalModal(todo.id)}
-                                                                className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 border border-yellow-400 rounded text-xs font-bold transition-all"
-                                                                style={{ fontFamily: 'Courier New, monospace' }}
-                                                            >
-                                                                + sub
-                                                            </button>
-
-                                                            {/* Delete Button (manual todos only) */}
-                                                            {todo.source === 'manual' && (
-                                                                <button
-                                                                    onClick={() => {
-                                                                        if (confirm('Delete this task?')) {
-                                                                            deleteManualTodo(todo.id).then(() => loadTodos());
-                                                                        }
-                                                                    }}
-                                                                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all"
-                                                                >
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            )}
-
-                                                            {/* Due Date */}
-                                                            {todo.due_date && !todo.completed && (
-                                                                <span className="text-xs text-gray-600" style={{ fontFamily: 'Courier New, monospace' }}>
-                                                                    {new Date(todo.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Sub-Goals (Draggable) */}
-                                                        {todo.sub_goals && todo.sub_goals.length > 0 && (
-                                                            <DragDropContext onDragEnd={(result) => handleSubGoalDragEnd(result, todo.id)}>
-                                                                <Droppable droppableId={`subgoals-${todo.id}`}>
-                                                                    {(provided) => (
-                                                                        <div
-                                                                            {...provided.droppableProps}
-                                                                            ref={provided.innerRef}
-                                                                            className="ml-20"
-                                                                        >
-                                                                            {todo.sub_goals?.map((subGoal, subIndex) => (
-                                                                                <Draggable key={subGoal.id} draggableId={subGoal.id} index={subIndex}>
-                                                                                    {(provided, snapshot) => (
-                                                                                        <div
-                                                                                            ref={provided.innerRef}
-                                                                                            {...provided.draggableProps}
-                                                                                            className={`flex items-center gap-4 group/sub ${snapshot.isDragging ? 'opacity-75' : ''}`}
-                                                                                            style={{
-                                                                                                minHeight: '32px',
-                                                                                                lineHeight: '32px',
-                                                                                                paddingTop: '0px',
-                                                                                                paddingBottom: '0px',
-                                                                                                ...provided.draggableProps.style
-                                                                                            }}
-                                                                                        >
-                                                                                            {/* Drag Handle */}
-                                                                                            <div {...provided.dragHandleProps} className="text-gray-300 hover:text-gray-500 cursor-move">
-                                                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                                                                                                </svg>
-                                                                                            </div>
-
-                                                                                            {/* Sub-Goal Label */}
-                                                                                            <span
-                                                                                                className="text-sm font-bold text-gray-500 w-6"
-                                                                                                style={{ fontFamily: 'Courier New, monospace' }}
-                                                                                            >
-                                                                                                {getSubGoalLabel(index + 1, subIndex)}
-                                                                                            </span>
-
-                                                                                            {/* Checkbox */}
-                                                                                            <button
-                                                                                                onClick={() => handleSubGoalToggle(todo, subGoal.id)}
-                                                                                                className="w-4 h-4 rounded border-2 border-gray-500 flex-shrink-0 hover:border-gray-700"
-                                                                                            >
-                                                                                                {subGoal.completed && (
-                                                                                                    <svg className="w-full h-full text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                                                                                    </svg>
-                                                                                                )}
-                                                                                            </button>
-
-                                                                                            {/* Sub-Goal Text (Editable) */}
-                                                                                            {editingSubGoal === subGoal.id ? (
-                                                                                                <input
-                                                                                                    type="text"
-                                                                                                    value={editText}
-                                                                                                    onChange={(e) => setEditText(e.target.value)}
-                                                                                                    onBlur={() => saveEditSubGoal(todo.id, subGoal.id, todo.source)}
-                                                                                                    onKeyDown={(e) => {
-                                                                                                        if (e.key === 'Enter') saveEditSubGoal(todo.id, subGoal.id, todo.source);
-                                                                                                        if (e.key === 'Escape') { setEditingSubGoal(null); setEditText(''); }
-                                                                                                    }}
-                                                                                                    className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
-                                                                                                    style={{ fontFamily: 'Courier New, monospace', fontSize: '16px', height: '24px' }}
-                                                                                                    autoFocus
-                                                                                                />
-                                                                                            ) : (
-                                                                                                <span
-                                                                                                    onClick={() => startEditingSubGoal(subGoal.id, subGoal.text)}
-                                                                                                    className={`text-base flex-1 cursor-pointer hover:bg-yellow-200/50 px-1 rounded ${subGoal.completed ? 'line-through text-gray-500' : 'text-gray-700'}`}
-                                                                                                    style={{ fontFamily: 'Courier New, monospace' }}
-                                                                                                >
-                                                                                                    {subGoal.text}
-                                                                                                </span>
-                                                                                            )}
-
-                                                                                            {/* Delete Sub-Goal Button */}
-                                                                                            <button
-                                                                                                onClick={() => deleteSubGoal(todo.id, subGoal.id, todo.source)}
-                                                                                                className="opacity-0 group-hover/sub:opacity-100 text-gray-400 hover:text-red-600 transition-all"
-                                                                                            >
-                                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                                                </svg>
-                                                                                            </button>
-                                                                                        </div>
-                                                                                    )}
-                                                                                </Draggable>
-                                                                            ))}
-                                                                            {provided.placeholder}
-                                                                        </div>
-                                                                    )}
-                                                                </Droppable>
-                                                            </DragDropContext>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
                     )}
 
+                    {/* Empty state */}
+                    {!loading && filtered.length === 0 && (
+                        <div className="text-center py-20">
+                            <div className="text-5xl mb-4">✨</div>
+                            <p className="text-base font-medium mb-1" style={{ color: 'var(--color-text)' }}>
+                                {activeFilter === 'all' ? 'Inbox zero!' : `Nothing ${activeFilter === 'today' ? 'due today' : activeFilter === 'tomorrow' ? 'due tomorrow' : activeFilter === 'this_week' ? 'this week' : 'in someday'}`}
+                            </p>
+                            <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>Tap + to add something</p>
+                        </div>
+                    )}
 
-                    {/* Hidden Section */}
-                    {hiddenTodos.length > 0 && (
-                        <div className="mt-8 mb-8">
-                            <button
-                                onClick={() => setShowHidden(!showHidden)}
-                                className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity"
-                                style={{ fontFamily: 'Courier New, monospace' }}
-                            >
-                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
-                                <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: t.text }}>
-                                    {showHidden ? '▼' : '▶'} {hiddenTodos.length} hidden
-                                </span>
-                                <div className="flex-1 border-t-2 border-dashed" style={{ borderColor: t.marginColor + '60' }} />
-                            </button>
-
-                            {showHidden && (
-                                <div className="mt-4 space-y-0 opacity-60">
-                                    {hiddenTodos.map((todo) => (
-                                        <div
-                                            key={todo.id}
-                                            className="flex items-center gap-4 group"
-                                            style={{
-                                                minHeight: '32px',
-                                                lineHeight: '32px',
-                                            }}
-                                        >
-                                            {/* Spacer */}
-                                            <div className="w-12 h-8" />
-
-                                            {/* Todo Text */}
-                                            <span
-                                                className="text-base flex-1"
-                                                style={{
-                                                    fontFamily: 'Courier New, monospace',
-                                                    color: theme === 'dark' ? '#94a3b8' : '#6b7280'
-                                                }}
-                                            >
-                                                {todo.text}
-                                                <span className="text-xs ml-2 italic">({todo.source === 'roadmap' ? 'Roadmap Goal' : 'Manual'})</span>
-                                            </span>
-
-                                            {/* Unhide Button */}
-                                            <button
-                                                onClick={() => handleToggleVisibility(todo)}
-                                                className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-gray-200 hover:bg-gray-300 border border-gray-400 rounded text-xs font-bold transition-all text-gray-800"
-                                                style={{ fontFamily: 'Courier New, monospace' }}
-                                                title="Show on To-Do Pad"
-                                            >
-                                                unhide
-                                            </button>
-                                        </div>
+                    {/* Category groups */}
+                    {!loading && allCats.map(cat => {
+                        const catTodos = filtered.filter(t => t.category === cat);
+                        if (catTodos.length === 0) return null;
+                        const pending = catTodos.filter(t => !t.completed);
+                        const done    = catTodos.filter(t => t.completed);
+                        const sorted  = [
+                            ...pending.sort((a, b) => URGENCY_ORDER[a.urgency ?? 'someday'] - URGENCY_ORDER[b.urgency ?? 'someday']),
+                            ...done,
+                        ];
+                        return (
+                            <div key={cat} className="mb-6">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-lg">{categoryEmoji(cat)}</span>
+                                    <h2 className="text-sm font-semibold tracking-wide uppercase" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+                                        {cat}
+                                    </h2>
+                                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--color-surface)', color: 'var(--color-text-dim)', border: '1px solid var(--color-border)' }}>
+                                        {pending.length}
+                                    </span>
+                                </div>
+                                <div className="space-y-2">
+                                    {sorted.map(todo => (
+                                        <TaskRow key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
                                     ))}
                                 </div>
-                            )}
+                            </div>
+                        );
+                    })}
+
+                    {/* Uncategorized */}
+                    {!loading && uncategorized.length > 0 && (
+                        <div className="mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-lg">📋</span>
+                                <h2 className="text-sm font-semibold tracking-wide uppercase" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
+                                    General
+                                </h2>
+                            </div>
+                            <div className="space-y-2">
+                                {uncategorized.map(todo => (
+                                    <TaskRow key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
+                                ))}
+                            </div>
                         </div>
                     )}
+
+                    {/* Spacer for FAB */}
+                    <div className="h-24" />
                 </div>
 
-                {/* Paper Shadow */}
-                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-400/20 to-transparent pointer-events-none" />
+                {/* Floating Add Button */}
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    id="life-inbox-add-btn"
+                    className="fixed bottom-8 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 active:scale-95"
+                    style={{
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        boxShadow: '0 8px 32px rgba(99,102,241,0.5)',
+                    }}
+                    aria-label="Add task"
+                >
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+
+                {/* Add Task Modal */}
+                {showAddModal && (
+                    <AddTaskModal
+                        onClose={() => setShowAddModal(false)}
+                        onAdd={handleAdd}
+                        categories={categories}
+                    />
+                )}
             </div>
-
-            {/* Add Todo Modal */}
-            {showAddModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className={`rounded-2xl shadow-2xl max-w-lg w-full p-8 border-4 ${t.modalBg}`}>
-                        <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
-                            Add New Todo
-                        </h2>
-                        <form onSubmit={handleAddTodo}>
-                            <input
-                                type="text"
-                                value={newTodoText}
-                                onChange={(e) => setNewTodoText(e.target.value)}
-                                placeholder="What do you need to do?"
-                                className={`w-full px-4 py-3 border-2 rounded-xl ${t.inputBorder}`}
-                                style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
-                                autoFocus
-                                required
-                            />
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAddModal(false)}
-                                    className="flex-1 px-6 py-3 border-2 border-gray-400 rounded-xl font-bold hover:opacity-80"
-                                    style={{ fontFamily: 'Courier New, monospace', color: t.text, backgroundColor: theme === 'dark' ? '#334155' : 'white' }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className={`flex-1 px-6 py-3 border-2 rounded-xl font-bold ${t.accentBg} ${t.accentText}`}
-                                    style={{ fontFamily: 'Courier New, monospace' }}
-                                >
-                                    Add Todo
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Add Sub-Goal Modal */}
-            {showSubGoalModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className={`rounded-2xl shadow-2xl max-w-lg w-full p-8 border-4 ${t.modalBg}`}>
-                        <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
-                            Add Sub-Goal
-                        </h2>
-                        <form onSubmit={(e) => {
-                            const todo = todos.find(t => t.id === showSubGoalModal);
-                            if (todo) handleAddSubGoal(e, todo.id, todo.source);
-                        }}>
-                            <input
-                                type="text"
-                                value={newSubGoalText}
-                                onChange={(e) => setNewSubGoalText(e.target.value)}
-                                placeholder="Enter sub-goal..."
-                                className={`w-full px-4 py-3 border-2 rounded-xl ${t.inputBorder}`}
-                                style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
-                                autoFocus
-                                required
-                            />
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowSubGoalModal(null)}
-                                    className="flex-1 px-6 py-3 border-2 border-gray-400 rounded-xl font-bold hover:opacity-80"
-                                    style={{ fontFamily: 'Courier New, monospace', color: t.text, backgroundColor: theme === 'dark' ? '#334155' : 'white' }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className={`flex-1 px-6 py-3 border-2 rounded-xl font-bold ${t.accentBg} ${t.accentText}`}
-                                    style={{ fontFamily: 'Courier New, monospace' }}
-                                >
-                                    Add Sub-Goal
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </>
     );
 }
