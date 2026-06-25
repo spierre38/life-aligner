@@ -185,7 +185,7 @@ export default function MobileGoalList({
 
     return (
         <div
-            className="min-h-screen pt-16 pb-24"
+            className="min-h-screen pt-navbar pb-24"
             style={{ background: 'var(--color-bg)' }}
         >
             <div className="px-4 py-6">

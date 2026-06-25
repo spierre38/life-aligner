@@ -448,7 +448,7 @@ export default function RoadmapPage() {
     return (
       <>
         <AuthNavbar />
-        <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
+        <div className="min-h-screen pt-navbar" style={{ background: 'var(--color-bg)' }}>
           <div className="max-w-6xl mx-auto px-4 py-12">
             <div className="h-64 rounded-3xl animate-pulse" style={{ background: 'var(--color-surface)' }} />
           </div>
@@ -461,7 +461,7 @@ export default function RoadmapPage() {
     return (
       <>
         <AuthNavbar />
-        <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
+        <div className="min-h-screen pt-navbar" style={{ background: 'var(--color-bg)' }}>
           <div className="max-w-3xl mx-auto px-4 py-24">
             <div className="rounded-3xl p-8 md:p-12 text-center" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
               <h2 className="text-2xl font-semibold mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>

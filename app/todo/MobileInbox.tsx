@@ -436,7 +436,7 @@ export default function MobileInbox() {
         <>
             <AuthNavbar />
             <div
-                className="min-h-screen pt-16"
+                className="min-h-screen pt-navbar"
                 style={{ background: 'var(--color-bg)' }}
                 {...containerProps}
             >

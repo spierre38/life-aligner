@@ -140,6 +140,7 @@ export default function AuthNavbar() {
             style={{
                 background: navBg,
                 borderBottom: `1px solid ${navBorder}`,
+                paddingTop: 'env(safe-area-inset-top)',
             }}
         >
             <div className="max-w-7xl mx-auto px-6">

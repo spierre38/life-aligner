@@ -577,7 +577,7 @@ export default function ReflectionsPage() {
   return (
     <>
       <AuthNavbar />
-      <div className="min-h-screen pt-16" style={{ background: 'var(--color-bg)' }}>
+      <div className="min-h-screen pt-navbar" style={{ background: 'var(--color-bg)' }}>
         <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
 
           {/* Page header */}

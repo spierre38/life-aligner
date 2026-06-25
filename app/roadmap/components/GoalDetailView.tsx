@@ -559,7 +559,7 @@ export default function GoalDetailView({
         </div>
       </div>
 
-      <div className="flex min-h-screen pt-16">
+      <div className="flex min-h-screen pt-navbar">
         {/* ── Tree area (left) ────────────────────────────────────── */}
         <div className="flex-1 relative overflow-auto" style={{ minHeight: '100vh' }}
           onClick={() => setSelectedActivityId(null)}

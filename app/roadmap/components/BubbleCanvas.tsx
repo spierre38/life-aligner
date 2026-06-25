@@ -268,7 +268,7 @@ export default function BubbleCanvas({
   return (
     <div
       ref={containerRef}
-      className="min-h-screen pt-16"
+      className="min-h-screen pt-navbar"
       style={{ background: 'var(--mesh-canvas)' }}
     >
       {/* Ambient drift animation */}
