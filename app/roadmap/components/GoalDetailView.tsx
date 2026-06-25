@@ -508,11 +508,12 @@ export default function GoalDetailView({
         .detail-float { animation: detail-float 4s ease-in-out infinite; }
       `}</style>
 
-      {/* ── Top bar ──────────────────────────────────────── */}
+      {/* ── Top bar ──────────────────────────────── */}
       <div
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 backdrop-blur-xl border-b border-white/5"
-        style={{ background: 'rgba(5,5,5,0.82)' }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/5"
+        style={{ background: 'rgba(5,5,5,0.82)', paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 flex-wrap gap-2">
         <button
           onClick={onClose}
           className="flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-medium"
@@ -558,8 +559,9 @@ export default function GoalDetailView({
           </button>
         </div>
       </div>
+      </div>
 
-      <div className="flex min-h-screen pt-navbar">
+      <div className="flex min-h-screen pt-navbar pb-32">
         {/* ── Tree area (left) ────────────────────────────────────── */}
         <div className="flex-1 relative overflow-auto" style={{ minHeight: '100vh' }}
           onClick={() => setSelectedActivityId(null)}

@@ -386,7 +386,10 @@ export default function LifeFrameConstellation() {
             <ConstellationMap activeSection={activeSection} />
 
             {/* Navigation */}
-            <div className="fixed top-6 left-6 z-40 flex gap-2">
+            <div
+                className="fixed left-6 z-40 flex gap-2"
+                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+            >
                 <button
                     onClick={() => router.push('/dashboard')}
                     className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition"
@@ -402,7 +405,10 @@ export default function LifeFrameConstellation() {
             </div>
 
             {/* Print & Share Buttons */}
-            <div className="fixed top-6 right-6 z-40 flex gap-2">
+            <div
+                className="fixed right-6 z-40 flex gap-2"
+                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+            >
                 <button
                     onClick={() => router.push('/lifeframe/print')}
                     className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2"
