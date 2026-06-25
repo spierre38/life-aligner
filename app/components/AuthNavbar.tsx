@@ -173,7 +173,7 @@ export default function AuthNavbar() {
                             Roadmap
                         </Link>
                         <Link href="/todo" className={linkClass(isActive('/todo'))}>
-                            Inbox
+                            To-Do
                         </Link>
                         <Link
                             href={lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute}
