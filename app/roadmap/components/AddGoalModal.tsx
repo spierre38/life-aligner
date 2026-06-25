@@ -1,20 +1,15 @@
 'use client';
 
 /**
- * AddGoalModal.tsx — v3: Goal + inline activities
+ * AddGoalModal.tsx — v4: Premium dark UI + chip-to-why injection
  *
- * Tim's requirement IV: "Enter Single Goal with Multiple Activities screen"
- *   - LifeFrame reference panel at top (values, interests, categories)
- *   - Goal title + why fields
- *   - Inline activity entry with sub-activity support
- *   - "Add to To-Do" toggle per activity/sub-activity
- *   - Multi-select chip pickers for connections
- *
- * onSave now passes (goal, activities[]) so both are created in one transaction.
+ * New UX: clicking a Life Category, Value, or Interest chip auto-inserts
+ * "[Name]: " into the "Why does this matter?" textarea so the user can
+ * write their explanation right after the label. Everything is optional.
  */
 
-import { useState, useEffect, useRef } from 'react';
-import type { Goal, Activity, SubActivity } from '@/lib/roadmap-types';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { Goal, Activity } from '@/lib/roadmap-types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +22,6 @@ interface AddGoalModalProps {
   onSave: (goal: Goal, activities: Activity[]) => void;
 }
 
-// Draft types for inline entry
 interface ActivityDraft {
   id: string;
   title: string;
@@ -40,40 +34,55 @@ interface SubActivityDraft {
   includeToday: boolean;
 }
 
-// ─── Chip picker ──────────────────────────────────────────────────────────────
+// ─── Chip Section ─────────────────────────────────────────────────────────────
 
-function ChipPicker({
+type ChipColor = 'purple' | 'indigo' | 'rose';
+
+const CHIP_STYLES: Record<ChipColor, { on: string; off: string }> = {
+  purple: {
+    on:  'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-[0_0_8px_rgba(168,85,247,0.25)]',
+    off: 'border-white/10 text-white/50 hover:border-purple-400/40 hover:text-purple-300 hover:bg-purple-500/10',
+  },
+  indigo: {
+    on:  'bg-indigo-500/20 text-indigo-300 border-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.25)]',
+    off: 'border-white/10 text-white/50 hover:border-indigo-400/40 hover:text-indigo-300 hover:bg-indigo-500/10',
+  },
+  rose: {
+    on:  'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_8px_rgba(244,63,94,0.25)]',
+    off: 'border-white/10 text-white/50 hover:border-rose-400/40 hover:text-rose-300 hover:bg-rose-500/10',
+  },
+};
+
+function ChipSection({
   label,
+  emoji,
   items,
   selected,
-  onToggle,
   color,
+  onToggle,
 }: {
   label: string;
+  emoji: string;
   items: string[];
   selected: string[];
+  color: ChipColor;
   onToggle: (item: string) => void;
-  color: 'purple' | 'blue' | 'rose';
 }) {
   if (items.length === 0) return null;
-  const filled = {
-    purple: 'bg-purple-600 text-white border-purple-600',
-    blue: 'bg-blue-600 text-white border-blue-600',
-    rose: 'bg-rose-500 text-white border-rose-500',
-  }[color];
-  const outlined = 'border border-gray-300 text-gray-700 hover:border-gray-400 bg-white';
-
+  const styles = CHIP_STYLES[color];
   return (
     <div>
-      <p className="text-sm font-semibold text-gray-700 mb-2">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+        {emoji} {label}
+      </p>
       <div className="flex flex-wrap gap-2">
         {items.map(item => (
           <button
             key={item}
             type="button"
             onClick={() => onToggle(item)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              selected.includes(item) ? filled : outlined
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+              selected.includes(item) ? styles.on : styles.off
             }`}
           >
             {item}
@@ -84,72 +93,7 @@ function ChipPicker({
   );
 }
 
-// ─── LifeFrame Reference Panel ────────────────────────────────────────────────
-
-function LifeFrameInset({
-  categories,
-  values,
-  interests,
-}: {
-  categories: string[];
-  values: string[];
-  interests: string[];
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const hasContent = categories.length > 0 || values.length > 0 || interests.length > 0;
-  if (!hasContent) return null;
-
-  return (
-    <div className="bg-gradient-to-r from-slate-50 to-indigo-50 border border-slate-200 rounded-xl px-4 py-3">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="flex items-center justify-between w-full text-left"
-      >
-        <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-          📋 Your LifeFrame
-        </span>
-        <span className="text-slate-400 text-xs">{expanded ? '▲ Hide' : '▼ Show for inspiration'}</span>
-      </button>
-      {expanded && (
-        <div className="mt-3 space-y-2">
-          {categories.length > 0 && (
-            <div>
-              <p className="text-[10px] font-bold text-purple-600 uppercase mb-1">Categories</p>
-              <div className="flex flex-wrap gap-1">
-                {categories.map(c => (
-                  <span key={c} className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-medium">{c}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {values.length > 0 && (
-            <div>
-              <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Values</p>
-              <div className="flex flex-wrap gap-1">
-                {values.map(v => (
-                  <span key={v} className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium">{v}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {interests.length > 0 && (
-            <div>
-              <p className="text-[10px] font-bold text-rose-600 uppercase mb-1">Interests</p>
-              <div className="flex flex-wrap gap-1">
-                {interests.map(i => (
-                  <span key={i} className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-medium">{i}</span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AddGoalModal({
   preselectedCategory,
@@ -159,16 +103,18 @@ export default function AddGoalModal({
   onClose,
   onSave,
 }: AddGoalModalProps) {
-  const [title, setTitle] = useState('');
-  const [why, setWhy] = useState('');
+  const [title, setTitle]                       = useState('');
+  const [why, setWhy]                           = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     preselectedCategory ? [preselectedCategory] : []
   );
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [selectedValues, setSelectedValues]     = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [activityDrafts, setActivityDrafts] = useState<ActivityDraft[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [activityDrafts, setActivityDrafts]     = useState<ActivityDraft[]>([]);
+  const [saving, setSaving]                     = useState(false);
+
   const titleRef = useRef<HTMLInputElement>(null);
+  const whyRef   = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const t = setTimeout(() => titleRef.current?.focus(), 80);
@@ -181,69 +127,73 @@ export default function AddGoalModal({
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  function toggle(
+  // ── Chip toggle: inject "[Name]: " into the why textarea ──────────────────
+  const injectIntoWhy = useCallback((name: string, isAdding: boolean) => {
+    if (!isAdding) return; // only inject on select, not deselect
+    const label = `${name}: `;
+    setWhy(prev => {
+      if (prev.includes(label)) return prev; // already there
+      const separator = prev.trim().length > 0 ? '\n' : '';
+      return prev + separator + label;
+    });
+    // Focus and move cursor to end
+    setTimeout(() => {
+      if (whyRef.current) {
+        whyRef.current.focus();
+        const len = whyRef.current.value.length;
+        whyRef.current.setSelectionRange(len, len);
+      }
+    }, 20);
+  }, []);
+
+  function toggleChip(
     list: string[],
     setList: (v: string[]) => void,
-    item: string
+    item: string,
   ) {
-    setList(list.includes(item) ? list.filter(x => x !== item) : [...list, item]);
+    const isAdding = !list.includes(item);
+    setList(isAdding ? [...list, item] : list.filter(x => x !== item));
+    injectIntoWhy(item, isAdding);
   }
 
-  // ── Activity draft helpers ──────────────────────────────────────────────────
+  // ── Activity helpers ────────────────────────────────────────────────────────
+  const addActivityDraft = () =>
+    setActivityDrafts(prev => [...prev, { id: crypto.randomUUID(), title: '', includeToday: false, subActivities: [] }]);
 
-  const addActivityDraft = () => {
-    setActivityDrafts(prev => [...prev, {
-      id: crypto.randomUUID(),
-      title: '',
-      includeToday: false,
-      subActivities: [],
-    }]);
-  };
+  const removeActivityDraft = (id: string) =>
+    setActivityDrafts(prev => prev.filter(d => d.id !== id));
 
-  const updateActivityDraft = (id: string, update: Partial<ActivityDraft>) => {
-    setActivityDrafts(prev => prev.map(a => a.id === id ? { ...a, ...update } : a));
-  };
+  const updateActivityDraft = (id: string, patch: Partial<ActivityDraft>) =>
+    setActivityDrafts(prev => prev.map(d => d.id === id ? { ...d, ...patch } : d));
 
-  const removeActivityDraft = (id: string) => {
-    setActivityDrafts(prev => prev.filter(a => a.id !== id));
-  };
-
-  const addSubActivityDraft = (activityId: string) => {
-    setActivityDrafts(prev => prev.map(a =>
-      a.id === activityId
-        ? { ...a, subActivities: [...a.subActivities, { id: crypto.randomUUID(), title: '', includeToday: false }] }
-        : a
+  const addSubActivityDraft = (parentId: string) =>
+    setActivityDrafts(prev => prev.map(d =>
+      d.id === parentId
+        ? { ...d, subActivities: [...d.subActivities, { id: crypto.randomUUID(), title: '', includeToday: false }] }
+        : d
     ));
-  };
 
-  const updateSubActivityDraft = (activityId: string, subId: string, update: Partial<SubActivityDraft>) => {
-    setActivityDrafts(prev => prev.map(a =>
-      a.id === activityId
-        ? { ...a, subActivities: a.subActivities.map(sa => sa.id === subId ? { ...sa, ...update } : sa) }
-        : a
+  const removeSubActivityDraft = (parentId: string, saId: string) =>
+    setActivityDrafts(prev => prev.map(d =>
+      d.id === parentId ? { ...d, subActivities: d.subActivities.filter(sa => sa.id !== saId) } : d
     ));
-  };
 
-  const removeSubActivityDraft = (activityId: string, subId: string) => {
-    setActivityDrafts(prev => prev.map(a =>
-      a.id === activityId
-        ? { ...a, subActivities: a.subActivities.filter(sa => sa.id !== subId) }
-        : a
+  const updateSubActivityDraft = (parentId: string, saId: string, patch: Partial<SubActivityDraft>) =>
+    setActivityDrafts(prev => prev.map(d =>
+      d.id === parentId
+        ? { ...d, subActivities: d.subActivities.map(sa => sa.id === saId ? { ...sa, ...patch } : sa) }
+        : d
     ));
-  };
 
   // ── Submit ──────────────────────────────────────────────────────────────────
-
   const canSubmit = title.trim().length > 0 && !saving;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
     setSaving(true);
-
     const now = new Date().toISOString();
     const goalId = crypto.randomUUID();
-
     const newGoal: Goal = {
       id: goalId,
       title: title.trim(),
@@ -251,13 +201,10 @@ export default function AddGoalModal({
       connectedCategories: selectedCategories,
       connectedValues: selectedValues,
       connectedInterests: selectedInterests,
-      blobVariant: (Math.floor(Math.random() * 4) as 0 | 1 | 2 | 3),
       status: 'active',
       createdAt: now,
       updatedAt: now,
     };
-
-    // Convert drafts to real Activities
     const newActivities: Activity[] = activityDrafts
       .filter(d => d.title.trim().length > 0)
       .map(d => ({
@@ -268,52 +215,77 @@ export default function AddGoalModal({
         includeToday: d.includeToday,
         subActivities: d.subActivities
           .filter(sa => sa.title.trim().length > 0)
-          .map(sa => ({
-            id: sa.id,
-            title: sa.title.trim(),
-            completed: false,
-            includeToday: sa.includeToday,
-            createdAt: now,
-          })),
+          .map(sa => ({ id: sa.id, title: sa.title.trim(), completed: false, includeToday: sa.includeToday, createdAt: now })),
         createdAt: now,
         updatedAt: now,
       }));
-
     onSave(newGoal, newActivities);
   };
 
+  const activeActivityCount = activityDrafts.filter(d => d.title.trim()).length;
+
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Add a goal"
     >
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-8 py-6 flex-shrink-0">
-          <p className="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">
-            New Goal
-          </p>
-          <h2 className="text-2xl font-bold text-white">
-            What do you want to achieve?
-          </h2>
-          {preselectedCategory && (
-            <div className="mt-3 inline-flex items-center gap-2 bg-white/20 text-white text-sm font-medium px-3 py-1.5 rounded-full">
-              <span className="w-2 h-2 bg-white rounded-full opacity-80" />
-              {preselectedCategory}
+      <div
+        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col"
+        style={{
+          background: 'linear-gradient(145deg, #141418 0%, #0f0f14 100%)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
+          maxHeight: '92vh',
+        }}
+      >
+        {/* ── Header ──────────────────────────────────────────────────────── */}
+        <div
+          className="px-7 py-6 flex-shrink-0 relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.12) 50%, rgba(244,63,94,0.08) 100%)' }}
+        >
+          {/* Decorative glow */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, rgba(168,85,247,1) 0%, transparent 70%)' }} />
+
+          <div className="flex items-start justify-between relative">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(168,85,247,0.8)' }}>
+                New Goal
+              </p>
+              <h2 className="text-xl font-bold" style={{ color: '#fff' }}>
+                What do you want to achieve?
+              </h2>
+              {preselectedCategory && (
+                <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'rgba(168,85,247,0.2)', color: '#c4b5fd', border: '1px solid rgba(168,85,247,0.3)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                  {preselectedCategory}
+                </div>
+              )}
             </div>
-          )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10 flex-shrink-0 mt-0.5"
+              style={{ color: 'rgba(255,255,255,0.4)' }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
-        {/* Scrollable Form */}
-        <form onSubmit={handleSubmit} className="px-8 py-7 space-y-6 overflow-y-auto flex-1">
+        {/* ── Scrollable Form ──────────────────────────────────────────────── */}
+        <form onSubmit={handleSubmit} className="px-7 py-6 space-y-6 overflow-y-auto flex-1">
 
-          {/* ── 1. Goal title ──────────────────────────────────────────────── */}
+          {/* 1. Goal title */}
           <div>
-            <label htmlFor="goal-title" className="block text-sm font-semibold text-gray-700 mb-2">
-              Goal title <span className="text-red-500">*</span>
+            <label htmlFor="goal-title" className="block text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Goal title <span className="text-red-400 normal-case tracking-normal font-normal">required</span>
             </label>
             <input
               ref={titleRef}
@@ -324,220 +296,189 @@ export default function AddGoalModal({
               placeholder="e.g. Join 3 new communities"
               maxLength={140}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#fff',
+                caretColor: '#a78bfa',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(168,85,247,0.5)'; e.target.style.background = 'rgba(168,85,247,0.07)'; }}
+              onBlur={e =>  { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; }}
             />
-            <p className="text-xs text-gray-400 mt-1.5 text-right">{title.length}/140</p>
+            <p className="text-right text-xs mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>{title.length}/140</p>
           </div>
 
-          {/* ── 2. Connections — choose what this goal aligns with ─────────── */}
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-gray-700 mb-1">Connect to your LifeFrame</p>
-              <p className="text-xs text-gray-400 mb-3">
-                Pick any that apply — these will anchor your "why" below.
-              </p>
-            </div>
-
-            <ChipPicker
-              label="Life Categories"
-              items={allCategories}
-              selected={selectedCategories}
-              onToggle={item => toggle(selectedCategories, setSelectedCategories, item)}
-              color="purple"
-            />
-            <ChipPicker
-              label="Values"
-              items={savedValues}
-              selected={selectedValues}
-              onToggle={item => toggle(selectedValues, setSelectedValues, item)}
-              color="blue"
-            />
-            <ChipPicker
-              label="Interests"
-              items={savedInterests}
-              selected={selectedInterests}
-              onToggle={item => toggle(selectedInterests, setSelectedInterests, item)}
-              color="rose"
-            />
-          </div>
-
-          {/* ── 3. Why does it matter — anchored by selections above ───────── */}
-          <div>
-            <label htmlFor="goal-why" className="block text-sm font-semibold text-gray-700 mb-2">
-              Why does this matter?{' '}
-              <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-
-            {/* Anchor chips — show what they selected above as writing prompts */}
-            {(selectedCategories.length > 0 || selectedValues.length > 0 || selectedInterests.length > 0) && (
-              <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                {selectedCategories.map(c => (
-                  <span key={c} className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium">
-                    {c}
-                  </span>
-                ))}
-                {selectedValues.map(v => (
-                  <span key={v} className="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
-                    {v}
-                  </span>
-                ))}
-                {selectedInterests.map(i => (
-                  <span key={i} className="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-medium">
-                    {i}
-                  </span>
-                ))}
+          {/* 2. LifeFrame connections → click to inject into why */}
+          {(allCategories.length > 0 || savedValues.length > 0 || savedInterests.length > 0) && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Connect to your LifeFrame
+                </p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  Tap a chip to add it to your "why" below
+                </p>
               </div>
-            )}
+              <ChipSection
+                label="Life Categories" emoji="🗂️"
+                items={allCategories} selected={selectedCategories} color="purple"
+                onToggle={item => toggleChip(selectedCategories, setSelectedCategories, item)}
+              />
+              <ChipSection
+                label="Values" emoji="⚡"
+                items={savedValues} selected={selectedValues} color="indigo"
+                onToggle={item => toggleChip(selectedValues, setSelectedValues, item)}
+              />
+              <ChipSection
+                label="Interests" emoji="🌱"
+                items={savedInterests} selected={selectedInterests} color="rose"
+                onToggle={item => toggleChip(selectedInterests, setSelectedInterests, item)}
+              />
+            </div>
+          )}
 
+          {/* 3. Why — chips inject labels here */}
+          <div>
+            <label htmlFor="goal-why" className="block text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Why does this matter?{' '}
+              <span className="normal-case tracking-normal font-normal" style={{ color: 'rgba(255,255,255,0.25)' }}>optional</span>
+            </label>
             <textarea
+              ref={whyRef}
               id="goal-why"
               value={why}
               onChange={e => setWhy(e.target.value)}
-              placeholder="In one sentence, explain why this goal matters to you…"
-              maxLength={300}
-              rows={2}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              placeholder="Tap a chip above to get started, or write your own…"
+              maxLength={500}
+              rows={3}
+              className="w-full px-4 py-3 rounded-xl text-sm resize-none outline-none transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#fff',
+                caretColor: '#a78bfa',
+                lineHeight: '1.7',
+              }}
+              onFocus={e => { e.target.style.borderColor = 'rgba(168,85,247,0.5)'; e.target.style.background = 'rgba(168,85,247,0.07)'; }}
+              onBlur={e =>  { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; }}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{why.length}/300</p>
+            <p className="text-right text-xs mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>{why.length}/500</p>
           </div>
 
-          {/* ── 4. Activities ──────────────────────────────────────────────── */}
+          {/* 4. Activities */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-700">
-                Activities <span className="text-gray-400 font-normal">(optional)</span>
-              </p>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Activities
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>optional — add later if you prefer</p>
+              </div>
               <button
                 type="button"
                 onClick={addActivityDraft}
-                className="text-xs font-semibold text-purple-600 hover:text-purple-700 transition"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: 'rgba(168,85,247,0.15)', color: '#c4b5fd', border: '1px solid rgba(168,85,247,0.25)' }}
               >
-                + Add activity
+                + Add
               </button>
             </div>
 
-            {activityDrafts.length === 0 && (
-              <p className="text-xs text-gray-400 italic">
-                You can add activities now or later from the goal detail view.
-              </p>
-            )}
-
-            <div className="space-y-3">
+            <div className="space-y-2">
               {activityDrafts.map((draft, idx) => (
-                <div key={draft.id} className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                <div key={draft.id} className="rounded-xl p-3 space-y-2"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 font-mono w-5">{idx + 1}.</span>
+                    <span className="text-xs font-mono w-5 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }}>{idx + 1}.</span>
                     <input
                       type="text"
                       value={draft.title}
                       onChange={e => updateActivityDraft(draft.id, { title: e.target.value })}
                       placeholder="e.g. Join Tuesday night running group"
                       maxLength={140}
-                      className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition"
+                      className="flex-1 px-3 py-2 rounded-lg text-sm outline-none transition-all"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeActivityDraft(draft.id)}
-                      className="text-gray-400 hover:text-red-500 transition p-1"
-                      title="Remove activity"
-                    >
-                      ✕
-                    </button>
+                    <button type="button" onClick={() => removeActivityDraft(draft.id)}
+                      className="text-xs transition-all hover:text-red-400 flex-shrink-0 p-1"
+                      style={{ color: 'rgba(255,255,255,0.3)' }}>✕</button>
                   </div>
 
                   {/* Include Today toggle */}
-                  <div className="flex items-center gap-2 mt-2 ml-7">
+                  <div className="flex items-center gap-2 pl-7">
                     <button
                       type="button"
                       onClick={() => updateActivityDraft(draft.id, { includeToday: !draft.includeToday })}
-                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition ${
-                        draft.includeToday
-                          ? 'bg-emerald-500 border-emerald-500'
-                          : 'border-gray-300 hover:border-gray-400'
-                      }`}
+                      className="w-4 h-4 rounded border-2 flex items-center justify-center transition-all flex-shrink-0"
+                      style={{ background: draft.includeToday ? '#10b981' : 'transparent', borderColor: draft.includeToday ? '#10b981' : 'rgba(255,255,255,0.2)' }}
                     >
-                      {draft.includeToday && (
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
+                      {draft.includeToday && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                     </button>
-                    <span className="text-xs text-gray-500">Add to To-Do List</span>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Add to Life Inbox</span>
                   </div>
 
                   {/* Sub-activities */}
                   {draft.subActivities.map((sa, saIdx) => (
-                    <div key={sa.id} className="flex items-center gap-2 mt-2 ml-7">
-                      <span className="text-[10px] text-gray-400 font-mono w-5">
+                    <div key={sa.id} className="flex items-center gap-2 pl-7">
+                      <span className="text-[10px] font-mono w-5 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.2)' }}>
                         {idx + 1}{String.fromCharCode(97 + saIdx)}.
                       </span>
                       <input
                         type="text"
                         value={sa.title}
                         onChange={e => updateSubActivityDraft(draft.id, sa.id, { title: e.target.value })}
-                        placeholder="e.g. Call Gil about running group"
+                        placeholder="Sub-activity…"
                         maxLength={140}
-                        className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-300 transition"
+                        className="flex-1 px-2 py-1.5 rounded-lg text-xs outline-none"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: '#fff' }}
                       />
-                      <button
-                        type="button"
-                        onClick={() => updateSubActivityDraft(draft.id, sa.id, { includeToday: !sa.includeToday })}
-                        className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition flex-shrink-0 ${
-                          sa.includeToday
-                            ? 'bg-emerald-500 border-emerald-500'
-                            : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                        title="Add to To-Do"
-                      >
-                        {sa.includeToday && (
-                          <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
+                      <button type="button" onClick={() => updateSubActivityDraft(draft.id, sa.id, { includeToday: !sa.includeToday })}
+                        className="w-3.5 h-3.5 rounded border flex items-center justify-center transition-all flex-shrink-0"
+                        style={{ background: sa.includeToday ? '#10b981' : 'transparent', borderColor: sa.includeToday ? '#10b981' : 'rgba(255,255,255,0.2)' }}
+                        title="Add to Life Inbox">
+                        {sa.includeToday && <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeSubActivityDraft(draft.id, sa.id)}
-                        className="text-gray-300 hover:text-red-400 transition text-xs"
-                      >
-                        ✕
-                      </button>
+                      <button type="button" onClick={() => removeSubActivityDraft(draft.id, sa.id)}
+                        className="text-xs transition-all hover:text-red-400" style={{ color: 'rgba(255,255,255,0.2)' }}>✕</button>
                     </div>
                   ))}
 
-                  <button
-                    type="button"
-                    onClick={() => addSubActivityDraft(draft.id)}
-                    className="text-[10px] text-purple-500 hover:text-purple-600 transition ml-7 mt-1.5"
-                  >
-                    + Add sub-activity
+                  <button type="button" onClick={() => addSubActivityDraft(draft.id)}
+                    className="text-[10px] pl-7 transition-all hover:text-purple-300"
+                    style={{ color: 'rgba(168,85,247,0.6)' }}>
+                    + sub-activity
                   </button>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── Actions ────────────────────────────────────────────────────── */}
-          <div className="flex gap-3 pt-1">
+          {/* Actions */}
+          <div className="flex gap-3 pt-1 pb-1">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+              className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!canSubmit}
-              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-bold hover:from-purple-700 hover:to-indigo-700 transition disabled:opacity-50 shadow-lg shadow-purple-200"
+              className="flex-1 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
+              style={{
+                background: canSubmit
+                  ? 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)'
+                  : 'rgba(255,255,255,0.1)',
+                color: '#fff',
+                boxShadow: canSubmit ? '0 4px 20px rgba(124,58,237,0.4)' : 'none',
+              }}
             >
-              {saving
-                ? 'Saving…'
-                : activityDrafts.filter(d => d.title.trim()).length > 0
-                  ? `Add Goal + ${activityDrafts.filter(d => d.title.trim()).length} Activities`
-                  : 'Add Goal'
-              }
+              {saving ? 'Saving…' : activeActivityCount > 0 ? `Add Goal + ${activeActivityCount} Activities` : 'Add Goal'}
             </button>
           </div>
         </form>
