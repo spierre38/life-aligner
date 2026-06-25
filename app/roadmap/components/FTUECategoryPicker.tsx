@@ -65,7 +65,7 @@ export default function FTUECategoryPicker({
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 pt-16">
+    <div className="min-h-screen pt-navbar pb-32" style={{ background: 'linear-gradient(135deg, #0a0a0f 0%, #0f0a1a 50%, #090d0f 100%)' }}>
       <style>{`
         @keyframes rm-float {
           0%, 100% { transform: translateY(0px) scale(1); }
@@ -84,23 +84,23 @@ export default function FTUECategoryPicker({
         .ask-tim-glow       { animation: rm-glow-pulse 2.8s ease-in-out infinite; }
       `}</style>
 
-      <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+      <div className="max-w-5xl mx-auto px-5 py-10 md:py-20">
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="text-center mb-16">
-          <p className="text-purple-300 text-sm font-semibold uppercase tracking-widest mb-4">
+        <div className="text-center mb-10 md:mb-16">
+          <p className="text-purple-300 text-xs font-semibold uppercase tracking-widest mb-3">
             Your Roadmap
           </p>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-5 leading-tight">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
             Where do you want<br className="hidden sm:block" /> to start?
           </h1>
-          <p className="text-slate-400 text-lg max-w-xl mx-auto">
-            Pick a life category to set your first goal, or ask Tim for a personalized suggestion.
+          <p className="text-slate-400 text-sm md:text-lg max-w-xl mx-auto">
+            Pick a life category to set your first goal.
           </p>
         </div>
 
         {/* ── Bubble grid ────────────────────────────────────────── */}
         <div
-          className="flex flex-wrap justify-center gap-6 md:gap-8"
+          className="flex flex-wrap justify-center gap-4 md:gap-8"
           role="list"
           aria-label="Life categories — pick one to start"
         >
@@ -126,7 +126,7 @@ export default function FTUECategoryPicker({
                 >
                   <svg
                     viewBox="0 0 100 100"
-                    className="w-36 h-36 md:w-44 md:h-44 transition-transform duration-300 group-hover:scale-110 group-active:scale-95"
+                    className="w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 transition-transform duration-300 group-hover:scale-110 group-active:scale-95"
                     aria-hidden="true"
                   >
                     <defs>
@@ -154,7 +154,7 @@ export default function FTUECategoryPicker({
                       </radialGradient>
                     </defs>
                   </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-white text-sm md:text-base font-bold text-center leading-tight px-4 drop-shadow-sm">
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-xs sm:text-sm md:text-base font-bold text-center leading-tight px-3 drop-shadow-sm">
                     {category}
                   </span>
                 </button>
@@ -176,7 +176,7 @@ export default function FTUECategoryPicker({
               >
                 <svg
                   viewBox="0 0 100 100"
-                  className="w-36 h-36 md:w-44 md:h-44 transition-transform duration-300 group-hover:scale-110 group-active:scale-95"
+                  className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 transition-transform duration-300 group-hover:scale-110 group-active:scale-95"
                   aria-hidden="true"
                 >
                   <defs>
@@ -204,7 +204,7 @@ export default function FTUECategoryPicker({
         </div>
 
         {/* ── Footer hint ─────────────────────────────────────────── */}
-        <p className="text-center text-slate-500 text-sm mt-16">
+        <p className="text-center text-slate-500 text-xs md:text-sm mt-10 md:mt-16">
           You can add goals across all categories — this just gets you started.
         </p>
       </div>
