@@ -136,6 +136,7 @@ export default function AuthNavbar() {
     const navBorder = 'rgba(255,255,255,0.07)';
 
     return (
+        <>
         <nav
             className="sticky top-0 z-50 backdrop-blur-xl"
             style={{
@@ -340,74 +341,76 @@ export default function AuthNavbar() {
 
                 {/* Mobile menu — replaced by MobileBottomNav */}
             </div>
+        </nav>
 
-            {/* Mobile user bottom sheet */}
-            {showMobileUserMenu && (
+        {/* Mobile user bottom sheet — MUST be outside <nav> because backdrop-blur
+            on nav creates a fixed-position containing block, trapping children */}
+        {showMobileUserMenu && (
+            <div
+                className="fixed inset-0 z-[60] flex items-end md:hidden"
+                style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}
+                onClick={() => setShowMobileUserMenu(false)}
+            >
                 <div
-                    className="fixed inset-0 z-[60] flex items-end md:hidden"
-                    style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}
-                    onClick={() => setShowMobileUserMenu(false)}
+                    className="w-full rounded-t-3xl py-6 px-5 space-y-2"
+                    style={{
+                        background: '#0f0f14',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+                    }}
+                    onClick={e => e.stopPropagation()}
                 >
-                    <div
-                        className="w-full rounded-t-3xl py-6 px-5 space-y-2"
-                        style={{
-                            background: '#0f0f14',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
-                        }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {/* Drag handle */}
-                        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                    {/* Drag handle */}
+                    <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.15)' }} />
 
-                        {/* User info */}
-                        <div className="flex items-center gap-3 px-1 mb-5">
-                            <div
-                                className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-                                style={{ background: 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)' }}
-                            >
-                                {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-sm font-semibold text-white truncate">{user?.user_metadata?.full_name || 'User'}</p>
-                                <p className="text-xs text-white/40 truncate">{user?.email}</p>
-                            </div>
+                    {/* User info */}
+                    <div className="flex items-center gap-3 px-1 mb-5">
+                        <div
+                            className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+                            style={{ background: 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)' }}
+                        >
+                            {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                         </div>
-
-                        {/* Nav rows */}
-                        {[
-                            { href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute, label: 'View LifeFrame', icon: '🗂️' },
-                            { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap', icon: '🗺️' },
-                            { href: '/settings', label: 'Settings', icon: '⚙️' },
-                        ].map(item => (
-                            <Link
-                                key={item.href + item.label}
-                                href={item.href}
-                                onClick={() => setShowMobileUserMenu(false)}
-                                className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
-                            >
-                                <span className="text-base">{item.icon}</span>
-                                <span className="text-sm font-medium text-white/80">{item.label}</span>
-                                <svg className="w-4 h-4 ml-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                            </Link>
-                        ))}
-
-                        <div className="pt-2">
-                            <button
-                                onClick={() => { setShowMobileUserMenu(false); handleSignOut(); }}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
-                                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}
-                            >
-                                <span className="text-base">🚪</span>
-                                <span className="text-sm font-medium text-red-400">Sign Out</span>
-                            </button>
+                        <div className="min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{user?.user_metadata?.full_name || 'User'}</p>
+                            <p className="text-xs text-white/40 truncate">{user?.email}</p>
                         </div>
                     </div>
+
+                    {/* Nav rows */}
+                    {[
+                        { href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute, label: 'View LifeFrame', icon: '🗂️' },
+                        { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap', icon: '🗺️' },
+                        { href: '/settings', label: 'Settings', icon: '⚙️' },
+                    ].map(item => (
+                        <Link
+                            key={item.href + item.label}
+                            href={item.href}
+                            onClick={() => setShowMobileUserMenu(false)}
+                            className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
+                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+                        >
+                            <span className="text-base">{item.icon}</span>
+                            <span className="text-sm font-medium text-white/80">{item.label}</span>
+                            <svg className="w-4 h-4 ml-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </Link>
+                    ))}
+
+                    <div className="pt-2">
+                        <button
+                            onClick={() => { setShowMobileUserMenu(false); handleSignOut(); }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
+                            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}
+                        >
+                            <span className="text-base">🚪</span>
+                            <span className="text-sm font-medium text-red-400">Sign Out</span>
+                        </button>
+                    </div>
                 </div>
-            )}
-        </nav>
+            </div>
+        )}
+    </>
     );
 }
