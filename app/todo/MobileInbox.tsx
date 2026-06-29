@@ -61,43 +61,61 @@ function AddTaskModal({
 
     return (
         <div
-            className="fixed inset-0 z-[60] flex flex-col justify-end sm:items-center sm:justify-center"
-            style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(8px)' }}
+            className="fixed inset-0 z-[60] flex flex-col sm:items-center sm:justify-center"
+            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
             onClick={onClose}
         >
-            {/* Sheet — slides up from bottom on mobile, dialog on desktop */}
+            {/* ── Mobile: full-screen form ─────────────────────────────── */}
             <div
-                className="w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl"
+                className="w-full h-full sm:h-auto sm:max-w-md sm:rounded-3xl sm:max-h-[90vh] flex flex-col"
                 style={{
                     background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    /* Push up above keyboard on mobile using dvh */
-                    maxHeight: '92dvh',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
+                    borderBottom: 'none',
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* Drag handle (mobile only) */}
-                <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                    <div className="w-10 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
-                </div>
-
-                {/* Scrollable content */}
-                <div className="flex-1 overflow-y-auto px-5 pt-4 pb-2 sm:px-6 sm:pt-6">
-                    <h2 className="text-lg font-semibold mb-5" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                {/* Top bar — Cancel · Title · Add  (always visible, never under keyboard) */}
+                <div
+                    className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                    style={{
+                        borderBottom: '1px solid var(--color-border)',
+                        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+                    }}
+                >
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="text-sm font-medium px-1"
+                        style={{ color: 'var(--color-text-muted)' }}
+                    >
+                        Cancel
+                    </button>
+                    <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
                         Add to Life Inbox
                     </h2>
+                    <button
+                        type="submit"
+                        form="add-task-form"
+                        disabled={!text.trim() || saving}
+                        className="text-sm font-semibold px-1 transition-opacity"
+                        style={{
+                            color: text.trim() ? '#818cf8' : 'rgba(99,102,241,0.3)',
+                        }}
+                    >
+                        {saving ? 'Adding…' : 'Add'}
+                    </button>
+                </div>
 
-                    <form id="add-task-form" onSubmit={handleSubmit} className="space-y-4">
+                {/* Scrollable form content */}
+                <div className="flex-1 overflow-y-auto px-5 pt-5 pb-8 sm:px-6">
+                    <form id="add-task-form" onSubmit={handleSubmit} className="space-y-5">
                         {/* Task text */}
                         <textarea
                             autoFocus
                             value={text}
                             onChange={e => setText(e.target.value)}
                             placeholder="What needs to be done? e.g. Pay car insurance"
-                            rows={3}
+                            rows={2}
                             className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none"
                             style={{
                                 background: 'var(--color-surface-2)',
@@ -168,37 +186,6 @@ function AddTaskModal({
                             </div>
                         </div>
                     </form>
-                </div>
-
-                {/* Sticky action bar — always visible above keyboard */}
-                <div
-                    className="flex gap-3 px-5 pt-3 pb-4 sm:px-6 sm:pb-6"
-                    style={{
-                        borderTop: '1px solid var(--color-border)',
-                        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
-                        background: 'var(--color-surface)',
-                    }}
-                >
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex-1 py-3 rounded-xl text-sm font-medium transition-all"
-                        style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        form="add-task-form"
-                        disabled={!text.trim() || saving}
-                        className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
-                        style={{
-                            background: text.trim() ? 'rgba(99,102,241,1)' : 'rgba(99,102,241,0.3)',
-                            color: 'white',
-                        }}
-                    >
-                        {saving ? 'Adding…' : 'Add Task'}
-                    </button>
                 </div>
             </div>
         </div>
