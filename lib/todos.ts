@@ -473,3 +473,33 @@ export async function deleteManualTodo(todoId: string) {
 export async function updateTodoOrder(_orderedTodos: TodoItem[]) {
   return { error: null };
 }
+
+// ─── RESCHEDULE TODO (change deadline bucket) ─────────────────────────────────
+
+export async function rescheduleTodoBucket(todoId: string, bucket: DeadlineBucket) {
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
+
+    const due_date = bucketToDate(bucket);
+    let found = false;
+
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id !== todoId) return a;
+      found = true;
+      const updated = { ...a, updatedAt: new Date().toISOString() } as any;
+      if (due_date) {
+        updated.due_date = due_date;
+      } else {
+        delete updated.due_date; // someday → remove date
+      }
+      return updated;
+    });
+
+    if (!found) return { error: { message: 'Todo not found' } };
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
+    return { error: saveErr };
+  } catch (err) {
+    return { error: err };
+  }
+}

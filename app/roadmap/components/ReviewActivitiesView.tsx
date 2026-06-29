@@ -363,7 +363,10 @@ export default function ReviewActivitiesView({
       }`}
     >
       {/* ── Top bar ────────────────────────────────────────────────── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
+      <div
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-slate-950/80 backdrop-blur-md border-b border-white/5"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+      >
         <button
           onClick={onClose}
           className="flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-medium"
@@ -371,7 +374,8 @@ export default function ReviewActivitiesView({
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to canvas
+          <span className="hidden sm:inline">Back to canvas</span>
+          <span className="sm:hidden">Back</span>
         </button>
         <div className="flex items-center gap-3">
           <span className="text-white/30 text-xs">
@@ -393,7 +397,7 @@ export default function ReviewActivitiesView({
       </div>
 
       {/* ── Scrollable content ─────────────────────────────────────── */}
-      <div ref={containerRef} className="h-full overflow-y-auto pt-16 relative">
+      <div ref={containerRef} className="h-full overflow-y-auto relative" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 64px)' }}>
         {/* ── Goals row ────────────────────────────────────────────── */}
         <div className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-white/5 px-6 py-4">
           <div className="flex items-center gap-2 mb-3">

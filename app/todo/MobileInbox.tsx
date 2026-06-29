@@ -6,7 +6,7 @@ import AuthNavbar from '@/app/components/AuthNavbar';
 import { supabase } from '@/lib/supabase';
 import {
     getAllTodos, addManualTodo, deleteManualTodo, toggleTodoCompletion,
-    toggleSubGoalCompletion, addSubGoal,
+    toggleSubGoalCompletion, addSubGoal, rescheduleTodoBucket,
     type TodoItem, type DeadlineBucket, type UrgencyLevel,
     URGENCY_COLOR, URGENCY_LABEL, URGENCY_ORDER, bucketToDate, computeUrgency,
 } from '@/lib/todos';
@@ -226,13 +226,16 @@ function TaskRow({
     todo,
     onToggle,
     onDelete,
+    onReschedule,
 }: {
     todo: TodoItem;
     onToggle: (t: TodoItem) => void;
     onDelete: (t: TodoItem) => void;
+    onReschedule: (t: TodoItem, bucket: DeadlineBucket) => void;
 }) {
     const [swipeX, setSwipeX] = useState(0);
     const [swiping, setSwiping] = useState(false);
+    const [showReschedule, setShowReschedule] = useState(false);
     const startX = useRef(0);
     const THRESHOLD = 80;
 
@@ -344,13 +347,38 @@ function TaskRow({
                             </span>
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                            {todo.urgency && !todo.completed && <UrgencyChip urgency={todo.urgency} />}
+                            {todo.urgency && !todo.completed && (
+                                <button onClick={() => setShowReschedule(s => !s)}>
+                                    <UrgencyChip urgency={todo.urgency} />
+                                </button>
+                            )}
                             {todo.goal_title && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-dim)' }}>
                                     ↗ {todo.goal_title}
                                 </span>
                             )}
                         </div>
+
+                        {/* Inline reschedule picker */}
+                        {showReschedule && !todo.completed && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                                {BUCKETS.map(b => (
+                                    <button
+                                        key={b.value}
+                                        onClick={() => { onReschedule(todo, b.value); setShowReschedule(false); }}
+                                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all active:scale-95"
+                                        style={{
+                                            background: (todo.urgency === b.value || todo.urgency === 'overdue' && b.value === 'today') ? `${b.color}33` : 'var(--color-surface-2)',
+                                            border: `1px solid ${b.color}44`,
+                                            color: b.color,
+                                        }}
+                                    >
+                                        {b.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         <p className="text-[10px] mt-1.5 md:hidden" style={{ color: 'var(--color-text-dim)' }}>
                             Swipe → complete · ← delete
                         </p>
@@ -434,6 +462,12 @@ export default function MobileInbox() {
         await deleteManualTodo(todo.id);
         showToast.success('Task removed');
         await loadTodos();
+    };
+
+    const handleReschedule = async (todo: TodoItem, bucket: DeadlineBucket) => {
+        const { error } = await rescheduleTodoBucket(todo.id, bucket);
+        if (error) { showToast.error('Failed to reschedule'); }
+        else { showToast.success(`Moved to ${bucket.replace('_', ' ')}`); await loadTodos(); }
     };
 
     // Group todos by category, filtered by bucket
@@ -568,7 +602,7 @@ export default function MobileInbox() {
                                 </div>
                                 <div className="space-y-2">
                                     {sorted.map(todo => (
-                                        <TaskRow key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
+                                        <TaskRow key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} onReschedule={handleReschedule} />
                                     ))}
                                 </div>
                             </div>
@@ -586,7 +620,7 @@ export default function MobileInbox() {
                             </div>
                             <div className="space-y-2">
                                 {uncategorized.map(todo => (
-                                    <TaskRow key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
+                                    <TaskRow key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} onReschedule={handleReschedule} />
                                 ))}
                             </div>
                         </div>

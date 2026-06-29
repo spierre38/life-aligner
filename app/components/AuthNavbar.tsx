@@ -61,6 +61,32 @@ function ThemeToggle() {
     );
 }
 
+// Inline toggle row for the mobile account sheet
+function ThemeToggleMobileRow() {
+    const { isDark, toggleTheme } = useTheme();
+    return (
+        <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+            <span className="text-base">{isDark ? '☀️' : '🌙'}</span>
+            <span className="text-sm font-medium text-white/80">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+            {/* Toggle pill */}
+            <div
+                className="ml-auto w-10 h-5 rounded-full relative transition-all duration-300"
+                style={{ background: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(99,102,241,0.8)' }}
+            >
+                <div
+                    className="absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300"
+                    style={{ left: isDark ? '2px' : '22px' }}
+                />
+            </div>
+        </button>
+    );
+}
+
 export default function AuthNavbar() {
     const router = useRouter();
     const pathname = usePathname();
@@ -399,9 +425,12 @@ export default function AuthNavbar() {
                     ))}
 
                     <div className="pt-2">
+                        {/* Theme toggle row */}
+                        <ThemeToggleMobileRow />
+
                         <button
                             onClick={() => { setShowMobileUserMenu(false); handleSignOut(); }}
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98] mt-2"
                             style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}
                         >
                             <span className="text-base">🚪</span>

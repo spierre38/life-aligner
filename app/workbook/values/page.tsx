@@ -151,6 +151,8 @@ export default function ValuesWorksheet() {
     const [showTooManyValuesConfirm, setShowTooManyValuesConfirm] = useState(false);
     // Ref for auto-scroll during drag
     const scrollInterval = useRef<NodeJS.Timeout | null>(null);
+    // Touch drag ref
+    const touchDragName = useRef<string | null>(null);
 
     // Check authentication on mount
     useEffect(() => {
@@ -383,6 +385,50 @@ export default function ValuesWorksheet() {
             clearInterval(scrollInterval.current);
             scrollInterval.current = null;
         }
+    };
+
+    // ── Touch drag handlers (mobile) ──────────────────────────────────────────
+    const handleTouchStart = (valueName: string) => {
+        touchDragName.current = valueName;
+        setDraggedItem(valueName);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!touchDragName.current) return;
+        // Prevent page scroll while dragging
+        e.preventDefault();
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const target = el?.closest('[data-value-name]') as HTMLElement | null;
+        const targetName = target?.dataset.valueName ?? null;
+        if (targetName && targetName !== touchDragName.current) {
+            setDragOverItem(targetName);
+        }
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (!touchDragName.current) return;
+        const touch = e.changedTouches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const target = el?.closest('[data-value-name]') as HTMLElement | null;
+        const targetName = target?.dataset.valueName ?? null;
+
+        if (targetName && targetName !== touchDragName.current) {
+            const draggedName = touchDragName.current;
+            setPrioritizedValues(prev => {
+                const draggedIndex = prev.findIndex(v => v.name === draggedName);
+                const targetIndex = prev.findIndex(v => v.name === targetName);
+                if (draggedIndex === -1 || targetIndex === -1) return prev;
+                const newValues = [...prev];
+                const [moved] = newValues.splice(draggedIndex, 1);
+                newValues.splice(targetIndex, 0, moved);
+                return newValues.map((v, i) => ({ ...v, priority: i + 1 }));
+            });
+        }
+
+        touchDragName.current = null;
+        setDraggedItem(null);
+        setDragOverItem(null);
     };
 
     const saveValues = async () => {
@@ -919,13 +965,17 @@ export default function ValuesWorksheet() {
                                             {prioritizedValues.map((value) => (
                                                 <div
                                                     key={value.name}
+                                                    data-value-name={value.name}
                                                     draggable
                                                     onDragStart={(e) => handleDragStart(e, value.name)}
                                                     onDragOver={(e) => handleDragOver(e, value.name)}
                                                     onDragLeave={handleDragLeave}
                                                     onDrop={(e) => handleDrop(e, value.name)}
                                                     onDragEnd={handleDragEnd}
-                                                    className={`flex items-center gap-4 p-4 rounded-xl transition-all cursor-move ${draggedItem === value.name
+                                                    onTouchStart={() => handleTouchStart(value.name)}
+                                                    onTouchMove={handleTouchMove}
+                                                    onTouchEnd={handleTouchEnd}
+                                                    className={`flex items-center gap-4 p-4 rounded-xl transition-all cursor-move touch-none ${draggedItem === value.name
                                                         ? 'opacity-50 scale-95'
                                                         : dragOverItem === value.name
                                                             ? 'bg-gradient-to-r from-purple-100 to-blue-100 ring-2 ring-purple-400 scale-105'
