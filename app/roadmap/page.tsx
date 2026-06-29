@@ -518,6 +518,8 @@ export default function RoadmapPage() {
           onOpenGoal={setDetailGoalId}
           onAddGoal={() => setAddGoalOpen(true)}
           onReviewAll={() => setReviewOpen(true)}
+          onCompleteGoal={handleCompleteGoal}
+          onDeleteGoal={handleDeleteGoal}
         />
       )}
 

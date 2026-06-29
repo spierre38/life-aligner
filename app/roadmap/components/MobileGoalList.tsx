@@ -6,8 +6,11 @@
  * Card-based goal list for mobile viewports, shown instead of BubbleCanvas.
  * Each card shows: goal title, life categories, progress ring, activity count,
  * and a "View Goal →" tap target that opens the GoalDetailView.
+ *
+ * Long-press a card → context sheet with View Details, Complete Goal, Delete.
  */
 
+import { useState, useRef, useCallback } from 'react';
 import type { Goal, Activity, RoadmapData } from '@/lib/roadmap-types';
 
 // ─── Category color mapping ────────────────────────────────────────────────────
@@ -77,20 +80,54 @@ function GoalCard({
     goal,
     activities,
     onOpen,
+    onLongPress,
 }: {
     goal: Goal;
     activities: Activity[];
     onOpen: (goalId: string) => void;
+    onLongPress: (goal: Goal) => void;
 }) {
     const goalActivities = activities.filter(a => a.connectedGoalIds.includes(goal.id));
     const done = goalActivities.filter(a => a.completed).length;
     const total = goalActivities.length;
     const hue = goal.connectedCategories[0] ? stringToHue(goal.connectedCategories[0]) : 250;
 
+    // Long-press detection
+    const pressTimer = useRef<NodeJS.Timeout | null>(null);
+    const didLongPress = useRef(false);
+
+    const handlePointerDown = () => {
+        didLongPress.current = false;
+        pressTimer.current = setTimeout(() => {
+            didLongPress.current = true;
+            // Haptic feedback
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                navigator.vibrate(15);
+            }
+            onLongPress(goal);
+        }, 500);
+    };
+
+    const handlePointerUpOrCancel = () => {
+        if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+            pressTimer.current = null;
+        }
+    };
+
+    const handleClick = () => {
+        if (didLongPress.current) return; // swallow click after long-press
+        onOpen(goal.id);
+    };
+
     return (
-        <button
-            onClick={() => onOpen(goal.id)}
-            className="w-full text-left transition-all duration-150 active:scale-[0.98]"
+        <div
+            onClick={handleClick}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUpOrCancel}
+            onPointerCancel={handlePointerUpOrCancel}
+            onPointerLeave={handlePointerUpOrCancel}
+            className="w-full text-left transition-all duration-150 active:scale-[0.98] select-none"
             style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
@@ -130,7 +167,7 @@ function GoalCard({
                         </div>
                     )}
 
-                    {/* Activity count + tap hint */}
+                    {/* Activity count + hints */}
                     <div className="flex items-center justify-between">
                         <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
                             {done}/{total} activities done
@@ -160,7 +197,110 @@ function GoalCard({
                     />
                 </div>
             )}
-        </button>
+
+            {/* Hint text */}
+            <p className="text-[10px] mt-2 text-center" style={{ color: 'var(--color-text-dim)', opacity: 0.5 }}>
+                Long-press for options
+            </p>
+        </div>
+    );
+}
+
+// ─── Goal Context Sheet (bottom sheet overlay) ─────────────────────────────────
+
+function GoalContextSheet({
+    goal,
+    onClose,
+    onViewDetails,
+    onComplete,
+    onDelete,
+}: {
+    goal: Goal;
+    onClose: () => void;
+    onViewDetails: () => void;
+    onComplete: () => void;
+    onDelete: () => void;
+}) {
+    return (
+        <div
+            className="fixed inset-0 z-[70] flex flex-col justify-end"
+            style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
+            onClick={onClose}
+        >
+            <div
+                className="w-full rounded-t-3xl"
+                style={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderBottom: 'none',
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1">
+                    <div className="w-10 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
+                </div>
+
+                {/* Goal title */}
+                <div className="px-5 pt-2 pb-4">
+                    <h3 className="text-base font-semibold" style={{ color: 'var(--color-text)' }}>
+                        {goal.title}
+                    </h3>
+                    {goal.connectedCategories.length > 0 && (
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-text-dim)' }}>
+                            {goal.connectedCategories.join(' · ')}
+                        </p>
+                    )}
+                </div>
+
+                {/* Actions */}
+                <div className="px-4 pb-3 space-y-1.5">
+                    {/* View Details */}
+                    <button
+                        onClick={onViewDetails}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+                    >
+                        <span className="text-base">📋</span>
+                        <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>View Details</span>
+                        <svg className="w-4 h-4 ml-auto" style={{ color: 'var(--color-text-dim)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+
+                    {/* Complete Goal */}
+                    <button
+                        onClick={onComplete}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                        style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}
+                    >
+                        <span className="text-base">✅</span>
+                        <span className="text-sm font-medium" style={{ color: '#34d399' }}>Complete Goal</span>
+                    </button>
+
+                    {/* Delete Goal */}
+                    <button
+                        onClick={onDelete}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                        style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}
+                    >
+                        <span className="text-base">🗑️</span>
+                        <span className="text-sm font-medium text-red-400">Delete Goal</span>
+                    </button>
+                </div>
+
+                {/* Cancel */}
+                <div className="px-4 pb-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}>
+                    <button
+                        onClick={onClose}
+                        className="w-full py-3 rounded-2xl text-sm font-medium transition-all active:scale-[0.98]"
+                        style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -171,6 +311,8 @@ interface MobileGoalListProps {
     onOpenGoal: (goalId: string) => void;
     onAddGoal: () => void;
     onReviewAll: () => void;
+    onCompleteGoal?: (goal: Goal) => void;
+    onDeleteGoal?: (goalId: string) => void;
 }
 
 export default function MobileGoalList({
@@ -178,10 +320,17 @@ export default function MobileGoalList({
     onOpenGoal,
     onAddGoal,
     onReviewAll,
+    onCompleteGoal,
+    onDeleteGoal,
 }: MobileGoalListProps) {
     const activeGoals = roadmap.goals.filter(g => g.status === 'active');
     const totalActivities = roadmap.activities.length;
     const doneActivities = roadmap.activities.filter(a => a.completed).length;
+    const [contextGoal, setContextGoal] = useState<Goal | null>(null);
+
+    const handleLongPress = useCallback((goal: Goal) => {
+        setContextGoal(goal);
+    }, []);
 
     return (
         <div
@@ -211,6 +360,7 @@ export default function MobileGoalList({
                             goal={goal}
                             activities={roadmap.activities}
                             onOpen={onOpenGoal}
+                            onLongPress={handleLongPress}
                         />
                     ))}
                 </div>
@@ -244,6 +394,17 @@ export default function MobileGoalList({
                     )}
                 </div>
             </div>
+
+            {/* Context sheet */}
+            {contextGoal && (
+                <GoalContextSheet
+                    goal={contextGoal}
+                    onClose={() => setContextGoal(null)}
+                    onViewDetails={() => { setContextGoal(null); onOpenGoal(contextGoal.id); }}
+                    onComplete={() => { setContextGoal(null); onCompleteGoal?.(contextGoal); }}
+                    onDelete={() => { setContextGoal(null); onDeleteGoal?.(contextGoal.id); }}
+                />
+            )}
         </div>
     );
 }
