@@ -73,10 +73,20 @@ const HIDDEN_PREFIXES = [
 export default function MobileBottomNav() {
     const pathname = usePathname();
     const [urgentCount, setUrgentCount] = useState(0);
+    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
         getUrgentTodoCount().then(setUrgentCount).catch(() => {});
     }, [pathname]); // refresh badge when route changes
+
+    // Watch for data-modal-open on <body> — any modal can set this to hide the nav
+    useEffect(() => {
+        const check = () => setModalOpen(document.body.dataset.modalOpen === 'true');
+        check();
+        const obs = new MutationObserver(check);
+        obs.observe(document.body, { attributes: true, attributeFilter: ['data-modal-open'] });
+        return () => obs.disconnect();
+    }, []);
 
     // Hide on workbook / auth pages
     const hidden = HIDDEN_PREFIXES.some(p => {
@@ -84,7 +94,7 @@ export default function MobileBottomNav() {
         return pathname?.startsWith(p);
     });
 
-    if (hidden) return null;
+    if (hidden || modalOpen) return null;
 
     return (
         <>

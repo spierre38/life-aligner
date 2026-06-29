@@ -50,6 +50,12 @@ function AddTaskModal({
     const [category, setCategory] = useState<string>(categories[0] ?? '');
     const [saving, setSaving] = useState(false);
 
+    // Tell MobileBottomNav to hide while this modal is open
+    useEffect(() => {
+        document.body.dataset.modalOpen = 'true';
+        return () => { delete document.body.dataset.modalOpen; };
+    }, []);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!text.trim()) return;
