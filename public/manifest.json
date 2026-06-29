@@ -1,6 +1,6 @@
 {
   "name": "Tim Collins Framework",
-  "short_name": "LifeAligner",
+  "short_name": "TCF",
   "description": "Align your goals with your values and purpose",
   "start_url": "/dashboard",
   "scope": "/",
