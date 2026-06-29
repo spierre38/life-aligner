@@ -60,113 +60,146 @@ function AddTaskModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }}>
-            <div className="w-full max-w-md rounded-3xl p-6" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                <h2 className="text-lg font-semibold mb-5" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                    Add to Life Inbox
-                </h2>
+        <div
+            className="fixed inset-0 z-50 flex flex-col justify-end sm:items-center sm:justify-center"
+            style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(8px)' }}
+            onClick={onClose}
+        >
+            {/* Sheet — slides up from bottom on mobile, dialog on desktop */}
+            <div
+                className="w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl"
+                style={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    /* Push up above keyboard on mobile using dvh */
+                    maxHeight: '92dvh',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Drag handle (mobile only) */}
+                <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                    <div className="w-10 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Task text */}
-                    <textarea
-                        autoFocus
-                        value={text}
-                        onChange={e => setText(e.target.value)}
-                        placeholder="What needs to be done? e.g. Pay car insurance"
-                        rows={2}
-                        className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none"
-                        style={{
-                            background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)',
-                            color: 'var(--color-text)',
-                        }}
-                    />
+                {/* Scrollable content */}
+                <div className="flex-1 overflow-y-auto px-5 pt-4 pb-2 sm:px-6 sm:pt-6">
+                    <h2 className="text-lg font-semibold mb-5" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                        Add to Life Inbox
+                    </h2>
 
-                    {/* Life Category */}
-                    {categories.length > 0 && (
-                        <div>
-                            <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
-                                Life Category
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {categories.map(cat => (
+                    <form id="add-task-form" onSubmit={handleSubmit} className="space-y-4">
+                        {/* Task text */}
+                        <textarea
+                            autoFocus
+                            value={text}
+                            onChange={e => setText(e.target.value)}
+                            placeholder="What needs to be done? e.g. Pay car insurance"
+                            rows={3}
+                            className="w-full rounded-xl px-4 py-3 text-sm resize-none outline-none"
+                            style={{
+                                background: 'var(--color-surface-2)',
+                                border: '1px solid var(--color-border)',
+                                color: 'var(--color-text)',
+                            }}
+                        />
+
+                        {/* Life Category */}
+                        {categories.length > 0 && (
+                            <div>
+                                <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                                    Life Category
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => setCategory(cat)}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                                            style={{
+                                                background: category === cat ? 'rgba(99,102,241,0.2)' : 'var(--color-surface-2)',
+                                                border: `1px solid ${category === cat ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
+                                                color: category === cat ? '#818cf8' : 'var(--color-text-muted)',
+                                            }}
+                                        >
+                                            {categoryEmoji(cat)} {cat}
+                                        </button>
+                                    ))}
                                     <button
-                                        key={cat}
                                         type="button"
-                                        onClick={() => setCategory(cat)}
+                                        onClick={() => setCategory('')}
                                         className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                                         style={{
-                                            background: category === cat ? 'rgba(99,102,241,0.2)' : 'var(--color-surface-2)',
-                                            border: `1px solid ${category === cat ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
-                                            color: category === cat ? '#818cf8' : 'var(--color-text-muted)',
+                                            background: category === '' ? 'rgba(99,102,241,0.2)' : 'var(--color-surface-2)',
+                                            border: `1px solid ${category === '' ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
+                                            color: category === '' ? '#818cf8' : 'var(--color-text-muted)',
                                         }}
                                     >
-                                        {categoryEmoji(cat)} {cat}
+                                        📋 General
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Deadline bucket */}
+                        <div>
+                            <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                                When
+                            </label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {BUCKETS.map(b => (
+                                    <button
+                                        key={b.value}
+                                        type="button"
+                                        onClick={() => setBucket(b.value)}
+                                        className="py-2 rounded-xl text-xs font-semibold transition-all"
+                                        style={{
+                                            background: bucket === b.value ? `${b.color}22` : 'var(--color-surface-2)',
+                                            border: `1px solid ${bucket === b.value ? b.color + '66' : 'var(--color-border)'}`,
+                                            color: bucket === b.value ? b.color : 'var(--color-text-muted)',
+                                        }}
+                                    >
+                                        {b.label}
                                     </button>
                                 ))}
-                                <button
-                                    type="button"
-                                    onClick={() => setCategory('')}
-                                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                                    style={{
-                                        background: category === '' ? 'rgba(99,102,241,0.2)' : 'var(--color-surface-2)',
-                                        border: `1px solid ${category === '' ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
-                                        color: category === '' ? '#818cf8' : 'var(--color-text-muted)',
-                                    }}
-                                >
-                                    📋 General
-                                </button>
                             </div>
                         </div>
-                    )}
+                    </form>
+                </div>
 
-                    {/* Deadline bucket */}
-                    <div>
-                        <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
-                            When
-                        </label>
-                        <div className="grid grid-cols-4 gap-2">
-                            {BUCKETS.map(b => (
-                                <button
-                                    key={b.value}
-                                    type="button"
-                                    onClick={() => setBucket(b.value)}
-                                    className="py-2 rounded-xl text-xs font-semibold transition-all"
-                                    style={{
-                                        background: bucket === b.value ? `${b.color}22` : 'var(--color-surface-2)',
-                                        border: `1px solid ${bucket === b.value ? b.color + '66' : 'var(--color-border)'}`,
-                                        color: bucket === b.value ? b.color : 'var(--color-text-muted)',
-                                    }}
-                                >
-                                    {b.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 py-3 rounded-xl text-sm font-medium transition-all"
-                            style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={!text.trim() || saving}
-                            className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
-                            style={{
-                                background: text.trim() ? 'rgba(99,102,241,1)' : 'rgba(99,102,241,0.3)',
-                                color: 'white',
-                            }}
-                        >
-                            {saving ? 'Adding…' : 'Add Task'}
-                        </button>
-                    </div>
-                </form>
+                {/* Sticky action bar — always visible above keyboard */}
+                <div
+                    className="flex gap-3 px-5 pt-3 pb-4 sm:px-6 sm:pb-6"
+                    style={{
+                        borderTop: '1px solid var(--color-border)',
+                        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+                        background: 'var(--color-surface)',
+                    }}
+                >
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 py-3 rounded-xl text-sm font-medium transition-all"
+                        style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        form="add-task-form"
+                        disabled={!text.trim() || saving}
+                        className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
+                        style={{
+                            background: text.trim() ? 'rgba(99,102,241,1)' : 'rgba(99,102,241,0.3)',
+                            color: 'white',
+                        }}
+                    >
+                        {saving ? 'Adding…' : 'Add Task'}
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -563,13 +596,13 @@ export default function MobileInbox() {
                     <div className="h-24" />
                 </div>
 
-                {/* Floating Add Button — above home indicator */}
+                {/* Floating Add Button */}
                 <button
                     onClick={() => setShowAddModal(true)}
                     id="life-inbox-add-btn"
                     className="fixed right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 active:scale-95"
                     style={{
-                        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)',
+                        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)',
                         background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                         boxShadow: '0 8px 32px rgba(99,102,241,0.5)',
                     }}
