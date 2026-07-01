@@ -955,4 +955,9 @@ section {
     opacity: 1 !important;
     transform: none !important;
   }
-}
+}
+
+/* ── Hide scrollbar (keep scroll) ── */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+

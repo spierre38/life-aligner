@@ -449,6 +449,12 @@ export default function GoalDetailView({
     return () => cancelAnimationFrame(t);
   }, []);
 
+  // Hide bottom nav while this overlay is open
+  useEffect(() => {
+    document.body.dataset.modalOpen = 'true';
+    return () => { delete document.body.dataset.modalOpen; };
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -513,37 +519,42 @@ export default function GoalDetailView({
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/5"
         style={{ background: 'rgba(5,5,5,0.82)', paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 flex-wrap gap-2">
-        <button
-          onClick={onClose}
-          className="flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-medium"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to canvas
-        </button>
-        <div className="flex items-center gap-2">
+        {/* Row 1: Back + Goal title */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 text-white/70 hover:text-white transition text-sm font-medium"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="hidden sm:inline">Back to canvas</span>
+            <span className="sm:hidden">Back</span>
+          </button>
+          <span className="text-xs font-medium text-white/40 truncate max-w-[50%] text-right">{goal.title}</span>
+        </div>
+
+        {/* Row 2: Action buttons — scrollable on mobile */}
+        <div className="flex items-center gap-2 px-4 sm:px-6 pb-2.5 overflow-x-auto no-scrollbar">
           <button
             onClick={() => onAddActivity(goal.id)}
-            className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-full transition"
+            className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
           >
-            + Add activity
+            + Activity
           </button>
           <button
             onClick={() => onEditGoal(goal)}
-            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition"
+            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
           >
-            Edit goal
+            Edit
           </button>
-          {/* Goal lifecycle buttons */}
           <button
             id="complete-goal-btn"
             onClick={() => onCompleteGoal(goal)}
-            className="bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-full transition hover:bg-white/90"
+            className="bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-full transition hover:bg-white/90 whitespace-nowrap flex-shrink-0"
             title="Mark this goal complete and archive it as a Life Chapter"
           >
-            ✔ Complete Goal
+            ✔ Complete
           </button>
           <button
             id="delete-goal-btn"
@@ -552,13 +563,12 @@ export default function GoalDetailView({
                 onDeleteGoal(goal.id);
               }
             }}
-            className="bg-red-500/20 hover:bg-red-500/35 text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full transition"
+            className="bg-red-500/20 hover:bg-red-500/35 text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
             title="Permanently delete this goal"
           >
             ✕ Delete
           </button>
         </div>
-      </div>
       </div>
 
       <div className="flex min-h-screen pt-navbar pb-32">
