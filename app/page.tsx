@@ -229,7 +229,7 @@ export default function Home() {
       </div>
 
       {/* Sticky Navigation */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-sm border-b border-gray-200 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-sm border-b border-gray-200 z-50" style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), var(--safe-top, 0px))' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Wordmark — same component used in the authenticated app */}

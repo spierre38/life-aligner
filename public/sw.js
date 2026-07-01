@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifealigner-v2';
+const CACHE_NAME = 'lifealigner-v3';
 const OFFLINE_URL = '/dashboard';
 
 // Assets to pre-cache on install
