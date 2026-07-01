@@ -121,6 +121,12 @@ export default function AddGoalModal({
     return () => clearTimeout(t);
   }, []);
 
+  // Hide bottom nav while this modal is open
+  useEffect(() => {
+    document.body.dataset.modalOpen = 'true';
+    return () => { delete document.body.dataset.modalOpen; };
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -227,59 +233,55 @@ export default function AddGoalModal({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-md"
+      className="fixed inset-0 z-[60] flex flex-col sm:items-center sm:justify-center bg-black/80 backdrop-blur-md"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Add a goal"
     >
       <div
-        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col"
+        className="w-full h-full sm:h-auto sm:max-w-lg sm:rounded-3xl sm:max-h-[90vh] overflow-hidden flex flex-col"
         style={{
           background: 'linear-gradient(145deg, #141418 0%, #0f0f14 100%)',
           border: '1px solid rgba(255,255,255,0.08)',
           boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)',
-          maxHeight: '92vh',
         }}
+        onClick={e => e.stopPropagation()}
       >
-        {/* ── Header ──────────────────────────────────────────────────────── */}
+        {/* ── Top bar — Cancel · Title · Save ─────────────────────────── */}
         <div
-          className="px-7 py-6 flex-shrink-0 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.12) 50%, rgba(244,63,94,0.08) 100%)' }}
+          className="flex items-center justify-between px-5 py-3 flex-shrink-0 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.12) 50%, rgba(244,63,94,0.08) 100%)',
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}
         >
-          {/* Decorative glow */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, rgba(168,85,247,1) 0%, transparent 70%)' }} />
-
-          <div className="flex items-start justify-between relative">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(168,85,247,0.8)' }}>
-                New Goal
-              </p>
-              <h2 className="text-xl font-bold" style={{ color: '#fff' }}>
-                What do you want to achieve?
-              </h2>
-              {preselectedCategory && (
-                <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
-                  style={{ background: 'rgba(168,85,247,0.2)', color: '#c4b5fd', border: '1px solid rgba(168,85,247,0.3)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                  {preselectedCategory}
-                </div>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10 flex-shrink-0 mt-0.5"
-              style={{ color: 'rgba(255,255,255,0.4)' }}
-            >
-              ✕
-            </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm font-medium"
+            style={{ color: 'rgba(255,255,255,0.6)' }}
+          >
+            Cancel
+          </button>
+          <div className="text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(168,85,247,0.8)' }}>New Goal</p>
+            <h2 className="text-sm font-bold" style={{ color: '#fff' }}>Add Goal</h2>
           </div>
+          <button
+            type="submit"
+            form="add-goal-form"
+            disabled={!canSubmit}
+            className="text-sm font-semibold transition-opacity"
+            style={{ color: canSubmit ? '#a78bfa' : 'rgba(255,255,255,0.2)' }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
         </div>
 
         {/* ── Scrollable Form ──────────────────────────────────────────────── */}
-        <form onSubmit={handleSubmit} className="px-7 py-6 space-y-6 overflow-y-auto flex-1">
+        <form id="add-goal-form" onSubmit={handleSubmit} className="px-5 sm:px-7 py-5 space-y-6 overflow-y-auto flex-1">
 
           {/* 1. Goal title */}
           <div>
@@ -455,32 +457,8 @@ export default function AddGoalModal({
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-1 pb-1">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
-              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="flex-1 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-40"
-              style={{
-                background: canSubmit
-                  ? 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)'
-                  : 'rgba(255,255,255,0.1)',
-                color: '#fff',
-                boxShadow: canSubmit ? '0 4px 20px rgba(124,58,237,0.4)' : 'none',
-              }}
-            >
-              {saving ? 'Saving…' : activeActivityCount > 0 ? `Add Goal + ${activeActivityCount} Activities` : 'Add Goal'}
-            </button>
-          </div>
+          {/* Bottom padding for scroll clearance */}
+          <div style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }} />
         </form>
       </div>
     </div>

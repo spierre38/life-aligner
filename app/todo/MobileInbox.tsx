@@ -629,9 +629,10 @@ export default function MobileInbox() {
                     id="life-inbox-add-btn"
                     className="fixed right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 active:scale-95"
                     style={{
-                        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)',
+                        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 90px)',
                         background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                         boxShadow: '0 8px 32px rgba(99,102,241,0.5)',
+                        zIndex: 40,
                     }}
                     aria-label="Add task"
                 >

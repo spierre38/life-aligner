@@ -94,6 +94,8 @@ export default function RootLayout({
                     </ToastProvider>
                     <MobileBottomNav />
                     <Toaster
+                        position="top-center"
+                        containerStyle={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
                         toastOptions={{
                             style: {
                                 background: '#1a1a1a',
