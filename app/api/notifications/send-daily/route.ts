@@ -40,21 +40,39 @@ export async function GET(req: NextRequest) {
 
     const supabase = getServiceClient();
     const nowUTC = new Date();
-    const currentHour = nowUTC.getUTCHours();
+    const currentHourUTC = nowUTC.getUTCHours();
 
-    // Find subscriptions where it's the user's notification hour (UTC comparison)
-    // In production you'd compare against timezone-converted hours; for simplicity
-    // we match UTC hour which works well for users in ET (UTC-4/5).
-    const { data: subscriptions, error } = await supabase
+    // Fetch all enabled subscriptions, then filter by timezone-aware hour match.
+    // A user's notify_hour is in THEIR timezone. We check if the current UTC hour
+    // matches what that local hour would be in UTC.
+    const { data: allSubs, error } = await supabase
         .from('push_subscriptions')
-        .select('*, user_id')
-        .eq('enabled', true)
-        .eq('notify_hour', currentHour);
+        .select('*')
+        .eq('enabled', true);
 
     if (error) {
         console.error('[send-daily] fetch error:', error);
         return NextResponse.json({ error: 'DB error' }, { status: 500 });
     }
+
+    // Filter: does the user's preferred local hour == current UTC hour?
+    const subscriptions = (allSubs ?? []).filter(sub => {
+        try {
+            // Get the current hour in the user's timezone
+            const userLocalHour = parseInt(
+                new Intl.DateTimeFormat('en-US', {
+                    hour: 'numeric',
+                    hour12: false,
+                    timeZone: sub.timezone || 'America/New_York',
+                }).format(nowUTC),
+                10
+            );
+            return userLocalHour === (sub.notify_hour ?? 8);
+        } catch {
+            // Fallback: compare directly against UTC
+            return (sub.notify_hour ?? 8) === currentHourUTC;
+        }
+    });
 
     if (!subscriptions || subscriptions.length === 0) {
         return NextResponse.json({ sent: 0, message: 'No subscriptions for this hour' });
@@ -120,5 +138,5 @@ export async function GET(req: NextRequest) {
         }
     }
 
-    return NextResponse.json({ sent, failed, hour: currentHour });
+    return NextResponse.json({ sent, failed, hour: currentHourUTC });
 }
