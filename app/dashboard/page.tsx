@@ -15,9 +15,20 @@ import { getAllTodos, type TodoItem, URGENCY_COLOR } from '@/lib/todos';
 
 // Welcome-flow components — lazy-loaded so first-time experience doesn't
 // bloat the main dashboard bundle.
-const OnboardingJourney = dynamic(() => import('@/app/components/OnboardingJourney'));
-const OnboardingModal = dynamic(() => import('@/app/components/OnboardingModal').then(m => ({ default: m.OnboardingModal })));
-const VideoIntroStep = dynamic(() => import('@/app/components/VideoIntroStep'));
+const OnboardingJourney = dynamic(() => import('@/app/components/OnboardingJourney'), {
+    loading: () => (
+        <div className="fixed inset-0 z-50" style={{ background: 'radial-gradient(ellipse at 20% 40%, #1e1b4b 0%, #080818 52%, #000 100%)' }} />
+    ),
+});
+const OnboardingModal = dynamic(
+    () => import('@/app/components/OnboardingModal').then(m => ({ default: m.OnboardingModal })),
+    { loading: () => null }
+);
+const VideoIntroStep = dynamic(() => import('@/app/components/VideoIntroStep'), {
+    loading: () => (
+        <div className="fixed inset-0 z-50" style={{ background: 'var(--mesh-canvas, #050505)' }} />
+    ),
+});
 
 // ─── State machine ──────────────────────────────────────────────────────────
 
