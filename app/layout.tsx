@@ -90,9 +90,7 @@ export default function RootLayout({
                     <InstallPromptBanner />
                     <ScrollToTop />
                     <ToastProvider>
-                        <div className="page-enter">
-                            {children}
-                        </div>
+                        {children}
                     </ToastProvider>
                     <MobileBottomNav />
                     <Toaster
