@@ -107,7 +107,7 @@ export function CompletionModal({ goal, onSave, onDismiss }: Props) {
         style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(16px)' }}
       >
         <div
-          className="w-full max-w-lg rounded-3xl overflow-hidden"
+          className="w-full max-w-lg rounded-3xl overflow-hidden modal-spring-in"
           style={{
             background: '#0e0e0e',
             border: '1px solid rgba(255,255,255,0.09)',
@@ -141,6 +141,26 @@ export function CompletionModal({ goal, onSave, onDismiss }: Props) {
                 className="relative w-20 h-20 mx-auto mb-5"
                 style={{ animation: 'orb-pulse 2.4s ease-in-out infinite', '--orb-glow': 'rgba(0,204,106,0.6)' } as React.CSSProperties}
               >
+                {/* Supernova rings */}
+                <div className="nova-ring" style={{ inset: '-30px', borderColor: 'rgba(0,204,106,0.7)' }} />
+                <div className="nova-ring-2" style={{ inset: '-30px', borderColor: 'rgba(167,139,250,0.5)' }} />
+                {/* Gold particles radiating out */}
+                {Array.from({ length: 8 }, (_, i) => {
+                  const angle = (i / 8) * Math.PI * 2;
+                  const dist = 50 + Math.random() * 20;
+                  return (
+                    <div
+                      key={i}
+                      className="nova-particle"
+                      style={{
+                        '--tx': `${Math.cos(angle) * dist}px`,
+                        '--ty': `${Math.sin(angle) * dist}px`,
+                        animationDelay: `${i * 0.06}s`,
+                        background: i % 2 === 0 ? '#fbbf24' : '#a78bfa',
+                      } as React.CSSProperties}
+                    />
+                  );
+                })}
                 <div
                   className="absolute inset-0 rounded-full"
                   style={{

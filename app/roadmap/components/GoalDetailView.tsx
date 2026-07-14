@@ -501,9 +501,7 @@ export default function GoalDetailView({
 
   return (
     <div
-      className={`fixed inset-0 z-50 overflow-auto transition-all duration-500 ${
-        mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-      }`}
+      className="fixed inset-0 z-50 overflow-auto detail-warp-in"
       style={{ background: 'var(--mesh-canvas)' }}
     >
       <style>{`

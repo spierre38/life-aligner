@@ -187,13 +187,13 @@ export default function GoalBubble({
         role="button"
         aria-label={`Goal: ${goal.title}. Click to open.`}
         tabIndex={0}
-        className={`absolute select-none ${animClass} ${isDragging ? 'cursor-grabbing z-30' : 'cursor-grab z-10 hover:z-20'}`}
+        className={`absolute select-none ${animClass} ${isDragging ? 'cursor-grabbing z-30' : 'cursor-grab z-10 hover:z-20'} ${reducedMotion ? '' : 'bubble-pop'}`}
         style={{
           left: localPos.x - containerPad,
           top: localPos.y - containerPad,
           width: containerSize,
           height: containerSize,
-          animationDelay: animDelay,
+          animationDelay: reducedMotion ? '0s' : `${animIndex * 0.12}s`,
           touchAction: 'none',
         }}
         onPointerDown={handlePointerDown}

@@ -90,19 +90,29 @@ export default function RootLayout({
                     <InstallPromptBanner />
                     <ScrollToTop />
                     <ToastProvider>
-                        {children}
+                        <div className="page-enter">
+                            {children}
+                        </div>
                     </ToastProvider>
                     <MobileBottomNav />
                     <Toaster
                         position="top-center"
                         containerStyle={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
                         toastOptions={{
+                            duration: 3500,
                             style: {
-                                background: '#1a1a1a',
+                                background: 'rgba(18,18,24,0.96)',
                                 color: '#ffffff',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '12px',
+                                border: '1px solid rgba(167,139,250,0.25)',
+                                borderRadius: '14px',
                                 fontFamily: 'var(--font-primary)',
+                                backdropFilter: 'blur(12px)',
+                                boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)',
+                                padding: '12px 16px',
+                                fontSize: '14px',
+                            },
+                            success: {
+                                iconTheme: { primary: '#a78bfa', secondary: '#0a0a0a' },
                             },
                         }}
                     />

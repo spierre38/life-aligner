@@ -2,12 +2,13 @@
 
 import { trackCategoriesSaved } from '@/lib/analytics';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import { Confetti } from '@/app/components/Confetti';
+import SpaceLaunchAnimation from '@/app/components/SpaceLaunchAnimation';
 
 // ============================================================================
 // INLINE SVG ILLUSTRATIONS
@@ -93,6 +94,20 @@ export default function LifeCategoriesWorksheet() {
     const [currentStep, setCurrentStep] = useState(1);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [showSpaceLaunch, setShowSpaceLaunch] = useState(false);
+    const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
+    const [isStepAnimating, setIsStepAnimating] = useState(false);
+
+    const goToStep = (next: number) => {
+        const dir = next > currentStep ? 'forward' : 'backward';
+        setStepDirection(dir);
+        setIsStepAnimating(true);
+        setTimeout(() => {
+            setCurrentStep(next);
+            setIsStepAnimating(false);
+        }, 250);
+    };
+
 
     // Micro-animation state
     const [pulsingCard, setPulsingCard] = useState<string | null>(null);
@@ -270,11 +285,17 @@ export default function LifeCategoriesWorksheet() {
             if (error) throw error;
 
             trackCategoriesSaved(categoryDetails.length);
-            setShowSuccess(true);
-            setShowConfetti(true);
-            setTimeout(() => {
-                router.push('/dashboard');
-            }, 2000);
+            // First-time completion → space launch cinematic
+            const firstTimeKey = 'tcf_lifeframe_completed';
+            const isFirstTime = !localStorage.getItem(firstTimeKey);
+            if (isFirstTime) {
+                localStorage.setItem(firstTimeKey, '1');
+                setShowSpaceLaunch(true);
+            } else {
+                setShowSuccess(true);
+                setShowConfetti(true);
+                setTimeout(() => { router.push('/dashboard'); }, 2000);
+            }
         } catch (error) {
             console.error('Error saving categories:', error);
             alert('Failed to save life categories. Please try again.');
@@ -297,6 +318,18 @@ export default function LifeCategoriesWorksheet() {
                     </div>
                 </div>
             </>
+        );
+    }
+
+    if (showSpaceLaunch) {
+        const handleLaunchComplete = () => {
+            router.push('/dashboard');
+        };
+        return (
+            <SpaceLaunchAnimation
+                categories={categoryDetails.map(c => c.name)}
+                onComplete={handleLaunchComplete}
+            />
         );
     }
 
@@ -377,7 +410,7 @@ export default function LifeCategoriesWorksheet() {
                                             <span>LifeFrame • Step 3 of 3 • 15-20 min</span>
                                         </div>
                                         <button
-                                            onClick={() => setCurrentStep(2)}
+                                            onClick={() => goToStep(2)}
                                             className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
                                             style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
@@ -391,9 +424,9 @@ export default function LifeCategoriesWorksheet() {
 
                     {/* Step 2: Video + Tim's Example Combined */}
                     {currentStep === 2 && (
-                        <div className="min-h-[80vh] py-8 animate-slide-in-up">
+                        <div className={`min-h-[80vh] py-8 ${isStepAnimating ? (stepDirection === 'forward' ? 'step-exit-forward' : 'step-exit-backward') : (stepDirection === 'forward' ? 'step-enter-forward' : 'step-enter-backward')}`}>
                             <button
-                                onClick={() => setCurrentStep(1)}
+                                onClick={() => goToStep(1)}
                                 className="flex items-center gap-2 mb-6 transition hover:opacity-70"
                                 style={{ color: 'var(--color-text-muted)' }}
                             >
@@ -543,7 +576,7 @@ export default function LifeCategoriesWorksheet() {
 
                             <div className="mt-8 flex justify-center">
                                 <button
-                                    onClick={() => setCurrentStep(3)}
+                                    onClick={() => goToStep(3)}
                                     className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
                                     style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                 >
@@ -555,9 +588,9 @@ export default function LifeCategoriesWorksheet() {
 
                     {/* Step 3: Enhanced Builder */}
                     {currentStep === 3 && (
-                        <div className="py-8 animate-slide-in-up">
+                        <div className={`py-8 ${isStepAnimating ? (stepDirection === 'forward' ? 'step-exit-forward' : 'step-exit-backward') : (stepDirection === 'forward' ? 'step-enter-forward' : 'step-enter-backward')}`}>
                             <button
-                                onClick={() => setCurrentStep(2)}
+                                onClick={() => goToStep(2)}
                                 className="flex items-center gap-2 mb-6 transition hover:opacity-70 group"
                                 style={{ color: 'var(--color-text-muted)' }}
                             >
@@ -1086,7 +1119,7 @@ export default function LifeCategoriesWorksheet() {
                                 style={{ borderTop: '1px solid var(--color-border)' }}
                             >
                                 <button
-                                    onClick={() => setCurrentStep(2)}
+                                    onClick={() => goToStep(2)}
                                     className="px-6 py-3 rounded-full font-semibold transition hover:opacity-70"
                                     style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface)' }}
                                 >

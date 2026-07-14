@@ -960,4 +960,204 @@ section {
 /* ── Hide scrollbar (keep scroll) ── */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════════════════════════════
+   PREMIUM ANIMATION SYSTEM — TCF 2026
+   All animations respect prefers-reduced-motion.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Spring modal entrance (scale + fade with slight bounce) ── */
+@keyframes modal-spring-in {
+  0%   { opacity: 0; transform: scale(0.88) translateY(12px); }
+  60%  { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes modal-spring-out {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.92) translateY(8px); }
+}
+.modal-spring-in  { animation: modal-spring-in  0.38s cubic-bezier(0.34,1.56,0.64,1) both; }
+.modal-spring-out { animation: modal-spring-out 0.22s ease-in both; }
+
+/* ── 2. Bubble pop-in (staggered entrance on canvas) ── */
+@keyframes bubble-pop {
+  0%   { opacity: 0; transform: scale(0) rotate(-8deg); filter: blur(6px); }
+  65%  { opacity: 1; transform: scale(1.08) rotate(2deg); filter: blur(0); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+}
+.bubble-pop { animation: bubble-pop 0.55s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+/* ── 3. Warp flash (goal bubble click → GoalDetailView) ── */
+@keyframes warp-flash {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes warp-lines {
+  0%   { transform: scaleX(0); opacity: 0.8; }
+  100% { transform: scaleX(1.5); opacity: 0; }
+}
+.warp-overlay {
+  position: fixed; inset: 0; z-index: 100; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.9) 0%, rgba(120,80,255,0.6) 40%, transparent 70%);
+  animation: warp-flash 0.45s ease-out both;
+}
+.warp-line {
+  position: absolute; top: 50%; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  transform-origin: center;
+  animation: warp-lines 0.35s ease-out both;
+}
+
+/* ── 4. GoalDetailView slide-in from warp ── */
+@keyframes detail-warp-in {
+  0%   { opacity: 0; transform: scale(1.06); filter: blur(8px); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.detail-warp-in { animation: detail-warp-in 0.4s ease-out 0.2s both; }
+
+/* ── 5. Supernova — goal completion ring burst ── */
+@keyframes nova-ring {
+  0%   { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+@keyframes nova-particle {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+.nova-ring {
+  position: absolute; inset: -20%; border-radius: 50%;
+  border: 2px solid rgba(251,191,36,0.9);
+  animation: nova-ring 0.8s ease-out both;
+  pointer-events: none;
+}
+.nova-ring-2 {
+  position: absolute; inset: -20%; border-radius: 50%;
+  border: 1px solid rgba(167,139,250,0.7);
+  animation: nova-ring 0.8s ease-out 0.15s both;
+  pointer-events: none;
+}
+.nova-particle {
+  position: absolute; top: 50%; left: 50%;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: #fbbf24;
+  animation: nova-particle 0.9s ease-out both;
+  pointer-events: none;
+}
+
+/* ── 6. Workbook step transition ── */
+@keyframes step-slide-in-up {
+  0%   { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes step-slide-in-down {
+  0%   { opacity: 0; transform: translateY(-24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes step-slide-out-up {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-24px); }
+}
+@keyframes step-slide-out-down {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(24px); }
+}
+.step-enter-forward  { animation: step-slide-in-up   0.35s cubic-bezier(0.4,0,0.2,1) both; }
+.step-enter-backward { animation: step-slide-in-down  0.35s cubic-bezier(0.4,0,0.2,1) both; }
+.step-exit-forward   { animation: step-slide-out-up   0.25s ease-in both; }
+.step-exit-backward  { animation: step-slide-out-down 0.25s ease-in both; }
+
+/* ── 7. Typewriter cursor ── */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.typewriter-cursor::after {
+  content: '|'; margin-left: 2px;
+  animation: blink 1s step-end infinite;
+  color: rgba(167,139,250,0.9);
+}
+
+/* ── 8. Page fade transition ── */
+@keyframes page-fade-in {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.page-enter { animation: page-fade-in 0.3s ease-out both; }
+
+/* ── 9. Space launch keyframes ── */
+@keyframes star-appear {
+  0%   { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes rocket-rise {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  70%  { transform: translateY(-40vh) scale(0.6); opacity: 1; }
+  100% { transform: translateY(-50vh) scale(0.1); opacity: 0; }
+}
+@keyframes exhaust-pulse {
+  0%, 100% { transform: scaleY(1); opacity: 0.9; }
+  50%       { transform: scaleY(1.4); opacity: 0.5; }
+}
+@keyframes constellation-draw {
+  0%   { stroke-dashoffset: 1000; opacity: 0; }
+  50%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes constellation-node {
+  0%   { transform: scale(0); opacity: 0; }
+  70%  { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes space-text-rise {
+  0%   { opacity: 0; transform: translateY(20px); letter-spacing: 0.3em; }
+  100% { opacity: 1; transform: translateY(0);  letter-spacing: 0.05em; }
+}
+@keyframes nebula-bloom {
+  0%   { opacity: 0; transform: scale(0.3); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── 10. Primary button press micro-interaction ── */
+.btn-press:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 0 3px rgba(167,139,250,0.3);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+/* ── 11. Glow pulse on focus ── */
+@keyframes focus-glow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(167,139,250,0); }
+  50%      { box-shadow: 0 0 0 4px rgba(167,139,250,0.35); }
+}
+.focus-glow:focus { animation: focus-glow 1.2s ease-in-out infinite; outline: none; }
+
+/* ── 12. Toast spring (replaces simple fade) ── */
+@keyframes toast-in {
+  0%   { opacity: 0; transform: translateY(-16px) scale(0.95); }
+  70%  { transform: translateY(2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-12px); }
+}
+
+/* ── Ambient starfield ── */
+@keyframes twinkle {
+  0%,100% { opacity: 0.2; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.4); }
+}
+
+/* ── Reduced motion: override all the above ── */
+@media (prefers-reduced-motion: reduce) {
+  .modal-spring-in, .modal-spring-out,
+  .bubble-pop, .warp-overlay, .detail-warp-in,
+  .nova-ring, .nova-ring-2, .nova-particle,
+  .step-enter-forward, .step-enter-backward,
+  .step-exit-forward, .step-exit-backward,
+  .page-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
 
