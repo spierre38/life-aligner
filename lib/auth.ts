@@ -223,8 +223,26 @@ export async function getUserWithProfile() {
             .single();
 
         if (profileError || !profile) {
-            console.error('Profile not found for authenticated user:', user.id);
-            return null;
+            // Profile row doesn't exist yet (new user race condition — DB trigger may not have fired).
+            // Create a minimal profile so they can proceed to the dashboard.
+            console.warn('Profile not found — auto-creating for new user:', user.id);
+            const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+                    welcome_seen: false,
+                    role: 'user',
+                }, { onConflict: 'id' })
+                .select('*')
+                .single();
+
+            if (insertError || !newProfile) {
+                console.error('Failed to auto-create profile:', insertError);
+                return null;
+            }
+
+            return { user, profile: newProfile };
         }
 
         return {
@@ -236,6 +254,7 @@ export async function getUserWithProfile() {
         return null;
     }
 }
+
 
 /**
  * Request password reset email
