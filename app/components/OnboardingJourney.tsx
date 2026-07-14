@@ -33,13 +33,13 @@ const ANIM_STYLES = `
     from{opacity:0;transform:translateY(8px)}
     to  {opacity:1;transform:translateY(0)}
   }
-  .blur-reveal{animation:blurReveal .85s cubic-bezier(.16,1,.3,1) both}
-  .slide-up   {animation:slideUp .65s cubic-bezier(.16,1,.3,1) both}
-  .float-plane{animation:floatPlane 5s ease-in-out infinite}
-  .fly-across {animation:flyAcross 1.5s cubic-bezier(.22,1,.36,1) both}
-  .page-flip  {animation:pageFlipIn 480ms cubic-bezier(.16,1,.3,1) both}
-  .fade-in    {animation:fadeIn 350ms cubic-bezier(.16,1,.3,1) both}
-  .opt-item{
+  .obj-blur-reveal{animation:blurReveal .85s cubic-bezier(.16,1,.3,1) both}
+  .obj-slide-up   {animation:slideUp .65s cubic-bezier(.16,1,.3,1) both}
+  .obj-float-plane{animation:floatPlane 5s ease-in-out infinite}
+  .obj-fly-across {animation:flyAcross 1.5s cubic-bezier(.22,1,.36,1) both}
+  .obj-page-flip  {animation:pageFlipIn 480ms cubic-bezier(.16,1,.3,1) both}
+  .obj-fade-in    {animation:fadeIn 350ms cubic-bezier(.16,1,.3,1) both}
+  .obj-opt-item{
     display:block;width:100%;text-align:left;
     padding:12px 16px;border-radius:12px;
     border:1.5px solid #e5e7eb;
@@ -47,12 +47,12 @@ const ANIM_STYLES = `
     font-size:15px;font-weight:500;
     transition:all 180ms ease;cursor:pointer;
   }
-  .opt-item:hover{
+  .obj-opt-item:hover{
     border-color:#111827;background:#f9fafb;color:#111827;
     transform:translateX(4px);
   }
   @media(prefers-reduced-motion:reduce){
-    .blur-reveal,.slide-up,.float-plane,.fly-across,.page-flip,.fade-in{animation:fadeIn 300ms ease both}
+    .obj-blur-reveal,.obj-slide-up,.obj-float-plane,.obj-fly-across,.obj-page-flip,.obj-fade-in{animation:fadeIn 300ms ease both}
   }
 `;
 
@@ -86,14 +86,13 @@ function DarkStage({ children, fadeOut, accent }: {
                     : 'radial-gradient(ellipse at 20% 40%, #1e1b4b 0%, #080818 52%, #000 100%)'
             }}
         >
-            <style dangerouslySetInnerHTML={{ __html: ANIM_STYLES }} />
             {/* Star field */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none">
                 {[...Array(80)].map((_, i) => (
                     <circle key={i}
                         cx={`${(i * 137.508) % 100}%`} cy={`${(i * 97.325) % 100}%`}
                         r={i % 7 === 0 ? 2 : i % 3 === 0 ? 1.2 : 0.7} fill="white"
-                        style={{ opacity: .08 + (i % 5) * .12, animation: `twinkle ${3 + i % 4}s ${i * .25}s ease-in-out infinite` }}
+                        style={{ opacity: .08 + (i % 5) * .12, animation: `obj-twinkle ${3 + i % 4}s ${i * .25}s ease-in-out infinite` }}
                     />
                 ))}
             </svg>
@@ -108,14 +107,13 @@ function DarkStage({ children, fadeOut, accent }: {
 function LightStage({ children, planeFlying }: { children: React.ReactNode; planeFlying: boolean }) {
     return (
         <div className="fixed inset-0 z-50 bg-[#FAFAF7] overflow-hidden">
-            <style dangerouslySetInnerHTML={{ __html: ANIM_STYLES }} />
             <div className="absolute top-5 left-6 z-10">
                 <Wordmark size="sm" />
             </div>
             {planeFlying && (
                 <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
                     <div className="absolute" style={{ top: '43%' }}>
-                        <div className="fly-across"><PlaneSVG width={110} /></div>
+                        <div className="obj-fly-across"><PlaneSVG width={110} /></div>
                     </div>
                 </div>
             )}
@@ -356,7 +354,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     const PlaneOverlay = () => !planeFlying ? null : (
         <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
             <div className="absolute" style={{ top: '43%' }}>
-                <div className="fly-across"><PlaneSVG width={110} /></div>
+                <div className="obj-fly-across"><PlaneSVG width={110} /></div>
             </div>
         </div>
     );
@@ -407,21 +405,21 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
         <DarkStage fadeOut={fadeOut}>
             <PlaneOverlay />
             {/* Floating plane decoration */}
-            <div className="absolute left-[6%] top-1/2 -translate-y-1/2 opacity-25 pointer-events-none float-plane">
+            <div className="absolute left-[6%] top-1/2 -translate-y-1/2 opacity-25 pointer-events-none obj-float-plane">
                 <PlaneSVG width={170} />
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 gap-4">
-                <div className="blur-reveal" style={{ animationDelay: '0.1s' }}>
+                <div className="obj-blur-reveal" style={{ animationDelay: '0.1s' }}>
                     <p className="text-xs font-bold tracking-[0.4em] uppercase text-purple-400 mb-3">Welcome to</p>
                     <h1 className="font-bold text-white leading-none"
                         style={{ fontSize: 'clamp(2.5rem,7vw,5rem)', textShadow: '0 0 80px rgba(139,92,246,.8)' }}>
                         Tim Collins<br/>Framework
                     </h1>
                 </div>
-                <p className="text-slate-400 text-lg slide-up" style={{ animationDelay: '0.4s' }}>
+                <p className="text-slate-400 text-lg obj-slide-up" style={{ animationDelay: '0.4s' }}>
                     {userName ? `Welcome back, ${userName}` : 'Your journey to contentment begins'}
                 </p>
-                <div className="slide-up" style={{ animationDelay: '0.65s' }}>
+                <div className="obj-slide-up" style={{ animationDelay: '0.65s' }}>
                     <div className="w-24 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-60 mx-auto" />
                 </div>
             </div>
@@ -435,7 +433,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     if (currentStep === 'thank-tim') return (
         <LightStage planeFlying={planeFlying}>
             <div className="absolute inset-0 flex items-center justify-center p-6">
-                <div className="w-full max-w-2xl page-flip">
+                <div className="w-full max-w-2xl obj-page-flip">
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                         <div className="flex flex-col md:flex-row">
                             <div className="relative md:w-56 h-48 md:h-auto flex-shrink-0 bg-gray-100">
@@ -472,7 +470,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
         return (
             <LightStage planeFlying={planeFlying}>
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-6 pt-20 overflow-y-auto">
-                    <div className="w-full max-w-2xl page-flip">
+                    <div className="w-full max-w-2xl obj-page-flip">
                         <div className="text-center mb-8">
                             <p className="text-xs font-bold tracking-[0.3em] uppercase text-gray-400 mb-2">Your Path Forward</p>
                             <h2 className="text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Journey to Contentment</h2>
@@ -481,7 +479,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                         <div className="grid grid-cols-3 gap-3 mb-8">
                             {JOURNEY_STOPS.map((stop, i) => (
                                 <div key={stop.num}
-                                    className="bg-white rounded-2xl p-4 border border-gray-200 flex flex-col items-center text-center gap-2 fade-in"
+                                    className="bg-white rounded-2xl p-4 border border-gray-200 flex flex-col items-center text-center gap-2 obj-fade-in"
                                     style={{ animationDelay: `${i * 40}ms` }}>
                                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                                         style={{ backgroundColor: stop.color }}>{stop.num}</div>
@@ -517,7 +515,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                     <div className="h-full bg-gray-900 transition-all duration-700" style={{ width: `${(stop.num / 9) * 100}%` }} />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center p-6 pt-16">
-                    <div key={traitIndex} className="w-full max-w-md page-flip">
+                    <div key={traitIndex} className="w-full max-w-md obj-page-flip">
                         <p className="text-xs font-semibold text-gray-400 tracking-widest uppercase mb-4 text-center">Stop {stop.num} of 9</p>
                         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="h-1" style={{ backgroundColor: stop.color }} />
@@ -539,7 +537,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                                             {stop.options!.map(opt => (
                                                 <button key={opt.value}
                                                     onClick={() => handleDemographicAnswer(stop.field!, opt.value)}
-                                                    className="opt-item">{opt.label}</button>
+                                                    className="obj-opt-item">{opt.label}</button>
                                             ))}
                                         </div>
                                         <button onClick={advanceToNextTrait}
@@ -568,7 +566,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     if (currentStep === 'ready') return (
         <LightStage planeFlying={planeFlying}>
             <div className="absolute inset-0 flex items-center justify-center p-6">
-                <div className="text-center page-flip">
+                <div className="text-center obj-page-flip">
                     <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-8">
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
