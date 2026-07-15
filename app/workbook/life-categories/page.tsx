@@ -105,6 +105,7 @@ export default function LifeCategoriesWorksheet() {
         setTimeout(() => {
             setCurrentStep(next);
             setIsStepAnimating(false);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 250);
     };
 

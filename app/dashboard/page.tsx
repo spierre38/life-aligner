@@ -322,8 +322,74 @@ export default function DashboardPage() {
     }
 
     const state = deriveState(completion);
-    const copy = COPY[state];
+    const baseCopy = COPY[state];
     const firstName = user?.profile?.full_name?.split(' ')[0] || 'friend';
+
+    // ─── Dynamic CTA enrichment ─────────────────────────────────────────
+    // When a section is incomplete, override the generic copy with a
+    // specific message explaining *why* the user can't progress.
+    const copy = (() => {
+        const c = { ...baseCopy, hero: { ...baseCopy.hero }, guide: { ...baseCopy.guide } };
+
+        // Only enrich when there's a specific blocker to explain
+        const section = completion.nextIncomplete;
+        if (!section) return c;
+
+        const s = completion[section];
+
+        if (section === 'values') {
+            if (s.status === 'too_many') {
+                c.hero.leadBold = `You have ${s.counts.total} values selected.`;
+                c.hero.rest = ` Narrow down to ${s.thresholds.max} or fewer to continue to Interests.`;
+                c.hero.ctaLabel = 'Edit Your Values';
+                c.guide.headingLine1 = `You've selected ${s.counts.total} values`;
+                c.guide.headingLine2 = `— narrow to ${s.thresholds.max} or fewer`;
+                c.guide.ctaLabel = 'Edit Your Values';
+            } else if (s.status === 'needs_more') {
+                c.hero.leadBold = `You have ${s.counts.total} value${(s.counts.total ?? 0) === 1 ? '' : 's'} so far.`;
+                c.hero.rest = ` Select at least ${s.thresholds.min} to continue to Interests.`;
+                c.hero.ctaLabel = 'Continue Selecting Values';
+                c.guide.headingLine1 = `You've selected ${s.counts.total} value${(s.counts.total ?? 0) === 1 ? '' : 's'}`;
+                c.guide.headingLine2 = `— select at least ${s.thresholds.min} to continue`;
+                c.guide.ctaLabel = 'Continue Selecting Values';
+            } else if (s.status === 'missing_priorities') {
+                c.hero.leadBold = 'Almost there!';
+                c.hero.rest = ' Your values need priorities assigned before you can continue.';
+                c.hero.ctaLabel = 'Prioritize Your Values';
+                c.guide.headingLine1 = 'Your values need';
+                c.guide.headingLine2 = 'priorities assigned';
+                c.guide.ctaLabel = 'Prioritize Your Values';
+            }
+        } else if (section === 'interests') {
+            const ex = s.counts.existing ?? 0;
+            const exp = s.counts.exploring ?? 0;
+            const exMin = s.thresholds.existingMin ?? 5;
+            const expMin = s.thresholds.exploringMin ?? 5;
+
+            if (s.status === 'needs_more') {
+                const parts: string[] = [];
+                if (ex < exMin) parts.push(`${exMin - ex} more existing interest${exMin - ex === 1 ? '' : 's'}`);
+                if (exp < expMin) parts.push(`${expMin - exp} more to explore`);
+                c.hero.leadBold = `Your interests need a bit more.`;
+                c.hero.rest = ` Add ${parts.join(' and ')} to continue.`;
+                c.guide.headingLine1 = `Add ${parts.join(' and ')}`;
+                c.guide.headingLine2 = 'to continue building your LifeFrame';
+            }
+        } else if (section === 'life_categories') {
+            if (s.status === 'too_many') {
+                c.hero.leadBold = `You have ${s.counts.total} life categories.`;
+                c.hero.rest = ` Narrow down to ${s.thresholds.max} or fewer to continue.`;
+            } else if (s.status === 'needs_more') {
+                c.hero.leadBold = `You have ${s.counts.total} life categor${(s.counts.total ?? 0) === 1 ? 'y' : 'ies'}.`;
+                c.hero.rest = ` Add at least ${s.thresholds.min} to continue.`;
+            } else if (s.status === 'missing_purpose') {
+                c.hero.leadBold = 'Your life categories need a purpose.';
+                c.hero.rest = ' Add at least one purpose element to continue.';
+            }
+        }
+
+        return c;
+    })();
 
     return (
         <>

@@ -141,6 +141,12 @@ export default function InterestsWorksheet() {
     // Micro-animation state
     const [pulsingPill, setPulsingPill] = useState<string | null>(null);
 
+    // Scroll to top when transitioning between steps
+    const goToStep = (step: number) => {
+        setCurrentStep(step);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const triggerPillPulse = (interest: string) => {
         setPulsingPill(interest);
         setTimeout(() => setPulsingPill(null), 420);
@@ -340,7 +346,7 @@ export default function InterestsWorksheet() {
                                         </div>
                                         <div>
                                             <button
-                                                onClick={() => setCurrentStep(2)}
+                                                onClick={() => goToStep(2)}
                                                 className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
                                                 style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                             >
@@ -358,7 +364,7 @@ export default function InterestsWorksheet() {
                         <div className="min-h-screen flex items-center justify-center animate-slide-in-up">
                             <div className="max-w-4xl w-full">
                                 <button
-                                    onClick={() => setCurrentStep(1)}
+                                    onClick={() => goToStep(1)}
                                     className="flex items-center gap-2 mb-8 transition hover:opacity-70"
                                     style={{ color: 'var(--color-text-muted)' }}
                                 >
@@ -400,14 +406,14 @@ export default function InterestsWorksheet() {
 
                                         <div className="flex gap-4">
                                             <button
-                                                onClick={() => setCurrentStep(1)}
+                                                onClick={() => goToStep(1)}
                                                 className="px-8 py-4 rounded-full font-semibold transition hover:opacity-70"
                                                 style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}
                                             >
                                                 ← Back
                                             </button>
                                             <button
-                                                onClick={() => setCurrentStep(3)}
+                                                onClick={() => goToStep(3)}
                                                 className="flex-1 px-8 py-4 rounded-full font-semibold transition hover:opacity-90"
                                                 style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                             >
@@ -425,7 +431,7 @@ export default function InterestsWorksheet() {
                         <div className="min-h-screen flex items-center justify-center py-20 animate-slide-in-up">
                             <div className="max-w-5xl w-full">
                                 <button
-                                    onClick={() => setCurrentStep(2)}
+                                    onClick={() => goToStep(2)}
                                     className="flex items-center gap-2 mb-8 transition hover:opacity-70"
                                     style={{ color: 'var(--color-text-muted)' }}
                                 >
@@ -545,7 +551,7 @@ export default function InterestsWorksheet() {
 
                                     <div className="mt-10">
                                         <button
-                                            onClick={() => setCurrentStep(4)}
+                                            onClick={() => goToStep(4)}
                                             className="w-full px-8 py-4 rounded-full font-semibold transition hover:opacity-90"
                                             style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
@@ -562,7 +568,7 @@ export default function InterestsWorksheet() {
                         <div className="min-h-screen flex items-center justify-center py-20 animate-slide-in-up">
                             <div className="max-w-4xl w-full">
                                 <button
-                                    onClick={() => setCurrentStep(3)}
+                                    onClick={() => goToStep(3)}
                                     className="flex items-center gap-2 mb-8 transition hover:opacity-70"
                                     style={{ color: 'var(--color-text-muted)' }}
                                 >
@@ -668,7 +674,7 @@ export default function InterestsWorksheet() {
 
                                     <div className="mt-10">
                                         <button
-                                            onClick={() => setCurrentStep(5)}
+                                            onClick={() => goToStep(5)}
                                             className="w-full px-8 py-5 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
                                             style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                         >
@@ -685,7 +691,7 @@ export default function InterestsWorksheet() {
                     {currentStep === 5 && (
                         <div className="py-8 animate-slide-in-up">
                             <button
-                                onClick={() => setCurrentStep(4)}
+                                onClick={() => goToStep(4)}
                                 className="flex items-center gap-2 mb-6 transition hover:opacity-70 group"
                                 style={{ color: 'var(--color-text-muted)' }}
                             >

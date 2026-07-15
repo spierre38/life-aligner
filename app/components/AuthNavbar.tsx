@@ -211,9 +211,7 @@ export default function AuthNavbar() {
                         >
                             Chapters
                         </Link>
-                        <Link href="/resources" className={linkClass(isActive('/resources'))}>
-                            Resources
-                        </Link>
+
                     </div>
 
                     {/* Right: theme toggle (desktop) + bell + user block */}
@@ -307,7 +305,7 @@ export default function AuthNavbar() {
                                             { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap' },
                                             { href: lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute, label: 'Life Chapters' },
                                             { href: '/todo', label: 'To-Do List' },
-                                            { href: '/resources', label: 'Resources' },
+
                                             { href: '/community', label: 'Community' },
                                         ].map(item => (
                                             <Link
