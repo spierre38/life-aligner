@@ -1,6 +1,7 @@
 'use client';
 
 import { trackCategoriesSaved } from '@/lib/analytics';
+import { evaluateLifeFrameCompletion } from '@/lib/lifeframe-completion';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -286,8 +287,24 @@ export default function LifeCategoriesWorksheet() {
             if (error) throw error;
 
             trackCategoriesSaved(categoryDetails.length);
-            // Show space launch cinematic on every save
-            setShowSpaceLaunch(true);
+
+            // Re-evaluate full LifeFrame completion after save
+            const { data: allEntries } = await supabase
+                .from('workbook_entries')
+                .select('category, content')
+                .eq('user_id', userId);
+
+            const completion = evaluateLifeFrameCompletion(allEntries || []);
+
+            if (completion.allComplete) {
+                // LifeFrame unlocked → show rocket cinematic!
+                setShowSpaceLaunch(true);
+            } else {
+                // Saved but LifeFrame not yet complete
+                setShowSuccess(true);
+                setShowConfetti(true);
+                setTimeout(() => { router.push('/dashboard'); }, 2000);
+            }
         } catch (error) {
             console.error('Error saving categories:', error);
             alert('Failed to save life categories. Please try again.');
