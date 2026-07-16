@@ -286,17 +286,8 @@ export default function LifeCategoriesWorksheet() {
             if (error) throw error;
 
             trackCategoriesSaved(categoryDetails.length);
-            // First-time completion → space launch cinematic
-            const firstTimeKey = 'tcf_lifeframe_completed';
-            const isFirstTime = !localStorage.getItem(firstTimeKey);
-            if (isFirstTime) {
-                localStorage.setItem(firstTimeKey, '1');
-                setShowSpaceLaunch(true);
-            } else {
-                setShowSuccess(true);
-                setShowConfetti(true);
-                setTimeout(() => { router.push('/dashboard'); }, 2000);
-            }
+            // Show space launch cinematic on every save
+            setShowSpaceLaunch(true);
         } catch (error) {
             console.error('Error saving categories:', error);
             alert('Failed to save life categories. Please try again.');
