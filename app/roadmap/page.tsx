@@ -36,6 +36,7 @@ import AddGoalModal from './components/AddGoalModal';
 import EditGoalModal from './components/EditGoalModal';
 import GoalDetailView from './components/GoalDetailView';
 import AddActivityModal from './components/AddActivityModal';
+import EditActivityModal from './components/EditActivityModal';
 import ReviewActivitiesView from './components/ReviewActivitiesView';
 import { CompletionModal } from './components/CompletionModal';
 import type { CompletionData } from './components/CompletionModal';
@@ -65,6 +66,7 @@ export default function RoadmapPage() {
   const [detailGoalId, setDetailGoalId] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [completingGoal, setCompletingGoal] = useState<Goal | null>(null);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile viewport
@@ -391,6 +393,18 @@ export default function RoadmapPage() {
     });
   }, [roadmap, persist]);
 
+  /** Replace an activity with an edited version (title, sub-activities, etc.) */
+  const handleEditActivitySave = useCallback(async (updated: Activity) => {
+    setEditingActivity(null);
+    await persist({
+      ...roadmap,
+      activities: roadmap.activities.map(a =>
+        a.id === updated.id ? updated : a
+      ),
+    });
+    showToast.success('Activity updated.');
+  }, [roadmap, persist]);
+
   // ── SubActivity handlers ────────────────────────────────────────────────────
 
   const handleToggleSubActivityComplete = useCallback(async (
@@ -550,6 +564,7 @@ export default function RoadmapPage() {
           onToggleSubActivityComplete={handleToggleSubActivityComplete}
           onDeleteActivity={handleDeleteActivity}
           onAddActivity={(goalId) => { setAddActivityForGoalId(goalId); setAddActivityOpen(true); }}
+          onEditActivity={(activity) => setEditingActivity(activity)}
           onCreateActivityInline={handleCreateActivityInline}
           onEditGoal={(g) => { setDetailGoalId(null); setEditingGoal(g); }}
           onCompleteGoal={handleCompleteGoal}
@@ -602,6 +617,15 @@ export default function RoadmapPage() {
           savedCategories={categories}
           onClose={() => { setAddActivityOpen(false); setAddActivityForGoalId(null); }}
           onSave={handleAddActivity}
+        />
+      )}
+
+      {/* Edit Activity modal */}
+      {editingActivity !== null && (
+        <EditActivityModal
+          activity={editingActivity}
+          onClose={() => setEditingActivity(null)}
+          onSave={handleEditActivitySave}
         />
       )}
     </>

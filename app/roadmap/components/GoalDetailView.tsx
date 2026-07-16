@@ -252,6 +252,7 @@ interface GoalDetailViewProps {
   onToggleSubActivityComplete: (activityId: string, subActivityId: string, completed: boolean) => void;
   onDeleteActivity: (activityId: string) => void;
   onAddActivity: (goalId: string) => void;
+  onEditActivity: (activity: Activity) => void;
   onCreateActivityInline: (goalId: string, title: string, includeToday: boolean) => void;
   onEditGoal: (goal: Goal) => void;
   /** Mark the goal complete — opens CompletionModal */
@@ -290,6 +291,7 @@ function ActivityBubble({
   onSelect,
   onToggleComplete,
   onToggleIncludeToday,
+  onEdit,
   onDelete,
 }: {
   activity: Activity;
@@ -301,6 +303,7 @@ function ActivityBubble({
   onSelect: (activityId: string) => void;
   onToggleComplete: (activityId: string, completed: boolean) => void;
   onToggleIncludeToday: (activityId: string, includeToday: boolean) => void;
+  onEdit: (activity: Activity) => void;
   onDelete: (activityId: string) => void;
 }) {
   const hue = stringToHue(activity.title);
@@ -360,6 +363,13 @@ function ActivityBubble({
             title={activity.includeToday ? 'Remove from To-Do' : 'Add to To-Do'}
           >
             📋 {activity.includeToday ? 'On list' : 'To-Do'}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(activity); }}
+            className="bg-blue-500/25 hover:bg-blue-500/50 text-blue-200 text-[11px] px-2.5 py-1.5 rounded-full transition shadow-lg backdrop-blur-sm"
+            title="Edit activity"
+          >
+            ✎ Edit
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${activity.title}"?`)) onDelete(activity.id); }}
@@ -428,6 +438,7 @@ export default function GoalDetailView({
   onToggleSubActivityComplete,
   onDeleteActivity,
   onAddActivity,
+  onEditActivity,
   onCreateActivityInline,
   onEditGoal,
   onCompleteGoal,
@@ -739,6 +750,7 @@ export default function GoalDetailView({
                     }}
                     onToggleComplete={onToggleActivityComplete}
                     onToggleIncludeToday={onToggleActivityIncludeToday}
+                    onEdit={onEditActivity}
                     onDelete={onDeleteActivity}
                   />
 
