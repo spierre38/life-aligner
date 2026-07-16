@@ -99,6 +99,21 @@ export default function DesktopTodoPad() {
     const [editText, setEditText] = useState('');
     const [showCompleted, setShowCompleted] = useState(false);
     const [showHidden, setShowHidden] = useState(false);
+    const [groupByGoal, setGroupByGoal] = useState(false);
+
+    // Load groupByGoal from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('todopad-group-by-goal');
+        if (saved === 'true') setGroupByGoal(true);
+    }, []);
+
+    const toggleGroupByGoal = () => {
+        setGroupByGoal(prev => {
+            const next = !prev;
+            localStorage.setItem('todopad-group-by-goal', String(next));
+            return next;
+        });
+    };
 
     // CSV Export
     const exportToCSV = () => {
@@ -521,6 +536,26 @@ export default function DesktopTodoPad() {
     const visibleTodos = todos.filter(todo => !todo.hidden);
     const hiddenTodos = todos.filter(todo => todo.hidden);
 
+    // Group by goal for grouped view
+    const goalGroups = (() => {
+        if (!groupByGoal) return [];
+        const groups = new Map<string, TodoItem[]>();
+        const UNGROUPED = '✏️ Quick Tasks';
+        for (const todo of visibleTodos) {
+            const key = todo.goal_title || UNGROUPED;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key)!.push(todo);
+        }
+        // Sort: named goals first (alphabetical), ungrouped last
+        const entries = Array.from(groups.entries());
+        entries.sort((a, b) => {
+            if (a[0] === UNGROUPED) return 1;
+            if (b[0] === UNGROUPED) return -1;
+            return a[0].localeCompare(b[0]);
+        });
+        return entries;
+    })();
+
     return (
         <>
             <AuthNavbar />
@@ -606,6 +641,19 @@ export default function DesktopTodoPad() {
                             )}
 
                             <button
+                                onClick={toggleGroupByGoal}
+                                className={`px-4 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${
+                                    groupByGoal
+                                        ? 'bg-indigo-200 hover:bg-indigo-300 border-indigo-400 text-indigo-800'
+                                        : `${t.accentBg} ${t.accentText}`
+                                }`}
+                                style={{ fontFamily: 'Courier New, monospace' }}
+                                title={groupByGoal ? 'Switch to flat list' : 'Group tasks by goal'}
+                            >
+                                {groupByGoal ? '📂 Grouped' : '📂 Group'}
+                            </button>
+
+                            <button
                                 onClick={() => setShowAddModal(true)}
                                 className={`px-6 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
                                 style={{ fontFamily: 'Courier New, monospace' }}
@@ -627,6 +675,239 @@ export default function DesktopTodoPad() {
                             <p className="text-xl text-gray-600 mb-8" style={{ fontFamily: 'Courier New, monospace' }}>
                                 Click "ADD TODO" to get started
                             </p>
+                        </div>
+                    ) : groupByGoal ? (
+                        /* ── GROUPED VIEW ──────────────────────────────── */
+                        <div>
+                            {goalGroups.map(([goalName, groupTodos]) => {
+                                const isQuickTasks = goalName.startsWith('✏️');
+                                return (
+                                    <div key={goalName} className="mb-6">
+                                        {/* Goal Section Header */}
+                                        <div
+                                            className="flex items-center gap-3 mb-1"
+                                            style={{
+                                                minHeight: '32px',
+                                                lineHeight: '32px',
+                                            }}
+                                        >
+                                            <div
+                                                className="w-1.5 h-6 rounded-full flex-shrink-0"
+                                                style={{
+                                                    backgroundColor: isQuickTasks
+                                                        ? '#94a3b8'
+                                                        : t.marginColor,
+                                                }}
+                                            />
+                                            <span
+                                                className="text-lg font-bold"
+                                                style={{
+                                                    fontFamily: 'Courier New, monospace',
+                                                    color: t.text,
+                                                }}
+                                            >
+                                                {goalName}
+                                            </span>
+                                            <span
+                                                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                                style={{
+                                                    backgroundColor: t.marginColor + '18',
+                                                    color: t.marginColor,
+                                                    fontFamily: 'Courier New, monospace',
+                                                }}
+                                            >
+                                                {groupTodos.filter(gt => !gt.completed).length}/{groupTodos.length}
+                                            </span>
+                                            <div
+                                                className="flex-1 border-t border-dashed"
+                                                style={{ borderColor: t.lineColor }}
+                                            />
+                                        </div>
+
+                                        {/* Tasks in this group */}
+                                        {groupTodos.map((todo, index) => (
+                                            <div key={todo.id}>
+                                                {/* Main Todo */}
+                                                <div
+                                                    className="flex items-center gap-4 group"
+                                                    style={{
+                                                        minHeight: '32px',
+                                                        lineHeight: '32px',
+                                                    }}
+                                                >
+                                                    {/* Spacer where drag handle would be */}
+                                                    <div className="w-4" />
+
+                                                    {/* Priority Number */}
+                                                    <div
+                                                        className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+                                                        style={{
+                                                            backgroundColor: (index + 1) <= 3 ? '#ef4444' : (index + 1) <= 6 ? '#f97316' : '#6b7280'
+                                                        }}
+                                                    >
+                                                        {index + 1}
+                                                    </div>
+
+                                                    {/* Checkbox */}
+                                                    <button
+                                                        onClick={() => handleToggle(todo)}
+                                                        className={`w-5 h-5 rounded border-2 flex-shrink-0 hover:opacity-80 transition-colors ${t.checkBorder}`}
+                                                    >
+                                                        {todo.completed && (
+                                                            <svg className="w-full h-full text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        )}
+                                                    </button>
+
+                                                    {/* Todo Text (Editable) */}
+                                                    {editingTodo === todo.id ? (
+                                                        <input
+                                                            type="text"
+                                                            value={editText}
+                                                            onChange={(e) => setEditText(e.target.value)}
+                                                            onBlur={() => saveEditTodo(todo.id, todo.source)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') saveEditTodo(todo.id, todo.source);
+                                                                if (e.key === 'Escape') { setEditingTodo(null); setEditText(''); }
+                                                            }}
+                                                            className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
+                                                            style={{ fontFamily: 'Courier New, monospace', fontSize: '18px', height: '28px' }}
+                                                            autoFocus
+                                                        />
+                                                    ) : (
+                                                        <span
+                                                            onClick={() => startEditingTodo(todo)}
+                                                            className={`text-lg flex-1 cursor-pointer ${t.hoverBg} px-1 rounded ${todo.completed ? 'line-through opacity-50' : ''}`}
+                                                            style={{
+                                                                fontFamily: 'Courier New, monospace',
+                                                                color: todo.completed
+                                                                    ? (theme === 'dark' ? '#64748b' : '#9ca3af')
+                                                                    : todo.source === 'roadmap' ? '#2563eb' : '#15803d'
+                                                            }}
+                                                        >
+                                                            {todo.text}
+                                                        </span>
+                                                    )}
+
+                                                    {/* Hide Button */}
+                                                    <button
+                                                        onClick={() => handleToggleVisibility(todo)}
+                                                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 border border-yellow-400 rounded text-xs font-bold transition-all ml-2"
+                                                        style={{ fontFamily: 'Courier New, monospace' }}
+                                                        title="Hide from To-Do Pad"
+                                                    >
+                                                        hide
+                                                    </button>
+
+                                                    {/* Add Sub-Goal Button */}
+                                                    <button
+                                                        onClick={() => setShowSubGoalModal(todo.id)}
+                                                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 border border-yellow-400 rounded text-xs font-bold transition-all"
+                                                        style={{ fontFamily: 'Courier New, monospace' }}
+                                                    >
+                                                        + sub
+                                                    </button>
+
+                                                    {/* Delete Button (manual todos only) */}
+                                                    {todo.source === 'manual' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (confirm('Delete this task?')) {
+                                                                    deleteManualTodo(todo.id).then(() => loadTodos());
+                                                                }
+                                                            }}
+                                                            className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-all"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+
+                                                    {/* Due Date */}
+                                                    {todo.due_date && !todo.completed && (
+                                                        <span className="text-xs text-gray-600" style={{ fontFamily: 'Courier New, monospace' }}>
+                                                            {new Date(todo.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Sub-Goals */}
+                                                {todo.sub_goals && todo.sub_goals.length > 0 && (
+                                                    <div className="ml-20">
+                                                        {todo.sub_goals.map((subGoal, subIndex) => (
+                                                            <div
+                                                                key={subGoal.id}
+                                                                className="flex items-center gap-4 group/sub"
+                                                                style={{
+                                                                    minHeight: '32px',
+                                                                    lineHeight: '32px',
+                                                                }}
+                                                            >
+                                                                {/* Sub-Goal Label */}
+                                                                <span
+                                                                    className="text-sm font-bold text-gray-500 w-6"
+                                                                    style={{ fontFamily: 'Courier New, monospace' }}
+                                                                >
+                                                                    {getSubGoalLabel(index + 1, subIndex)}
+                                                                </span>
+
+                                                                {/* Checkbox */}
+                                                                <button
+                                                                    onClick={() => handleSubGoalToggle(todo, subGoal.id)}
+                                                                    className="w-4 h-4 rounded border-2 border-gray-500 flex-shrink-0 hover:border-gray-700"
+                                                                >
+                                                                    {subGoal.completed && (
+                                                                        <svg className="w-full h-full text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    )}
+                                                                </button>
+
+                                                                {/* Sub-Goal Text (Editable) */}
+                                                                {editingSubGoal === subGoal.id ? (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editText}
+                                                                        onChange={(e) => setEditText(e.target.value)}
+                                                                        onBlur={() => saveEditSubGoal(todo.id, subGoal.id, todo.source)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') saveEditSubGoal(todo.id, subGoal.id, todo.source);
+                                                                            if (e.key === 'Escape') { setEditingSubGoal(null); setEditText(''); }
+                                                                        }}
+                                                                        className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
+                                                                        style={{ fontFamily: 'Courier New, monospace', fontSize: '16px', height: '24px' }}
+                                                                        autoFocus
+                                                                    />
+                                                                ) : (
+                                                                    <span
+                                                                        onClick={() => startEditingSubGoal(subGoal.id, subGoal.text)}
+                                                                        className={`text-base flex-1 cursor-pointer hover:bg-yellow-200/50 px-1 rounded ${subGoal.completed ? 'line-through text-gray-500' : 'text-gray-700'}`}
+                                                                        style={{ fontFamily: 'Courier New, monospace' }}
+                                                                    >
+                                                                        {subGoal.text}
+                                                                    </span>
+                                                                )}
+
+                                                                {/* Delete Sub-Goal Button */}
+                                                                <button
+                                                                    onClick={() => deleteSubGoal(todo.id, subGoal.id, todo.source)}
+                                                                    className="opacity-0 group-hover/sub:opacity-100 text-gray-400 hover:text-red-600 transition-all"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })}
                         </div>
                     ) : (
                         <DragDropContext onDragEnd={handleDragEnd}>
@@ -710,6 +991,11 @@ export default function DesktopTodoPad() {
                                                                     }}
                                                                 >
                                                                     {todo.text}
+                                                                    {todo.goal_title && (
+                                                                        <span className="text-xs opacity-40 ml-2">
+                                                                            [{todo.goal_title}]
+                                                                        </span>
+                                                                    )}
                                                                 </span>
                                                             )}
 
