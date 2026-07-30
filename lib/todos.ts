@@ -49,6 +49,8 @@ export interface TodoItem {
   notes?: string;
   sub_goals?: SubGoal[];
   urgency?: UrgencyLevel;
+  /** 'daily' = behavior change (resets each day), 'one-time' = done once */
+  taskType?: 'daily' | 'one-time';
   // v3/v4 back-references
   activityId?: string;
   isSubActivity?: boolean;
@@ -199,6 +201,7 @@ export async function getAllTodos(): Promise<{ data: TodoItem[] | null; error: a
         priority: priority++,
         due_date,
         urgency,
+        taskType: activity.taskType ?? 'one-time',
         sub_goals: subGoals,
         activityId: activity.id,
       });
@@ -383,6 +386,7 @@ export async function addManualTodo(text: string, options?: {
   bucket?: DeadlineBucket;
   category?: string;
   notes?: string;
+  taskType?: 'daily' | 'one-time';
 }) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -419,6 +423,7 @@ export async function addManualTodo(text: string, options?: {
       subActivities: [],
       createdAt: now,
       updatedAt: now,
+      taskType: options?.taskType ?? 'one-time',
       // v4 extras (stored as extra fields on the activity object)
       ...(options?.category && { category: options.category }),
       ...(due_date && { due_date }),

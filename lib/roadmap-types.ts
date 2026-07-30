@@ -92,6 +92,16 @@ export interface Activity {
 
   /** ISO-8601 timestamp of last update. */
   updatedAt: string;
+
+  /**
+   * Task recurrence type.
+   * - 'daily': resets to incomplete each day (behavior change)
+   * - 'one-time': done once, stays completed (default if absent)
+   */
+  taskType?: 'daily' | 'one-time';
+
+  /** ISO date (YYYY-MM-DD) deadline for one-time tasks. */
+  due_date?: string;
 }
 
 // ─── Goal ────────────────────────────────────────────────────────────────────

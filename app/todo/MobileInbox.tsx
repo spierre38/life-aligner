@@ -42,12 +42,13 @@ function AddTaskModal({
     categories,
 }: {
     onClose: () => void;
-    onAdd: (text: string, bucket: DeadlineBucket, category?: string) => Promise<void>;
+    onAdd: (text: string, bucket: DeadlineBucket, category?: string, taskType?: 'daily' | 'one-time') => Promise<void>;
     categories: string[];
 }) {
     const [text, setText] = useState('');
     const [bucket, setBucket] = useState<DeadlineBucket>('today');
     const [category, setCategory] = useState<string>(categories[0] ?? '');
+    const [taskType, setTaskType] = useState<'one-time' | 'daily'>('one-time');
     const [saving, setSaving] = useState(false);
 
     // Tell MobileBottomNav to hide while this modal is open
@@ -60,7 +61,7 @@ function AddTaskModal({
         e.preventDefault();
         if (!text.trim()) return;
         setSaving(true);
-        await onAdd(text.trim(), bucket, category || undefined);
+        await onAdd(text.trim(), bucket, category || undefined, taskType);
         setSaving(false);
         onClose();
     };
@@ -129,6 +130,44 @@ function AddTaskModal({
                                 color: 'var(--color-text)',
                             }}
                         />
+
+                        {/* Task Type */}
+                        <div>
+                            <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                                Type
+                            </label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setTaskType('one-time')}
+                                    className="py-2.5 rounded-xl text-xs font-semibold transition-all"
+                                    style={{
+                                        background: taskType === 'one-time' ? 'rgba(99,102,241,0.15)' : 'var(--color-surface-2)',
+                                        border: `1px solid ${taskType === 'one-time' ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
+                                        color: taskType === 'one-time' ? '#818cf8' : 'var(--color-text-muted)',
+                                    }}
+                                >
+                                    📌 One-Time
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setTaskType('daily')}
+                                    className="py-2.5 rounded-xl text-xs font-semibold transition-all"
+                                    style={{
+                                        background: taskType === 'daily' ? 'rgba(16,185,129,0.15)' : 'var(--color-surface-2)',
+                                        border: `1px solid ${taskType === 'daily' ? 'rgba(16,185,129,0.5)' : 'var(--color-border)'}`,
+                                        color: taskType === 'daily' ? '#10b981' : 'var(--color-text-muted)',
+                                    }}
+                                >
+                                    🔁 Behavior Change
+                                </button>
+                            </div>
+                            <p className="text-[10px] mt-1 opacity-50" style={{ color: 'var(--color-text-muted)' }}>
+                                {taskType === 'daily'
+                                    ? 'Resets daily — comes back each morning'
+                                    : 'Done once — stays completed'}
+                            </p>
+                        </div>
 
                         {/* Life Category */}
                         {categories.length > 0 && (
@@ -336,6 +375,9 @@ function TaskRow({
                                     textDecoration: todo.completed ? 'line-through' : 'none',
                                 }}
                             >
+                                {todo.taskType === 'daily' && (
+                                    <span className="text-[10px] mr-1 opacity-50" title="Behavior change — resets daily">🔁</span>
+                                )}
                                 {todo.text}
                             </span>
                         </div>
@@ -440,10 +482,10 @@ export default function MobileInbox() {
         init();
     }, [loadCategories, loadTodos, router]);
 
-    const handleAdd = async (text: string, bucket: DeadlineBucket, category?: string) => {
-        const { error } = await addManualTodo(text, { bucket, category });
+    const handleAdd = async (text: string, bucket: DeadlineBucket, category?: string, taskType?: 'daily' | 'one-time') => {
+        const { error } = await addManualTodo(text, { bucket, category, taskType: taskType ?? 'one-time' });
         if (error) { showToast.error('Failed to add task'); }
-        else { showToast.success('Task added!'); await loadTodos(); }
+        else { showToast.success(taskType === 'daily' ? 'Behavior change added! 🔁' : 'Task added!'); await loadTodos(); }
     };
 
     const handleToggle = async (todo: TodoItem) => {

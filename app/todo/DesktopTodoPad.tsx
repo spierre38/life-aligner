@@ -15,6 +15,8 @@ export default function DesktopTodoPad() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [showSubGoalModal, setShowSubGoalModal] = useState<string | null>(null);
     const [newTodoText, setNewTodoText] = useState('');
+    const [newTodoType, setNewTodoType] = useState<'one-time' | 'daily'>('one-time');
+    const [newTodoDueDate, setNewTodoDueDate] = useState('');
     const [newSubGoalText, setNewSubGoalText] = useState('');
 
     // Theme state
@@ -231,14 +233,18 @@ export default function DesktopTodoPad() {
         if (!newTodoText.trim()) return;
 
         const { error } = await addManualTodo(newTodoText.trim(), {
-            priority: todos.length + 1
+            priority: todos.length + 1,
+            taskType: newTodoType,
+            ...(newTodoType === 'one-time' && newTodoDueDate ? { due_date: newTodoDueDate } : {}),
         });
 
         if (error) {
             showToast.error('Failed to add todo');
         } else {
-            showToast.success('Todo added!');
+            showToast.success(newTodoType === 'daily' ? 'Behavior change added! 🔁' : 'Todo added!');
             setNewTodoText('');
+            setNewTodoType('one-time');
+            setNewTodoDueDate('');
             setShowAddModal(false);
             loadTodos();
         }
@@ -786,6 +792,9 @@ export default function DesktopTodoPad() {
                                                                     : todo.source === 'roadmap' ? '#2563eb' : '#15803d'
                                                             }}
                                                         >
+                                                            {todo.taskType === 'daily' && (
+                                                                <span className="text-xs opacity-50 mr-1" title="Behavior change — resets daily">🔁</span>
+                                                            )}
                                                             {todo.text}
                                                         </span>
                                                     )}
@@ -990,6 +999,9 @@ export default function DesktopTodoPad() {
                                                                             : todo.source === 'roadmap' ? '#2563eb' : '#15803d'
                                                                     }}
                                                                 >
+                                                                    {todo.taskType === 'daily' && (
+                                                                        <span className="text-xs opacity-50 mr-1" title="Behavior change — resets daily">🔁</span>
+                                                                    )}
                                                                     {todo.text}
                                                                     {todo.goal_title && (
                                                                         <span className="text-xs opacity-40 ml-2">
@@ -1230,10 +1242,65 @@ export default function DesktopTodoPad() {
                                 autoFocus
                                 required
                             />
+
+                            {/* Task Type Selector */}
+                            <div className="mt-4">
+                                <label className="text-xs font-bold mb-2 block" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
+                                    TYPE
+                                </label>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewTodoType('one-time')}
+                                        className={`flex-1 px-4 py-2.5 border-2 rounded-xl font-bold text-sm transition-all ${
+                                            newTodoType === 'one-time'
+                                                ? 'border-indigo-500 bg-indigo-100 text-indigo-800'
+                                                : 'border-gray-300 hover:border-gray-400'
+                                        }`}
+                                        style={{ fontFamily: 'Courier New, monospace', color: newTodoType !== 'one-time' ? t.text : undefined }}
+                                    >
+                                        📌 One-Time
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewTodoType('daily')}
+                                        className={`flex-1 px-4 py-2.5 border-2 rounded-xl font-bold text-sm transition-all ${
+                                            newTodoType === 'daily'
+                                                ? 'border-emerald-500 bg-emerald-100 text-emerald-800'
+                                                : 'border-gray-300 hover:border-gray-400'
+                                        }`}
+                                        style={{ fontFamily: 'Courier New, monospace', color: newTodoType !== 'daily' ? t.text : undefined }}
+                                    >
+                                        🔁 Behavior Change
+                                    </button>
+                                </div>
+                                <p className="text-xs mt-1.5 opacity-60" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
+                                    {newTodoType === 'daily'
+                                        ? 'Resets daily — comes back each morning'
+                                        : 'Done once — stays completed'}
+                                </p>
+                            </div>
+
+                            {/* Due Date (one-time only) */}
+                            {newTodoType === 'one-time' && (
+                                <div className="mt-4">
+                                    <label className="text-xs font-bold mb-2 block" style={{ fontFamily: 'Courier New, monospace', color: t.text }}>
+                                        DUE DATE (optional)
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={newTodoDueDate}
+                                        onChange={(e) => setNewTodoDueDate(e.target.value)}
+                                        className={`w-full px-4 py-2.5 border-2 rounded-xl ${t.inputBorder}`}
+                                        style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
+                                    />
+                                </div>
+                            )}
+
                             <div className="flex gap-3 mt-6">
                                 <button
                                     type="button"
-                                    onClick={() => setShowAddModal(false)}
+                                    onClick={() => { setShowAddModal(false); setNewTodoType('one-time'); setNewTodoDueDate(''); }}
                                     className="flex-1 px-6 py-3 border-2 border-gray-400 rounded-xl font-bold hover:opacity-80"
                                     style={{ fontFamily: 'Courier New, monospace', color: t.text, backgroundColor: theme === 'dark' ? '#334155' : 'white' }}
                                 >
