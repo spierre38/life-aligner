@@ -124,28 +124,23 @@ export default function LifeCategoriesWorksheet() {
     const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
     // Check auth and prerequisites
-    // Check auth and prerequisites
     useEffect(() => {
-        let mounted = true; // Prevent state updates after unmount
+        let mounted = true;
 
         const checkAuth = async () => {
             try {
-                console.log('🔍 Checking auth...');
                 const userWithProfile = await getUserWithProfile();
 
                 if (!mounted) return;
 
                 if (!userWithProfile) {
-                    console.log('❌ No user, redirecting to login');
                     router.push('/login');
                     return;
                 }
 
-                console.log('✅ User found:', userWithProfile.user.email);
                 setUserId(userWithProfile.user.id);
 
                 // Check if Interests is completed (prerequisite)
-                console.log('🔍 Checking interests prerequisite...');
                 const { data: interestsData, error: interestsError } = await supabase
                     .from('workbook_entries')
                     .select('content')
@@ -156,15 +151,11 @@ export default function LifeCategoriesWorksheet() {
                 if (!mounted) return;
 
                 if (interestsError || !interestsData) {
-                    console.log('❌ Interests not completed, redirecting...');
                     router.push('/workbook/interests');
                     return;
                 }
 
-                console.log('✅ Interests completed');
-
                 // Check if they already have saved life categories
-                console.log('🔍 Checking existing life categories...');
                 const { data, error } = await supabase
                     .from('workbook_entries')
                     .select('content')
@@ -175,7 +166,6 @@ export default function LifeCategoriesWorksheet() {
                 if (!mounted) return;
 
                 if (data && !error) {
-                    console.log('✅ Found existing data');
                     const saved = data.content;
                     if (saved.categories) {
                         setCategoryDetails(saved.categories);
@@ -188,32 +178,21 @@ export default function LifeCategoriesWorksheet() {
                     if (saved.categories || saved.purpose_elements) {
                         setCurrentStep(3);
                     }
-                } else {
-                    console.log('ℹ️ No existing data, starting fresh');
                 }
-
-                console.log('✅ Auth check complete');
             } catch (error) {
-                console.error('💥 Auth check error:', error);
+                console.error('Auth check error:', error);
                 if (mounted) {
                     router.push('/login');
                 }
             } finally {
-                if (mounted) {
-                    console.log('🏁 Setting loading to false');
-                    setLoading(false);
-                }
+                if (mounted) setLoading(false);
             }
         };
 
         checkAuth();
 
-        // Cleanup: prevent state updates after unmount
-        return () => {
-            console.log('🧹 Cleanup: component unmounting');
-            mounted = false;
-        };
-    }, []); // ← EMPTY ARRAY - runs only once!
+        return () => { mounted = false; };
+    }, []);
 
     const addCategory = () => {
         if (customCategory.trim()) {
@@ -889,7 +868,7 @@ export default function LifeCategoriesWorksheet() {
                                                 placeholder="e.g., Travel, Hobbies, Adventure..."
                                                 value={customCategory}
                                                 onChange={(e) => setCustomCategory(e.target.value)}
-                                                onKeyPress={(e) => e.key === 'Enter' && addCategory()}
+                                                onKeyDown={(e) => e.key === 'Enter' && addCategory()}
                                                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium focus:outline-none transition"
                                                 style={{
                                                     background: 'var(--color-surface-2)',
@@ -907,26 +886,35 @@ export default function LifeCategoriesWorksheet() {
                                             </button>
                                         </div>
                                     </div>
-
-                                    {/* Sub-Categories Section */}
+                                     {/* Sub-Categories Section — Inline per selected category */}
                                     {categoryDetails.length > 0 && (
-                                        <div
-                                            className="rounded-2xl p-5"
-                                            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-                                        >
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>Add Details (Optional)</h3>
-                                                <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Refine your categories</span>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Break It Down</h3>
+                                                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-dim)' }}>
+                                                    What matters within each area?
+                                                </span>
                                             </div>
-                                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-                                                {categoryDetails.map((category) => (
+                                            {categoryDetails.map((category) => {
+                                                const colors = getCategoryColor(category.name);
+                                                const isEditing = editingCategory === category.name;
+
+                                                return (
                                                     <div
                                                         key={category.name}
-                                                        className="group rounded-xl p-3 transition-all"
-                                                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
+                                                        className="rounded-2xl overflow-hidden transition-all"
+                                                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
                                                     >
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{category.name}</span>
+                                                        {/* Category header bar */}
+                                                        <div className={`px-4 py-3 bg-gradient-to-r ${colors.bg} flex items-center justify-between`}>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-white font-semibold text-sm">{category.name}</span>
+                                                                {category.subCategories.length > 0 && (
+                                                                    <span className="text-white/60 text-[10px] bg-white/15 px-1.5 py-0.5 rounded-full">
+                                                                        {category.subCategories.length} sub
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <button
                                                                 onClick={() => {
                                                                     setCategoryDetails(prev => prev.filter(c => c.name !== category.name));
@@ -936,8 +924,7 @@ export default function LifeCategoriesWorksheet() {
                                                                         return newSet;
                                                                     });
                                                                 }}
-                                                                className="opacity-0 group-hover:opacity-100 transition-all"
-                                                                style={{ color: 'var(--color-text-muted)' }}
+                                                                className="text-white/40 hover:text-white/80 transition"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -945,66 +932,71 @@ export default function LifeCategoriesWorksheet() {
                                                             </button>
                                                         </div>
 
-                                                        {/* Sub-category tags */}
-                                                        {category.subCategories.length > 0 && (
-                                                            <div className="flex flex-wrap gap-1.5 mb-2">
-                                                                {category.subCategories.map((sub) => (
-                                                                    <div
-                                                                        key={sub}
-                                                                        className="px-2 py-0.5 rounded-md text-xs flex items-center gap-1"
-                                                                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
-                                                                    >
-                                                                        {sub}
-                                                                        <button
-                                                                            onClick={() => removeSubCategory(category.name, sub)}
-                                                                            className="hover:opacity-70 transition"
+                                                        {/* Sub-categories body */}
+                                                        <div className="px-4 py-3">
+                                                            {category.subCategories.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1.5 mb-3">
+                                                                    {category.subCategories.map((sub) => (
+                                                                        <span
+                                                                            key={sub}
+                                                                            className="group px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all"
+                                                                            style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
                                                                         >
-                                                                            ×
-                                                                        </button>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
+                                                                            {sub}
+                                                                            <button
+                                                                                onClick={() => removeSubCategory(category.name, sub)}
+                                                                                className="opacity-40 hover:opacity-100 hover:text-red-400 transition ml-0.5"
+                                                                            >
+                                                                                ×
+                                                                            </button>
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
 
-                                                        {editingCategory === category.name ? (
-                                                            <div className="flex gap-1.5">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="e.g., Physical Health, Mental Health..."
-                                                                    value={customSubCategory}
-                                                                    onChange={(e) => setCustomSubCategory(e.target.value)}
-                                                                    onKeyPress={(e) => e.key === 'Enter' && addSubCategory(category.name)}
-                                                                    className="flex-1 px-3 py-1.5 rounded-lg focus:outline-none text-xs transition"
-                                                                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
-                                                                    autoFocus
-                                                                />
+                                                            {isEditing ? (
+                                                                <div className="flex gap-1.5">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="e.g., Physical Health, Mental Health..."
+                                                                        value={customSubCategory}
+                                                                        onChange={(e) => setCustomSubCategory(e.target.value)}
+                                                                        onKeyDown={(e) => e.key === 'Enter' && addSubCategory(category.name)}
+                                                                        className="flex-1 px-3 py-1.5 rounded-lg focus:outline-none text-xs transition"
+                                                                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                                                                        autoFocus
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => addSubCategory(category.name)}
+                                                                        className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
+                                                                        style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
+                                                                    >
+                                                                        ✓
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => { setEditingCategory(null); setCustomSubCategory(''); }}
+                                                                        className="px-3 py-1.5 rounded-lg text-xs transition hover:opacity-70"
+                                                                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
                                                                 <button
-                                                                    onClick={() => addSubCategory(category.name)}
-                                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
-                                                                    style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
+                                                                    onClick={() => setEditingCategory(category.name)}
+                                                                    className="text-xs font-semibold transition hover:opacity-70 flex items-center gap-1"
+                                                                    style={{ color: 'var(--color-text-muted)' }}
                                                                 >
-                                                                    ✓
+                                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                                    </svg>
+                                                                    Add sub-category
                                                                 </button>
-                                                                <button
-                                                                    onClick={() => { setEditingCategory(null); setCustomSubCategory(''); }}
-                                                                    className="px-3 py-1.5 rounded-lg text-xs transition hover:opacity-70"
-                                                                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
-                                                                >
-                                                                    ✕
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => setEditingCategory(category.name)}
-                                                                className="text-xs font-semibold transition hover:opacity-70"
-                                                                style={{ color: 'var(--color-text-muted)' }}
-                                                            >
-                                                                + Add sub-category
-                                                            </button>
-                                                        )}
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
