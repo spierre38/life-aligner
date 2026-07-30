@@ -38,6 +38,7 @@ import GoalDetailView from './components/GoalDetailView';
 import AddActivityModal from './components/AddActivityModal';
 import EditActivityModal from './components/EditActivityModal';
 import ReviewActivitiesView from './components/ReviewActivitiesView';
+import QuickTodoPanel from './components/QuickTodoPanel';
 import { CompletionModal } from './components/CompletionModal';
 import type { CompletionData } from './components/CompletionModal';
 import { uploadReflectionImage } from '@/lib/reflection-images';
@@ -572,6 +573,9 @@ export default function RoadmapPage() {
           onAddReflection={handleAddReflection}
         />
       )}
+
+      {/* Quick To-Do panel (floating) */}
+      <QuickTodoPanel />
 
       {/* Completion celebration modal */}
       {completingGoal && (
