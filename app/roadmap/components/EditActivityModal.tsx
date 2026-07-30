@@ -41,6 +41,7 @@ export default function EditActivityModal({
     }))
   );
   const [saving, setSaving] = useState(false);
+  const [taskType, setTaskType] = useState<'one-time' | 'daily'>(activity.taskType ?? 'one-time');
   const titleRef = useRef<HTMLInputElement>(null);
   const newSubRef = useRef<HTMLInputElement>(null);
 
@@ -102,6 +103,7 @@ export default function EditActivityModal({
       ...activity,
       title: title.trim(),
       subActivities: updatedSubs,
+      taskType,
       updatedAt: now,
     };
 
@@ -164,6 +166,41 @@ export default function EditActivityModal({
                 color: 'var(--color-text)',
               }}
             />
+          </div>
+
+          {/* Behavior Change toggle */}
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition"
+            style={{
+              background: taskType === 'daily' ? 'rgba(99,102,241,0.1)' : 'var(--color-bg)',
+              border: `1px solid ${taskType === 'daily' ? 'rgba(99,102,241,0.3)' : 'var(--color-border)'}`,
+            }}
+            onClick={() => setTaskType(prev => prev === 'daily' ? 'one-time' : 'daily')}
+          >
+            <button
+              type="button"
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition flex-shrink-0 ${
+                taskType === 'daily'
+                  ? 'bg-indigo-500 border-indigo-500'
+                  : 'border-gray-400 hover:border-gray-500'
+              }`}
+            >
+              {taskType === 'daily' && (
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+            <div>
+              <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                🔁 Behavior Change
+              </span>
+              <span className="block text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                {taskType === 'daily'
+                  ? 'Active — resets daily on your To-Do list'
+                  : 'Off — one-time task, stays completed'}
+              </span>
+            </div>
           </div>
 
           {/* Sub-activities */}

@@ -44,6 +44,7 @@ export default function AddActivityModal({
     preselectedGoalId ? [preselectedGoalId] : []
   );
   const [includeToday, setIncludeToday] = useState(false);
+  const [taskType, setTaskType] = useState<'one-time' | 'daily'>('one-time');
   const [subActivityDrafts, setSubActivityDrafts] = useState<SubActivityDraft[]>([]);
   const [newGoalDrafts, setNewGoalDrafts] = useState<string[]>([]);
   const [newGoalInput, setNewGoalInput] = useState('');
@@ -110,6 +111,7 @@ export default function AddActivityModal({
         })),
       createdAt: now,
       updatedAt: now,
+      taskType,
     };
 
     onSave(newActivity, newGoalDrafts);
@@ -312,6 +314,31 @@ export default function AddActivityModal({
             </button>
             <span className="text-sm text-gray-700">Add to To-Do List</span>
           </div>
+
+          {/* Behavior Change toggle */}
+          {includeToday && (
+            <div className="flex items-center gap-3 ml-8">
+              <button
+                type="button"
+                onClick={() => setTaskType(prev => prev === 'daily' ? 'one-time' : 'daily')}
+                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${
+                  taskType === 'daily'
+                    ? 'bg-indigo-500 border-indigo-500'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                {taskType === 'daily' && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <span className="text-sm text-gray-600">
+                🔁 Make this a behavior change
+                <span className="block text-[10px] text-gray-400">Resets daily — comes back each morning</span>
+              </span>
+            </div>
+          )}
 
           {/* Sub-activities */}
           <div>
