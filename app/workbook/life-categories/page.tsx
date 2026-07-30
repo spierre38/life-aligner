@@ -1038,10 +1038,14 @@ export default function LifeCategoriesWorksheet() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center"
                                                 style={{ background: 'rgba(255,180,0,0.15)', border: '1px solid rgba(255,180,0,0.3)' }}
                                             >
-                                                ⭐
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,180,0,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <circle cx="12" cy="12" r="10" />
+                                                    <circle cx="12" cy="12" r="6" />
+                                                    <circle cx="12" cy="12" r="2" />
+                                                </svg>
                                             </div>
                                             <div>
                                                 <h2 className="text-2xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Your Purpose</h2>
@@ -1063,7 +1067,7 @@ export default function LifeCategoriesWorksheet() {
                                         className="rounded-2xl p-4"
                                         style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,180,0,0.2)' }}
                                     >
-                                        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>💡 Quick Add:</p>
+                                        <p className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>Quick Add:</p>
                                         <div className="flex flex-wrap gap-2">
                                             {['Help Others', 'Help Environment', 'Mentor Youth', 'Address Loneliness'].map((example) => (
                                                 <button
