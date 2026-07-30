@@ -346,17 +346,17 @@ export default function LifeCategoriesWorksheet() {
 
     // Helper function for category colors
     const getCategoryColor = (name: string) => {
-        const colorMap: Record<string, { bg: string; text: string; glow: string; border: string }> = {
-            'Health': { bg: 'from-red-500 to-pink-500', text: 'text-red-700', glow: 'shadow-red-500/20', border: 'border-red-200' },
-            'Relationships': { bg: 'from-pink-500 to-rose-500', text: 'text-pink-700', glow: 'shadow-pink-500/20', border: 'border-pink-200' },
-            'Community': { bg: 'from-purple-500 to-indigo-500', text: 'text-purple-700', glow: 'shadow-purple-500/20', border: 'border-purple-200' },
-            'Education': { bg: 'from-blue-500 to-cyan-500', text: 'text-blue-700', glow: 'shadow-blue-500/20', border: 'border-blue-200' },
-            'Career': { bg: 'from-cyan-500 to-teal-500', text: 'text-cyan-700', glow: 'shadow-cyan-500/20', border: 'border-cyan-200' },
-            'Financial': { bg: 'from-green-500 to-emerald-500', text: 'text-green-700', glow: 'shadow-green-500/20', border: 'border-green-200' },
-            'Spirituality': { bg: 'from-amber-500 to-yellow-500', text: 'text-amber-700', glow: 'shadow-amber-500/20', border: 'border-amber-200' },
-            'Creative': { bg: 'from-orange-500 to-red-500', text: 'text-orange-700', glow: 'shadow-orange-500/20', border: 'border-orange-200' }
+        const colorMap: Record<string, { accent: string; glow: string; border: string }> = {
+            'Health': { accent: 'rgba(239,68,68,0.8)', glow: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.25)' },
+            'Relationships': { accent: 'rgba(236,72,153,0.8)', glow: 'rgba(236,72,153,0.12)', border: 'rgba(236,72,153,0.25)' },
+            'Community': { accent: 'rgba(168,85,247,0.8)', glow: 'rgba(168,85,247,0.12)', border: 'rgba(168,85,247,0.25)' },
+            'Education': { accent: 'rgba(59,130,246,0.8)', glow: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.25)' },
+            'Career': { accent: 'rgba(6,182,212,0.8)', glow: 'rgba(6,182,212,0.12)', border: 'rgba(6,182,212,0.25)' },
+            'Financial': { accent: 'rgba(34,197,94,0.8)', glow: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.25)' },
+            'Spirituality': { accent: 'rgba(245,158,11,0.8)', glow: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
+            'Creative': { accent: 'rgba(249,115,22,0.8)', glow: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.25)' }
         };
-        return colorMap[name] || { bg: 'from-indigo-500 to-purple-500', text: 'text-indigo-700', glow: 'shadow-indigo-500/20', border: 'border-indigo-200' };
+        return colorMap[name] || { accent: 'rgba(139,92,246,0.8)', glow: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.25)' };
     };
 
     return (
@@ -760,34 +760,39 @@ export default function LifeCategoriesWorksheet() {
                                                     }}
                                                     className={[
                                                         'group relative p-4 rounded-2xl transition-all duration-300 text-left',
-                                                        isSelected
-                                                            ? `bg-gradient-to-br ${colors.bg} text-white shadow-xl ${colors.glow} scale-[1.02] ring-2 ring-white/20 ring-offset-2 ring-offset-transparent`
-                                                            : '',
                                                         isPulsing ? 'animate-select-pulse' : ''
                                                     ].join(' ')}
-                                                    style={!isSelected ? {
+                                                    style={isSelected ? {
+                                                        background: colors.glow,
+                                                        border: `1px solid ${colors.border}`,
+                                                        boxShadow: `0 0 20px ${colors.glow}, inset 0 0 0 0 transparent`,
+                                                        transform: 'scale(1.02)',
+                                                    } : {
                                                         background: 'var(--color-surface)',
                                                         border: '1px solid var(--color-border)',
                                                         color: 'var(--color-text-muted)'
-                                                    } : undefined}
+                                                    }}
                                                 >
                                                     <div className="flex items-start justify-between mb-2">
                                                         <div className="text-3xl">{cat.emoji}</div>
                                                         {isSelected && (
-                                                            <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                                                <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <div
+                                                                className="w-6 h-6 rounded-full flex items-center justify-center"
+                                                                style={{ background: colors.accent }}
+                                                            >
+                                                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                                 </svg>
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <div className={`font-semibold mb-1 ${isSelected ? 'text-white' : ''}`}
-                                                        style={!isSelected ? { color: 'var(--color-text)' } : undefined}
+                                                    <div className="font-semibold mb-1"
+                                                        style={{ color: isSelected ? colors.accent : 'var(--color-text)' }}
                                                     >
                                                         {cat.name}
                                                     </div>
-                                                    <div className={`text-xs ${isSelected ? 'text-white/80' : ''}`}
-                                                        style={!isSelected ? { color: 'var(--color-text-dim)' } : undefined}
+                                                    <div className="text-xs"
+                                                        style={{ color: 'var(--color-text-dim)' }}
                                                     >
                                                         {cat.desc}
                                                     </div>
@@ -818,37 +823,39 @@ export default function LifeCategoriesWorksheet() {
                                                             }
                                                             setSelectedCategories(newSelected);
                                                         }}
-                                                        className={`
-                                                            group relative p-4 rounded-2xl transition-all duration-300 text-left
-                                                            ${isSelected
-                                                                ? `bg-gradient-to-br ${colors.bg} text-white shadow-xl ${colors.glow} scale-[1.02] ring-2 ring-white ring-offset-2`
-                                                                : ''
-                                                            }
-                                                        `}
-                                                        style={!isSelected ? {
+                                                        className="group relative p-4 rounded-2xl transition-all duration-300 text-left"
+                                                        style={isSelected ? {
+                                                            background: colors.glow,
+                                                            border: `1px solid ${colors.border}`,
+                                                            boxShadow: `0 0 20px ${colors.glow}`,
+                                                            transform: 'scale(1.02)',
+                                                        } : {
                                                             background: 'var(--color-surface)',
                                                             border: '1px solid var(--color-border)',
                                                             color: 'var(--color-text-muted)'
-                                                        } : undefined}
+                                                        }}
                                                     >
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="text-3xl">✨</div>
                                                             {isSelected && (
-                                                                <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                                                    <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                                <div
+                                                                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                                                                    style={{ background: colors.accent }}
+                                                                >
+                                                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                                     </svg>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className={`font-semibold mb-1 ${isSelected ? 'text-white' : ''}`}
-                                                        style={!isSelected ? { color: 'var(--color-text)' } : undefined}
-                                                    >
+                                                        <div className="font-semibold mb-1"
+                                                            style={{ color: isSelected ? colors.accent : 'var(--color-text)' }}
+                                                        >
                                                             {cat.name}
                                                         </div>
-                                                        <div className={`text-xs ${isSelected ? 'text-white/80' : ''}`}
-                                                        style={!isSelected ? { color: 'var(--color-text-dim)' } : undefined}
-                                                    >
+                                                        <div className="text-xs"
+                                                            style={{ color: 'var(--color-text-dim)' }}
+                                                        >
                                                             Custom category
                                                         </div>
                                                     </button>
@@ -906,11 +913,21 @@ export default function LifeCategoriesWorksheet() {
                                                         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
                                                     >
                                                         {/* Category header bar */}
-                                                        <div className={`px-4 py-3 bg-gradient-to-r ${colors.bg} flex items-center justify-between`}>
+                                                        <div
+                                                            className="px-4 py-3 flex items-center justify-between"
+                                                            style={{
+                                                                background: 'var(--color-surface-2)',
+                                                                borderBottom: `2px solid ${colors.accent}`,
+                                                            }}
+                                                        >
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-white font-semibold text-sm">{category.name}</span>
+                                                                <div
+                                                                    className="w-2 h-2 rounded-full"
+                                                                    style={{ background: colors.accent }}
+                                                                />
+                                                                <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{category.name}</span>
                                                                 {category.subCategories.length > 0 && (
-                                                                    <span className="text-white/60 text-[10px] bg-white/15 px-1.5 py-0.5 rounded-full">
+                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: colors.glow, color: colors.accent, border: `1px solid ${colors.border}` }}>
                                                                         {category.subCategories.length} sub
                                                                     </span>
                                                                 )}
@@ -924,7 +941,8 @@ export default function LifeCategoriesWorksheet() {
                                                                         return newSet;
                                                                     });
                                                                 }}
-                                                                className="text-white/40 hover:text-white/80 transition"
+                                                                className="transition hover:opacity-70"
+                                                                style={{ color: 'var(--color-text-dim)' }}
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
