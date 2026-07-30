@@ -724,14 +724,14 @@ export default function LifeCategoriesWorksheet() {
                                     <div className="grid grid-cols-2 gap-3">
                                         {/* Default categories */}
                                         {[
-                                            { name: 'Health', emoji: '💪', desc: 'Physical & mental wellbeing' },
-                                            { name: 'Relationships', emoji: '❤️', desc: 'Family, friends, love' },
-                                            { name: 'Community', emoji: '🤝', desc: 'Belonging & connection' },
-                                            { name: 'Education', emoji: '📚', desc: 'Learning & growth' },
-                                            { name: 'Career', emoji: '💼', desc: 'Work & professional goals' },
-                                            { name: 'Financial', emoji: '💰', desc: 'Money & security' },
-                                            { name: 'Spirituality', emoji: '🙏', desc: 'Faith & inner peace' },
-                                            { name: 'Creative', emoji: '🎨', desc: 'Art & expression' }
+                                            { name: 'Health', icon: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z', desc: 'Physical & mental wellbeing' },
+                                            { name: 'Relationships', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75', desc: 'Family, friends, love' },
+                                            { name: 'Community', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', desc: 'Belonging & connection' },
+                                            { name: 'Education', icon: 'M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z', desc: 'Learning & growth' },
+                                            { name: 'Career', icon: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z', desc: 'Work & professional goals' },
+                                            { name: 'Financial', icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6', desc: 'Money & security' },
+                                            { name: 'Spirituality', icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5', desc: 'Faith & inner peace' },
+                                            { name: 'Creative', icon: 'M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586', desc: 'Art & expression' }
                                         ].map((cat) => {
                                             const isSelected = selectedCategories.has(cat.name);
                                             const colors = getCategoryColor(cat.name);
@@ -774,7 +774,14 @@ export default function LifeCategoriesWorksheet() {
                                                     }}
                                                 >
                                                     <div className="flex items-start justify-between mb-2">
-                                                        <div className="text-3xl">{cat.emoji}</div>
+                                                        <div
+                                                            className="w-9 h-9 rounded-xl flex items-center justify-center"
+                                                            style={{ background: isSelected ? colors.accent.replace('0.8', '0.15') : 'var(--color-surface-2)' }}
+                                                        >
+                                                            <svg className="w-4.5 h-4.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isSelected ? colors.accent : 'var(--color-text-dim)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <path d={cat.icon} />
+                                                            </svg>
+                                                        </div>
                                                         {isSelected && (
                                                             <div
                                                                 className="w-6 h-6 rounded-full flex items-center justify-center"
@@ -836,7 +843,14 @@ export default function LifeCategoriesWorksheet() {
                                                         }}
                                                     >
                                                         <div className="flex items-start justify-between mb-2">
-                                                            <div className="text-3xl">✨</div>
+                                                            <div
+                                                                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                                                                style={{ background: isSelected ? colors.accent.replace('0.8', '0.15') : 'var(--color-surface-2)' }}
+                                                            >
+                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isSelected ? colors.accent : 'var(--color-text-dim)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                                </svg>
+                                                            </div>
                                                             {isSelected && (
                                                                 <div
                                                                     className="w-6 h-6 rounded-full flex items-center justify-center"
