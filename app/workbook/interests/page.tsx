@@ -138,8 +138,12 @@ export default function InterestsWorksheet() {
         new Set() // Start with all categories collapsed
     );
     const [searchTerm, setSearchTerm] = useState('');
+    const [customInterest, setCustomInterest] = useState('');
     // Micro-animation state
     const [pulsingPill, setPulsingPill] = useState<string | null>(null);
+
+    // Derived: are we actively searching?
+    const isSearching = searchTerm.trim().length > 0;
 
     // Scroll to top when transitioning between steps
     const goToStep = (step: number) => {
@@ -151,6 +155,35 @@ export default function InterestsWorksheet() {
         setPulsingPill(interest);
         setTimeout(() => setPulsingPill(null), 420);
     };
+
+    // Add a custom interest
+    const handleAddCustomInterest = (type: 'existing' | 'exploring', textOverride?: string) => {
+        const trimmed = (textOverride ?? customInterest).trim();
+        if (!trimmed) return;
+        triggerPillPulse(trimmed);
+        if (type === 'existing') {
+            setSelectedExisting(prev => new Set([...prev, trimmed]));
+        } else {
+            setSelectedExploring(prev => new Set([...prev, trimmed]));
+        }
+        if (!textOverride) setCustomInterest('');
+    };
+
+    // Global search: find all matching interests across all categories
+    const globalSearchResults = isSearching
+        ? Object.entries(INTERESTS_BY_CATEGORY).flatMap(([category, interests]) =>
+            interests
+                .filter(i => i.toLowerCase().includes(searchTerm.toLowerCase()))
+                .map(i => ({ interest: i, category }))
+        )
+        : [];
+
+    // Check if custom text matches anything already in the list
+    const customAlreadyExists = isSearching && globalSearchResults.some(
+        r => r.interest.toLowerCase() === searchTerm.toLowerCase()
+    );
+    const customAlreadySelected = selectedExisting.has(searchTerm.trim()) || selectedExploring.has(searchTerm.trim());
+
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -260,13 +293,6 @@ export default function InterestsWorksheet() {
         } finally {
             setSaving(false);
         }
-    };
-
-    const filterInterests = (interests: string[]) => {
-        if (!searchTerm) return interests;
-        return interests.filter(interest =>
-            interest.toLowerCase().includes(searchTerm.toLowerCase())
-        );
     };
 
     if (loading) {
@@ -781,25 +807,155 @@ export default function InterestsWorksheet() {
                                 </div>
                             </div>
 
-                            {/* Search */}
+                            {/* Search — Global across all categories */}
                             <div className="relative mb-6">
                                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--color-text-dim)' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
                                 </svg>
                                 <input
                                     type="text"
-                                    placeholder="Search 125+ interests..."
+                                    placeholder="Search all 175+ interests or type your own..."
                                     value={searchTerm}
                                     onChange={e => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm transition focus:outline-none"
+                                    className="w-full pl-12 pr-10 py-3.5 rounded-2xl text-sm transition focus:outline-none"
                                     style={{
                                         background: 'var(--color-surface)',
-                                        border: '1px solid var(--color-border)',
+                                        border: `1px solid ${isSearching ? 'rgba(99,102,241,0.5)' : 'var(--color-border)'}`,
                                         color: 'var(--color-text)',
                                     }}
                                 />
+                                {isSearching && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center transition hover:opacity-70"
+                                        style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)' }}
+                                    >
+                                        ✕
+                                    </button>
+                                )}
                             </div>
 
+                            {/* ── SEARCH RESULTS VIEW (when searching) ──────────────────── */}
+                            {isSearching ? (
+                                <div className="mb-6 space-y-3">
+                                    <p className="text-xs font-medium" style={{ color: 'var(--color-text-dim)' }}>
+                                        {globalSearchResults.length} result{globalSearchResults.length !== 1 ? 's' : ''} across all categories
+                                    </p>
+
+                                    {globalSearchResults.length > 0 ? (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                                            {globalSearchResults.map(({ interest, category }) => {
+                                                const isExisting = selectedExisting.has(interest);
+                                                const isExploring = selectedExploring.has(interest);
+                                                const isSelected = isExisting || isExploring;
+
+                                                return (
+                                                    <div
+                                                        key={interest}
+                                                        className={['group relative rounded-xl p-3 transition-all duration-200 cursor-pointer', pulsingPill === interest ? 'animate-select-pulse' : ''].join(' ')}
+                                                        style={{
+                                                            background: isExisting
+                                                                ? 'rgba(0,200,100,0.15)'
+                                                                : isExploring
+                                                                    ? 'rgba(100,120,255,0.15)'
+                                                                    : 'var(--color-surface-2)',
+                                                            border: isExisting
+                                                                ? '1px solid rgba(0,200,100,0.4)'
+                                                                : isExploring
+                                                                    ? '1px solid rgba(100,120,255,0.4)'
+                                                                    : '1px solid var(--color-border)',
+                                                        }}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span
+                                                                className="font-medium text-xs"
+                                                                style={{ color: isSelected ? 'var(--color-text)' : 'var(--color-text-muted)' }}
+                                                            >
+                                                                {interest}
+                                                            </span>
+                                                            {isSelected && (
+                                                                <span
+                                                                    className="text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                                                    style={{ background: isExisting ? 'rgba(0,200,100,0.3)' : 'rgba(100,120,255,0.3)', color: 'var(--color-text)' }}
+                                                                >
+                                                                    {isExisting ? '✓' : '⭐'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[10px] mb-2 opacity-50" style={{ color: 'var(--color-text-muted)' }}>{category}</p>
+                                                        <div>
+                                                            {!isSelected ? (
+                                                                <div className="grid grid-cols-2 gap-1">
+                                                                    <button
+                                                                        onClick={() => { triggerPillPulse(interest); toggleInterest(interest, 'existing'); }}
+                                                                        className="px-2 py-1 rounded-lg text-[10px] font-bold transition hover:opacity-80"
+                                                                        style={{ background: 'rgba(0,200,100,0.2)', color: 'rgba(0,200,100,0.9)' }}
+                                                                    >
+                                                                        + Existing
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => { triggerPillPulse(interest); toggleInterest(interest, 'exploring'); }}
+                                                                        className="px-2 py-1 rounded-lg text-[10px] font-bold transition hover:opacity-80"
+                                                                        style={{ background: 'rgba(100,120,255,0.2)', color: 'rgba(100,120,255,0.9)' }}
+                                                                    >
+                                                                        + Explore
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        if (isExisting) toggleInterest(interest, 'existing');
+                                                                        else toggleInterest(interest, 'exploring');
+                                                                    }}
+                                                                    className="w-full px-2 py-1 rounded-lg text-[10px] font-semibold transition hover:bg-red-500/20"
+                                                                    style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
+                                                                >
+                                                                    Remove
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : null}
+
+                                    {/* Add Custom Interest (when search doesn't match or user wants something new) */}
+                                    {!customAlreadyExists && searchTerm.trim().length >= 2 && !customAlreadySelected && (
+                                        <div
+                                            className="rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
+                                            style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)' }}
+                                        >
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                                                    Add &ldquo;{searchTerm.trim()}&rdquo; as a custom interest?
+                                                </p>
+                                                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                                                    Not in our list? No problem — add your own!
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => { handleAddCustomInterest('existing', searchTerm.trim()); setSearchTerm(''); }}
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
+                                                    style={{ background: 'rgba(0,200,100,0.2)', color: 'rgba(0,200,100,0.9)' }}
+                                                >
+                                                    + Existing
+                                                </button>
+                                                <button
+                                                    onClick={() => { handleAddCustomInterest('exploring', searchTerm.trim()); setSearchTerm(''); }}
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
+                                                    style={{ background: 'rgba(100,120,255,0.2)', color: 'rgba(100,120,255,0.9)' }}
+                                                >
+                                                    + Explore
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                /* ── CATEGORY BROWSE VIEW (when NOT searching) ──────────── */
+                                <>
                             {/* Category Navigation Tabs */}
                             <div className="mb-4">
                                 <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-dim)' }}>Most Common</p>
@@ -876,19 +1032,17 @@ export default function InterestsWorksheet() {
                                     const isActive = expandedCategories.has(category) || (expandedCategories.size === 0 && category === ORDERED_CATEGORIES[0]);
                                     if (!isActive) return null;
 
-                                    const filteredInterests = filterInterests(interests);
-
                                     return (
                                         <div key={category} className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                                             {/* Category Header */}
                                             <div className={`p-4 bg-gradient-to-r ${CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]} text-white`}>
                                                 <h3 className="text-lg font-semibold">{category}</h3>
-                                                <p className="text-white/70 text-xs">Click to add as existing or exploring</p>
+                                                <p className="text-white/70 text-xs">{interests.length} interests — click to add as existing or exploring</p>
                                             </div>
 
                                             {/* Interests Grid */}
                                             <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                                                {filteredInterests.map((interest) => {
+                                                {interests.map((interest) => {
                                                     const isExisting = selectedExisting.has(interest);
                                                     const isExploring = selectedExploring.has(interest);
                                                     const isSelected = isExisting || isExploring;
@@ -997,55 +1151,102 @@ export default function InterestsWorksheet() {
                                     );
                                 })}
                             </div>
+                                </>
+                            )}
 
-                            {/* Quick-Add Popular Interests */}
+                            {/* Your Selections Summary */}
+                            {(selectedExisting.size > 0 || selectedExploring.size > 0) && (
+                            <div
+                                className="rounded-2xl p-5 mb-6"
+                                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                            >
+                                <div className="flex items-center gap-2 mb-4">
+                                    <span className="text-lg">✨</span>
+                                    <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Your Selections</h3>
+                                </div>
+
+                                {selectedExisting.size > 0 && (
+                                    <div className="mb-3">
+                                        <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgba(0,200,100,0.7)' }}>✓ Existing ({selectedExisting.size})</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {Array.from(selectedExisting).map(interest => (
+                                                <button
+                                                    key={interest}
+                                                    onClick={() => toggleInterest(interest, 'existing')}
+                                                    className="group px-2.5 py-1 rounded-lg text-xs font-medium transition-all hover:line-through"
+                                                    style={{ background: 'rgba(0,200,100,0.12)', color: 'rgba(0,200,100,0.9)', border: '1px solid rgba(0,200,100,0.25)' }}
+                                                    title="Click to remove"
+                                                >
+                                                    {interest} <span className="opacity-0 group-hover:opacity-100 ml-0.5">✕</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedExploring.size > 0 && (
+                                    <div>
+                                        <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgba(100,120,255,0.7)' }}>⭐ Exploring ({selectedExploring.size})</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {Array.from(selectedExploring).map(interest => (
+                                                <button
+                                                    key={interest}
+                                                    onClick={() => toggleInterest(interest, 'exploring')}
+                                                    className="group px-2.5 py-1 rounded-lg text-xs font-medium transition-all hover:line-through"
+                                                    style={{ background: 'rgba(100,120,255,0.12)', color: 'rgba(100,120,255,0.9)', border: '1px solid rgba(100,120,255,0.25)' }}
+                                                    title="Click to remove"
+                                                >
+                                                    {interest} <span className="opacity-0 group-hover:opacity-100 ml-0.5">✕</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            )}
+
+                            {/* Add Custom Interest (always visible) */}
                             <div
                                 className="rounded-2xl p-5 mb-6"
                                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
                             >
                                 <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-lg">🔥</span>
-                                    <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Quick Add Popular Interests</h3>
+                                    <span className="text-lg">✏️</span>
+                                    <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Add Your Own Interest</h3>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {[
-                                        'Reading', 'Hiking', 'Cooking', 'Exercise', 'Photography',
-                                        'Gaming', 'Music', 'Movies', 'Travel', 'Yoga',
-                                        'Writing', 'Painting', 'Running', 'Swimming', 'Cycling',
-                                        'Dancing', 'Gardening', 'Meditation', 'Podcasting', 'Drawing',
-                                        'Baking', 'Camping', 'Fishing', 'Video games', 'Chess',
-                                        'Guitar', 'Piano', 'Singing', 'Knitting', 'Woodworking'
-                                    ].map((interest) => {
-                                        const isExisting = selectedExisting.has(interest);
-                                        const isExploring = selectedExploring.has(interest);
-                                        const isSelected = isExisting || isExploring;
-
-                                        return (
-                                            <button
-                                                key={interest}
-                                                onClick={() => {
-                                                    triggerPillPulse(interest);
-                                                    if (isSelected) {
-                                                        if (isExisting) {
-                                                            setSelectedExisting(prev => { const s = new Set(prev); s.delete(interest); return s; });
-                                                        } else {
-                                                            setSelectedExploring(prev => { const s = new Set(prev); s.delete(interest); return s; });
-                                                        }
-                                                    } else {
-                                                        setSelectedExisting(prev => new Set([...prev, interest]));
-                                                    }
-                                                }}
-                                                className={['px-3 py-1.5 rounded-lg text-xs font-medium transition-all', pulsingPill === interest ? 'animate-select-pulse' : ''].join(' ')}
-                                                style={{
-                                                    background: isSelected ? 'rgba(0,200,100,0.15)' : 'var(--color-surface-2)',
-                                                    color: isSelected ? 'rgba(0,200,100,0.9)' : 'var(--color-text-muted)',
-                                                    border: `1px solid ${isSelected ? 'rgba(0,200,100,0.3)' : 'var(--color-border)'}`,
-                                                }}
-                                            >
-                                                {isSelected ? '✓' : '+'} {interest}
-                                            </button>
-                                        );
-                                    })}
+                                <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                                    Don&apos;t see what you&apos;re looking for? Type anything and add it.
+                                </p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Drone Racing, Pottery, etc."
+                                        value={customInterest}
+                                        onChange={e => setCustomInterest(e.target.value)}
+                                        onKeyDown={e => { if (e.key === 'Enter' && customInterest.trim()) handleAddCustomInterest('existing'); }}
+                                        className="flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none transition"
+                                        style={{
+                                            background: 'var(--color-bg)',
+                                            border: '1px solid var(--color-border)',
+                                            color: 'var(--color-text)',
+                                        }}
+                                    />
+                                    <button
+                                        onClick={() => handleAddCustomInterest('existing')}
+                                        disabled={!customInterest.trim()}
+                                        className="px-3 py-2 rounded-xl text-xs font-bold transition hover:opacity-80 disabled:opacity-30"
+                                        style={{ background: 'rgba(0,200,100,0.2)', color: 'rgba(0,200,100,0.9)' }}
+                                    >
+                                        + Existing
+                                    </button>
+                                    <button
+                                        onClick={() => handleAddCustomInterest('exploring')}
+                                        disabled={!customInterest.trim()}
+                                        className="px-3 py-2 rounded-xl text-xs font-bold transition hover:opacity-80 disabled:opacity-30"
+                                        style={{ background: 'rgba(100,120,255,0.2)', color: 'rgba(100,120,255,0.9)' }}
+                                    >
+                                        + Explore
+                                    </button>
                                 </div>
                             </div>
 
