@@ -507,27 +507,65 @@ export default function LifeFrameConstellation() {
                             </div>
                         </div>
                         <h2 className="text-5xl font-bold text-white mb-4 scroll-text-gradient">Your Values</h2>
-                        <p className="text-xl text-purple-200">Principles that guide your life</p>
+                        <p className="text-xl text-purple-200">The guiding stars of your constellation</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6">
-                        {lifeFrameData?.values.map((value, index) => (
-                            <div
-                                key={value.name}
-                                className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-purple-400 transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] scroll-pop"
-                                style={{ animationDelay: `${index * 100}ms` }}
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                                        {value.priority}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white mb-2">{value.name}</h3>
-                                        <p className="text-purple-200 text-sm">{value.description}</p>
+                    {/* Values as ranked cards with priority glow */}
+                    <div className="space-y-4">
+                        {lifeFrameData?.values.map((value, index) => {
+                            const glowColors = [
+                                'rgba(168, 85, 247, 0.6)',
+                                'rgba(236, 72, 153, 0.5)',
+                                'rgba(99, 102, 241, 0.4)',
+                                'rgba(139, 92, 246, 0.35)',
+                                'rgba(168, 85, 247, 0.3)',
+                            ];
+                            const glow = glowColors[Math.min(index, glowColors.length - 1)];
+                            const scale = 1 - (index * 0.01);
+
+                            return (
+                                <div
+                                    key={value.name}
+                                    className="group relative rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02] scroll-pop"
+                                    style={{
+                                        animationDelay: `${index * 120}ms`,
+                                        background: `linear-gradient(135deg, rgba(168,85,247,${0.15 - index * 0.015}) 0%, rgba(236,72,153,${0.1 - index * 0.01}) 100%)`,
+                                        border: '1px solid rgba(168, 85, 247, 0.3)',
+                                        backdropFilter: 'blur(20px)',
+                                        boxShadow: `0 0 ${30 - index * 4}px ${glow}`,
+                                        transform: `scale(${scale})`,
+                                    }}
+                                >
+                                    <div className="flex items-start gap-5">
+                                        {/* Priority Ring */}
+                                        <div className="relative flex-shrink-0">
+                                            <div
+                                                className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl text-white"
+                                                style={{
+                                                    background: `linear-gradient(135deg, rgba(168,85,247,0.8), rgba(236,72,153,0.8))`,
+                                                    boxShadow: `0 0 20px ${glow}`,
+                                                }}
+                                            >
+                                                {value.priority}
+                                            </div>
+                                            <div
+                                                className="absolute inset-0 rounded-full border-2 border-purple-400/40"
+                                                style={{ transform: 'scale(1.3)', animation: index === 0 ? 'spin-slower 20s linear infinite' : undefined }}
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-2xl font-bold text-white mb-1 tracking-tight">{value.name}</h3>
+                                            <p className="text-purple-200/80 text-sm leading-relaxed">{value.description}</p>
+                                        </div>
+                                        {index === 0 && (
+                                            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-500/30 border border-purple-400/40 text-purple-200 flex-shrink-0">
+                                                #1 Priority
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     <div className="text-center mt-8 scroll-pop">
@@ -561,19 +599,32 @@ export default function LifeFrameConstellation() {
                             </div>
                         </div>
                         <h2 className="text-5xl font-bold text-white mb-4 scroll-text-gradient">Your Interests</h2>
-                        <p className="text-xl text-pink-200">Activities that bring you joy</p>
+                        <p className="text-xl text-pink-200">Activities that bring you joy &amp; growth</p>
                     </div>
 
-                    <div className="mb-8">
-                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2 scroll-pop">
-                            <span>✓</span> Currently Enjoying
-                        </h3>
+                    {/* Existing Interests */}
+                    <div className="mb-10">
+                        <div className="flex items-center justify-center gap-3 mb-6 scroll-pop">
+                            <div className="w-8 h-8 rounded-full bg-green-500/30 border border-green-400/50 flex items-center justify-center">
+                                <span className="text-green-300 text-sm font-bold">✓</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-white">Currently Enjoying</h3>
+                            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-500/20 border border-green-400/30 text-green-300">
+                                {lifeFrameData?.interests.existing.length || 0}
+                            </span>
+                        </div>
                         <div className="flex flex-wrap gap-3 justify-center">
                             {lifeFrameData?.interests.existing.map((interest, index) => (
                                 <div
                                     key={interest}
-                                    className="px-4 py-2 bg-pink-500/20 backdrop-blur-sm rounded-full border border-pink-400/50 text-white hover:bg-pink-500/30 transition hover:scale-110 scroll-pop"
-                                    style={{ animationDelay: `${index * 50}ms` }}
+                                    className="px-5 py-2.5 rounded-full text-white font-medium transition-all duration-300 hover:scale-110 scroll-pop cursor-default"
+                                    style={{
+                                        animationDelay: `${index * 40}ms`,
+                                        background: `linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(16,185,129,0.15) 100%)`,
+                                        border: '1px solid rgba(34,197,94,0.4)',
+                                        backdropFilter: 'blur(12px)',
+                                        boxShadow: '0 0 15px rgba(34,197,94,0.15)',
+                                    }}
                                 >
                                     {interest}
                                 </div>
@@ -581,16 +632,29 @@ export default function LifeFrameConstellation() {
                         </div>
                     </div>
 
+                    {/* Exploring Interests */}
                     <div>
-                        <h3 className="text-2xl font-bold text-white mb-4 flex items-center justify-center gap-2 scroll-pop">
-                            <span>⭐</span> Want to Explore
-                        </h3>
+                        <div className="flex items-center justify-center gap-3 mb-6 scroll-pop">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/30 border border-purple-400/50 flex items-center justify-center">
+                                <span className="text-purple-300 text-sm">⭐</span>
+                            </div>
+                            <h3 className="text-2xl font-bold text-white">Want to Explore</h3>
+                            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300">
+                                {lifeFrameData?.interests.exploring.length || 0}
+                            </span>
+                        </div>
                         <div className="flex flex-wrap gap-3 justify-center">
                             {lifeFrameData?.interests.exploring.map((interest, index) => (
                                 <div
                                     key={interest}
-                                    className="px-4 py-2 bg-purple-500/20 backdrop-blur-sm rounded-full border border-purple-400/50 text-white hover:bg-purple-500/30 transition hover:scale-110 scroll-pop"
-                                    style={{ animationDelay: `${index * 50}ms` }}
+                                    className="px-5 py-2.5 rounded-full text-white font-medium transition-all duration-300 hover:scale-110 scroll-pop cursor-default"
+                                    style={{
+                                        animationDelay: `${index * 40}ms`,
+                                        background: `linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(168,85,247,0.15) 100%)`,
+                                        border: '1px solid rgba(139,92,246,0.4)',
+                                        backdropFilter: 'blur(12px)',
+                                        boxShadow: '0 0 15px rgba(139,92,246,0.15)',
+                                    }}
                                 >
                                     {interest}
                                 </div>
@@ -629,31 +693,63 @@ export default function LifeFrameConstellation() {
                             </div>
                         </div>
                         <h2 className="text-5xl font-bold text-white mb-4 scroll-text-gradient">Life Categories</h2>
-                        <p className="text-xl text-indigo-200">Areas where you'll set goals</p>
+                        <p className="text-xl text-indigo-200">The orbits of your life constellation</p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        {lifeFrameData?.lifeCategories.categories.map((category, index) => (
-                            <div
-                                key={category.name}
-                                className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:border-indigo-400 transition-all scroll-pop"
-                                style={{ animationDelay: `${index * 100}ms` }}
-                            >
-                                <h3 className="text-lg font-bold text-white mb-2">{category.name}</h3>
-                                {category.subCategories.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {category.subCategories.map((sub) => (
-                                            <span
-                                                key={sub}
-                                                className="text-xs px-2 py-1 bg-indigo-500/30 rounded-full text-indigo-200"
-                                            >
-                                                {sub}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                    <div className="grid md:grid-cols-2 gap-5">
+                        {lifeFrameData?.lifeCategories.categories.map((category, index) => {
+                            const categoryGradients = [
+                                'from-red-500/25 to-pink-500/15',
+                                'from-pink-500/25 to-rose-500/15',
+                                'from-purple-500/25 to-indigo-500/15',
+                                'from-blue-500/25 to-cyan-500/15',
+                                'from-cyan-500/25 to-teal-500/15',
+                                'from-green-500/25 to-emerald-500/15',
+                                'from-amber-500/25 to-yellow-500/15',
+                                'from-orange-500/25 to-red-500/15',
+                            ];
+                            const borderColors = [
+                                'rgba(239,68,68,0.4)', 'rgba(236,72,153,0.4)', 'rgba(168,85,247,0.4)',
+                                'rgba(59,130,246,0.4)', 'rgba(6,182,212,0.4)', 'rgba(34,197,94,0.4)',
+                                'rgba(245,158,11,0.4)', 'rgba(249,115,22,0.4)'
+                            ];
+                            const grad = categoryGradients[index % categoryGradients.length];
+                            const borderColor = borderColors[index % borderColors.length];
+
+                            return (
+                                <div
+                                    key={category.name}
+                                    className={`group relative rounded-2xl p-5 transition-all duration-300 hover:scale-[1.03] scroll-pop bg-gradient-to-br ${grad}`}
+                                    style={{
+                                        animationDelay: `${index * 100}ms`,
+                                        border: `1px solid ${borderColor}`,
+                                        backdropFilter: 'blur(16px)',
+                                        boxShadow: `0 0 25px ${borderColor.replace('0.4', '0.15')}`,
+                                    }}
+                                >
+                                    <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{category.name}</h3>
+                                    {category.subCategories.length > 0 ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {category.subCategories.map((sub) => (
+                                                <span
+                                                    key={sub}
+                                                    className="text-xs px-3 py-1.5 rounded-full font-medium"
+                                                    style={{
+                                                        background: `${borderColor.replace('0.4', '0.15')}`,
+                                                        border: `1px solid ${borderColor.replace('0.4', '0.25')}`,
+                                                        color: 'rgba(255,255,255,0.85)'
+                                                    }}
+                                                >
+                                                    {sub}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-white/40 italic">No sub-categories defined</p>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div className="text-center mt-8 scroll-pop">
@@ -698,7 +794,7 @@ export default function LifeFrameConstellation() {
                             Your Purpose
                         </h2>
                         <p className="text-2xl text-yellow-200 mb-12">
-                            How you'll make a positive impact
+                            The supernova at the center of your constellation
                         </p>
                     </div>
 
@@ -706,27 +802,56 @@ export default function LifeFrameConstellation() {
                         {lifeFrameData?.lifeCategories.purpose_elements.map((element, index) => (
                             <div
                                 key={element.name}
-                                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-lg rounded-2xl p-8 border border-yellow-400/50 scroll-pop"
-                                style={{ animationDelay: `${index * 200}ms` }}
+                                className="relative rounded-3xl p-8 transition-all duration-300 hover:scale-[1.02] scroll-pop overflow-hidden"
+                                style={{
+                                    animationDelay: `${index * 200}ms`,
+                                    background: 'linear-gradient(135deg, rgba(251,191,36,0.15) 0%, rgba(249,115,22,0.1) 50%, rgba(236,72,153,0.08) 100%)',
+                                    border: '1px solid rgba(251,191,36,0.35)',
+                                    backdropFilter: 'blur(20px)',
+                                    boxShadow: '0 0 40px rgba(251,191,36,0.15), inset 0 1px 0 rgba(251,191,36,0.2)',
+                                }}
                             >
-                                <h3 className="text-3xl font-bold text-white mb-3">{element.name}</h3>
+                                {/* Radiant glow accent */}
+                                <div
+                                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px]"
+                                    style={{ background: 'linear-gradient(90deg, transparent, rgba(251,191,36,0.8), transparent)' }}
+                                />
+                                <h3 className="text-3xl font-bold text-white mb-3 tracking-tight">{element.name}</h3>
                                 {element.description && (
-                                    <p className="text-xl text-yellow-100">{element.description}</p>
+                                    <p className="text-lg text-yellow-100/80 leading-relaxed">{element.description}</p>
                                 )}
                             </div>
                         ))}
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 scroll-pop">
-                        <p className="text-2xl text-white mb-6">
-                            Your LifeFrame is complete! 🎉
+                    {/* Final Summary Stats */}
+                    <div
+                        className="rounded-3xl p-8 scroll-pop relative overflow-hidden"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(168,85,247,0.1) 100%)',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            backdropFilter: 'blur(20px)',
+                            boxShadow: '0 0 60px rgba(168,85,247,0.1)',
+                        }}
+                    >
+                        <div
+                            className="absolute top-0 left-0 right-0 h-[1px]"
+                            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
+                        />
+                        <p className="text-2xl text-white mb-2 font-bold">Your LifeFrame is complete 🌟</p>
+                        <p className="text-sm text-purple-200/60 mb-6">
+                            {lifeFrameData?.values.length || 0} values • {(lifeFrameData?.interests.existing.length || 0) + (lifeFrameData?.interests.exploring.length || 0)} interests • {lifeFrameData?.lifeCategories.categories.length || 0} categories • {lifeFrameData?.lifeCategories.purpose_elements.length || 0} purpose elements
                         </p>
                         <p className="text-lg text-purple-200 mb-8">
-                            Now build your Roadmap with goals and activities aligned with these values and purpose.
+                            Now build your Roadmap with goals aligned to these values and purpose.
                         </p>
                         <button
                             onClick={() => router.push('/roadmap')}
-                            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-bold text-xl hover:shadow-[0_0_40px_rgba(168,85,247,0.6)] transition-all transform hover:scale-105"
+                            className="px-10 py-4 rounded-full font-bold text-xl text-white transition-all transform hover:scale-105"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(168,85,247,0.8), rgba(236,72,153,0.8))',
+                                boxShadow: '0 0 40px rgba(168,85,247,0.4)',
+                            }}
                         >
                             Build Your Roadmap →
                         </button>
