@@ -2,24 +2,33 @@ import Image from 'next/image';
 
 export function TimCollinsStory() {
     return (
-        <section className="py-20 bg-gradient-to-br from-blue-50 to-purple-50 relative">
+        <section
+            className="py-20 relative"
+            style={{
+                background: 'radial-gradient(ellipse 60% 50% at 70% 40%, rgba(59,130,246,0.07) 0%, transparent 60%), #07070f',
+                borderTop: '1px solid rgba(255,255,255,0.04)',
+            }}
+        >
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid md:grid-cols-2 gap-12 items-center">
                     {/* Tim's Photo */}
                     <div className="flex justify-center md:justify-end">
                         <div className="relative">
-                            {/* Decorative background blob */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl opacity-20 transform scale-110"></div>
+                            {/* Glow behind photo */}
+                            <div className="absolute inset-0 rounded-full blur-3xl opacity-20" style={{ background: 'rgba(168,85,247,0.4)' }}></div>
 
                             {/* Photo container */}
                             <div className="relative w-64 h-64 md:w-80 md:h-80">
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-10"></div>
                                 <Image
                                     src="/timmyC.webp"
                                     alt="Tim Collins, Creator of the Tim Collins Framework"
                                     width={320}
                                     height={320}
-                                    className="rounded-full object-cover shadow-2xl border-4 border-white"
+                                    className="rounded-full object-cover"
+                                    style={{
+                                        boxShadow: '0 0 40px rgba(168,85,247,0.15)',
+                                        border: '2px solid rgba(255,255,255,0.1)',
+                                    }}
                                     priority
                                 />
                             </div>
@@ -29,56 +38,39 @@ export function TimCollinsStory() {
                     {/* Tim's Story */}
                     <div className="space-y-6">
                         <div>
-                            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ letterSpacing: '-0.03em' }}>
                                 After 20 Years, I Finally{' '}
-                                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                <span style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>
                                     Understood Contentment
                                 </span>
                             </h2>
                         </div>
 
-                        <div className="space-y-4 text-lg text-gray-700 leading-relaxed">
+                        <div className="space-y-4 text-lg text-white/50 leading-relaxed">
                             <p>
-                                It took me <strong>20 years</strong> to build the company I co-founded while in college
-                                into a <strong>successful industry leader</strong>...only to learn that despite all
-                                my accomplishments in business, <strong>I wasn't feeling content</strong>.
+                                It took me <strong className="text-white/80">20 years</strong> to build the company I co-founded while in college
+                                into a <strong className="text-white/80">successful industry leader</strong>...only to learn that despite all
+                                my accomplishments in business, <strong className="text-white/80">I wasn&apos;t feeling content</strong>.
                             </p>
 
                             <p>
-                                Then I discovered a simple truth: <em>contentment doesn't come from achieving more—it
+                                Then I discovered a simple truth: <em className="text-white/60">contentment doesn&apos;t come from achieving more—it
                                     comes from aligning what you do with who you are.</em>
                             </p>
 
-                            <p className="text-xl font-medium text-gray-900">
+                            <p className="text-xl font-medium text-white/80">
                                 This framework changed my life. Now, I want to share it with you.
                             </p>
                         </div>
 
                         {/* Attribution */}
-                        <div className="pt-4 border-t border-gray-200">
-                            <p className="font-semibold text-gray-900 text-lg">Tim Collins</p>
-                            <p className="text-gray-800">Founder EBSCO Publishing, Former CEO </p>
-                            <p className="text-gray-800">TEDx Speaker • Tim Collins Framework Creator</p>
+                        <div className="pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                            <p className="font-semibold text-white text-lg">Tim Collins</p>
+                            <p className="text-white/40">Founder EBSCO Publishing, Former CEO </p>
+                            <p className="text-white/40">TEDx Speaker • Tim Collins Framework Creator</p>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Wave Divider - transitions to dark navy contentment section */}
-            <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180 z-20">
-                <svg className="relative block w-full h-24" viewBox="0 0 1200 120" preserveAspectRatio="none">
-                    <defs>
-                        <linearGradient id="timWaveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style={{ stopColor: '#0a1f44', stopOpacity: 1 }} />
-                            <stop offset="50%" style={{ stopColor: '#1e4d7b', stopOpacity: 1 }} />
-                            <stop offset="100%" style={{ stopColor: '#3b8b9f', stopOpacity: 1 }} />
-                        </linearGradient>
-                    </defs>
-                    <path
-                        d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
-                        fill="url(#timWaveGradient)"
-                    />
-                </svg>
             </div>
         </section>
     );

@@ -171,8 +171,8 @@ export function Interactive5StepJourney() {
     const currentStep = steps[activeStep - 1];
 
     return (
-        <div className="mt-10 sm:mt-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12 shadow-xl">
-            <h3 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-6 sm:mb-8">
+        <div className="mt-10 sm:mt-16 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-12" style={{ background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)' }}>
+            <h3 className="text-2xl sm:text-3xl font-bold text-center text-white mb-6 sm:mb-8" style={{ letterSpacing: '-0.02em' }}>
                 Your 5-Step Journey
             </h3>
 
@@ -190,22 +190,22 @@ export function Interactive5StepJourney() {
                         {/* Connection line */}
                         {step.num < 5 && (
                             <div
-                                className={`absolute left-full w-3 sm:w-8 h-1 ${activeStep > step.num
+                                className={`absolute left-full w-3 sm:w-8 h-0.5 ${activeStep > step.num
                                     ? 'bg-gradient-to-r from-teal-500 to-blue-500'
-                                    : 'bg-gray-300'
+                                    : ''
                                     }`}
+                                style={activeStep <= step.num ? { background: 'rgba(255,255,255,0.1)' } : undefined}
                             />
                         )}
 
                         <div
-                            className={`w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-base sm:text-xl font-bold transition-all ${activeStep === step.num
-                                ? step.color === 'teal'
-                                    ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg'
-                                    : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg'
+                            className={`w-11 h-11 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-base sm:text-xl font-bold transition-all`}
+                            style={activeStep === step.num
+                                ? { background: step.color === 'teal' ? 'rgba(20,184,166,0.4)' : 'rgba(59,130,246,0.4)', border: step.color === 'teal' ? '2px solid rgba(20,184,166,0.6)' : '2px solid rgba(59,130,246,0.6)', color: 'white', boxShadow: step.color === 'teal' ? '0 0 20px rgba(20,184,166,0.2)' : '0 0 20px rgba(59,130,246,0.2)' }
                                 : activeStep > step.num
-                                    ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-                                    : 'bg-white text-gray-400 border-2 border-gray-300'
-                                }`}
+                                    ? { background: 'rgba(34,197,94,0.3)', border: '2px solid rgba(34,197,94,0.5)', color: 'white' }
+                                    : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.3)' }
+                            }
                         >
                             {activeStep > step.num ? '✓' : step.num}
                         </div>
@@ -214,7 +214,7 @@ export function Interactive5StepJourney() {
             </div>
 
             {/* Active Step Details */}
-            <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-lg">
+            <div className="rounded-xl sm:rounded-2xl p-5 sm:p-8" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3 sm:gap-4">
                     <div className="flex items-center gap-3 sm:gap-4">
                         {/* SVG Icon */}
@@ -222,39 +222,37 @@ export function Interactive5StepJourney() {
                             <currentStep.IconComponent />
                         </div>
                         <div>
-                            <div className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            <div className="text-xs sm:text-sm font-semibold text-white/35 uppercase tracking-wide mb-1">
                                 Step {currentStep.num} - {currentStep.category}
                             </div>
-                            <h4 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{currentStep.title}</h4>
+                            <h4 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{currentStep.title}</h4>
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="text-xs sm:text-sm text-gray-500">Estimated Time</div>
-                        <div className="text-base sm:text-lg font-semibold text-purple-600">{currentStep.time}</div>
+                        <div className="text-xs sm:text-sm text-white/35">Estimated Time</div>
+                        <div className="text-base sm:text-lg font-semibold" style={{ color: 'rgba(168,85,247,0.8)' }}>{currentStep.time}</div>
                     </div>
                 </div>
 
                 <div className="space-y-6">
                     <div>
-                        <h5 className="text-lg font-semibold text-gray-900 mb-2">What You'll Do:</h5>
-                        <p className="text-gray-700">{currentStep.description}</p>
+                        <h5 className="text-lg font-semibold text-white/80 mb-2">What You&apos;ll Do:</h5>
+                        <p className="text-white/50">{currentStep.description}</p>
                     </div>
 
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
-                        <h5 className="text-sm font-semibold text-gray-900 mb-2">Example:</h5>
-                        <p className="text-sm text-gray-700 italic">{currentStep.example}</p>
+                    <div className="rounded-lg p-4" style={{ background: 'rgba(168,85,247,0.08)', borderLeft: '3px solid rgba(168,85,247,0.5)' }}>
+                        <h5 className="text-sm font-semibold text-white/70 mb-2">Example:</h5>
+                        <p className="text-sm text-white/45 italic">{currentStep.example}</p>
                     </div>
                 </div>
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
+                <div className="flex justify-between items-center mt-6 sm:mt-8 pt-4 sm:pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     <button
                         onClick={() => setActiveStep(Math.max(1, activeStep - 1))}
                         disabled={activeStep === 1}
-                        className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition min-h-[44px] ${activeStep === 1
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
+                        className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition min-h-[44px]`}
+                        style={activeStep === 1 ? { background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}
                     >
                         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -263,14 +261,15 @@ export function Interactive5StepJourney() {
                         <span className="sm:hidden">Prev</span>
                     </button>
 
-                    <div className="text-xs sm:text-sm text-gray-500">
+                    <div className="text-xs sm:text-sm text-white/30">
                         {activeStep} of {steps.length}
                     </div>
 
                     {activeStep < 5 ? (
                         <button
                             onClick={() => setActiveStep(Math.min(5, activeStep + 1))}
-                            className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:shadow-lg transition min-h-[44px]"
+                            className="flex items-center gap-1.5 sm:gap-2 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition min-h-[44px] hover:opacity-90"
+                            style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.7), rgba(168,85,247,0.7))', boxShadow: '0 0 15px rgba(59,130,246,0.15)' }}
                         >
                             Next
                             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +277,10 @@ export function Interactive5StepJourney() {
                             </svg>
                         </button>
                     ) : (
-                        <button className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-green-600 to-teal-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:shadow-lg transition min-h-[44px]">
+                        <button
+                            className="flex items-center gap-1.5 sm:gap-2 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base transition min-h-[44px] hover:opacity-90"
+                            style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.6), rgba(20,184,166,0.6))', boxShadow: '0 0 15px rgba(34,197,94,0.15)' }}
+                        >
                             <span className="hidden sm:inline">Start Your Journey</span>
                             <span className="sm:hidden">Start</span>
                             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,13 +293,13 @@ export function Interactive5StepJourney() {
 
             {/* Progress Bar */}
             <div className="mt-8">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
                     <div
-                        className="h-full bg-gradient-to-r from-teal-500 to-blue-600 transition-all duration-500"
-                        style={{ width: `${(activeStep / 5) * 100}%` }}
+                        className="h-full transition-all duration-500"
+                        style={{ width: `${(activeStep / 5) * 100}%`, background: 'linear-gradient(90deg, rgba(20,184,166,0.7), rgba(59,130,246,0.7))' }}
                     />
                 </div>
-                <p className="text-center text-sm text-gray-500 mt-2">
+                <p className="text-center text-sm text-white/30 mt-2">
                     Complete all 5 steps to build your personalized path to contentment
                 </p>
             </div>
