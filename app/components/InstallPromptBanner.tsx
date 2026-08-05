@@ -14,27 +14,29 @@ export default function InstallPromptBanner() {
     const [showIOSModal, setShowIOSModal] = useState(false);
 
     useEffect(() => {
-        // Don't show if already dismissed
+        // Don't show if already dismissed permanently
         if (localStorage.getItem('la_install_dismissed') === 'true') return;
         // Don't show if already installed (running as PWA)
         if (window.matchMedia('(display-mode: standalone)').matches) return;
-        // Only show after 3 activities logged
-        if (localStorage.getItem('la_show_install') !== 'true') return;
+        // Only show on mobile screen widths (< 768px)
+        if (window.innerWidth >= 768) return;
 
         // Detect iOS
         const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
         setIsIOS(ios);
 
         if (ios) {
-            // iOS: show our custom instructions banner
-            setShowBanner(true);
+            // iOS can't use beforeinstallprompt — show our manual instructions after a delay
+            const timer = setTimeout(() => setShowBanner(true), 3000);
+            return () => clearTimeout(timer);
         }
 
-        // Android/Chrome: listen for install prompt
+        // Android/Chrome: listen for the native install prompt event
         const handler = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e as BeforeInstallPromptEvent);
-            setShowBanner(true);
+            // Small delay so it doesn't pop immediately on page load
+            setTimeout(() => setShowBanner(true), 3000);
         };
         window.addEventListener('beforeinstallprompt', handler);
         return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -85,8 +87,8 @@ export default function InstallPromptBanner() {
                                 </svg>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-white font-semibold text-sm">Add to your Home Screen</p>
-                                <p className="text-slate-400 text-xs mt-0.5">One-tap access to your daily check-in</p>
+                                <p className="text-white font-semibold text-sm">Best on your Home Screen</p>
+                                <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">Add to your home screen for the full app experience — no browser chrome, faster access</p>
                             </div>
                             <button onClick={handleDismiss} className="text-gray-600 hover:text-gray-400 transition p-1 flex-shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
