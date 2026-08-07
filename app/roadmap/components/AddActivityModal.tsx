@@ -133,69 +133,100 @@ export default function AddActivityModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Add an activity"
     >
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
+      <div
+        className="w-full sm:max-w-lg flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden"
+        style={{
+          background: 'var(--color-bg)',
+          border: '1px solid var(--color-border)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+          maxHeight: '92dvh',
+        }}
+      >
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 flex-shrink-0">
-          <p className="text-emerald-200 text-xs font-semibold uppercase tracking-widest mb-1">
-            New Activity
-          </p>
-          <h2 className="text-2xl font-bold text-white">
-            What do you want to do?
-          </h2>
-          <p className="text-emerald-100/80 text-sm mt-1">
-            Connect this activity to one or more goals
-          </p>
+        <div
+          className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(20,184,166,0.12) 50%, rgba(6,182,212,0.08) 100%)',
+            borderBottom: '1px solid var(--color-border)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm font-medium transition hover:opacity-70"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            Cancel
+          </button>
+          <div className="text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(52,211,153,0.8)' }}>
+              New Activity
+            </p>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>What do you want to do?</h2>
+          </div>
+          <button
+            type="submit"
+            form="add-activity-form"
+            disabled={!canSubmit}
+            className="text-sm font-semibold transition-opacity"
+            style={{ color: canSubmit ? '#34d399' : 'var(--color-text-dim)', opacity: canSubmit ? 1 : 0.4 }}
+          >
+            {saving ? 'Saving…' : 'Add'}
+          </button>
         </div>
 
         {/* Scrollable form */}
-        <form onSubmit={handleSubmit} className="px-8 py-7 space-y-5 overflow-y-auto flex-1">
+        <form id="add-activity-form" onSubmit={handleSubmit} className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto flex-1">
           {/* LifeFrame reference */}
           {hasLifeFrame && (
-            <div className="bg-gradient-to-r from-slate-50 to-emerald-50 border border-slate-200 rounded-xl px-4 py-3">
+            <div
+              className="rounded-xl px-4 py-3"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            >
               <button
                 type="button"
                 onClick={() => setShowLifeFrame(!showLifeFrame)}
                 className="flex items-center justify-between w-full text-left"
               >
-                <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-dim)' }}>
                   📋 Your LifeFrame
                 </span>
-                <span className="text-slate-400 text-xs">{showLifeFrame ? '▲ Hide' : '▼ Show'}</span>
+                <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>{showLifeFrame ? '▲ Hide' : '▼ Show'}</span>
               </button>
               {showLifeFrame && (
                 <div className="mt-3 space-y-2">
                   {savedCategories.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-bold text-purple-600 uppercase mb-1">Life Categories</p>
+                      <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'rgba(168,85,247,0.8)' }}>Life Categories</p>
                       <div className="flex flex-wrap gap-1">
                         {savedCategories.map(c => (
-                          <span key={c} className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-medium">{c}</span>
+                          <span key={c} className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(168,85,247,0.15)', color: '#c4b5fd' }}>{c}</span>
                         ))}
                       </div>
                     </div>
                   )}
                   {savedValues.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Values</p>
+                      <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'rgba(96,165,250,0.8)' }}>Values</p>
                       <div className="flex flex-wrap gap-1">
                         {savedValues.map(v => (
-                          <span key={v} className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-medium">{v}</span>
+                          <span key={v} className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd' }}>{v}</span>
                         ))}
                       </div>
                     </div>
                   )}
                   {savedInterests.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-bold text-rose-600 uppercase mb-1">Interests</p>
+                      <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'rgba(251,113,133,0.8)' }}>Interests</p>
                       <div className="flex flex-wrap gap-1">
                         {savedInterests.map(i => (
-                          <span key={i} className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-medium">{i}</span>
+                          <span key={i} className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ background: 'rgba(251,113,133,0.15)', color: '#fda4af' }}>{i}</span>
                         ))}
                       </div>
                     </div>
@@ -207,8 +238,8 @@ export default function AddActivityModal({
 
           {/* Connect to Goals */}
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-2">
-              Connect to goals <span className="text-gray-400 font-normal">(select one or more)</span>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-2.5" style={{ color: 'var(--color-text-dim)' }}>
+              Connect to goals <span className="normal-case tracking-normal font-normal" style={{ color: 'var(--color-text-dim)' }}>(select one or more)</span>
             </p>
             <div className="flex flex-wrap gap-2 mb-3">
               {existingGoals.map(goal => {
@@ -218,11 +249,11 @@ export default function AddActivityModal({
                     key={goal.id}
                     type="button"
                     onClick={() => toggleGoal(goal.id)}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition border-2 ${
-                      isSelected
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300'
-                    }`}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 active:scale-95"
+                    style={isSelected
+                      ? { background: 'rgba(52,211,153,0.2)', border: '1px solid rgba(52,211,153,0.5)', color: '#34d399' }
+                      : { background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }
+                    }
                   >
                     {isSelected && '✓ '}{goal.title}
                   </button>
@@ -231,17 +262,12 @@ export default function AddActivityModal({
               {newGoalDrafts.map(draft => (
                 <div
                   key={draft}
-                  className="px-3 py-2 rounded-xl text-sm font-medium border-2 bg-purple-600 text-white border-purple-600 shadow-md flex items-center gap-2"
+                  className="px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-2"
+                  style={{ background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.4)', color: '#c4b5fd' }}
                 >
-                  <span className="text-purple-200 text-[10px] uppercase tracking-wider font-bold">New</span>
+                  <span className="text-[9px] uppercase tracking-wider font-bold" style={{ color: 'rgba(168,85,247,0.7)' }}>New</span>
                   {draft}
-                  <button
-                    type="button"
-                    onClick={() => removeGoalDraft(draft)}
-                    className="ml-1 text-purple-200 hover:text-white transition"
-                  >
-                    ✕
-                  </button>
+                  <button type="button" onClick={() => removeGoalDraft(draft)} className="opacity-60 hover:opacity-100 transition">✕</button>
                 </div>
               ))}
             </div>
@@ -251,27 +277,24 @@ export default function AddActivityModal({
                 type="text"
                 value={newGoalInput}
                 onChange={e => setNewGoalInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddGoalDraft();
-                  }
-                }}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddGoalDraft(); } }}
                 placeholder="+ Create new goal..."
-                className="flex-1 px-3 py-2 rounded-xl border border-gray-300 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                className="flex-1 px-3 py-2 rounded-xl text-sm focus:outline-none transition"
+                style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
               />
               <button
                 type="button"
                 onClick={handleAddGoalDraft}
                 disabled={!newGoalInput.trim()}
-                className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition disabled:opacity-50"
+                className="px-4 py-2 text-sm font-semibold rounded-xl transition disabled:opacity-30"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
               >
                 Add
               </button>
             </div>
 
             {selectedGoalIds.length === 0 && newGoalDrafts.length === 0 && (
-              <p className="text-xs text-gray-400 mt-2 italic">
+              <p className="text-xs mt-2 italic" style={{ color: 'var(--color-text-dim)' }}>
                 No goals selected — this will be a personal activity
               </p>
             )}
@@ -279,8 +302,8 @@ export default function AddActivityModal({
 
           {/* Activity title */}
           <div>
-            <label htmlFor="activity-title" className="block text-sm font-semibold text-gray-700 mb-2">
-              Activity <span className="text-red-500">*</span>
+            <label htmlFor="activity-title" className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-dim)' }}>
+              Activity <span className="text-red-400 normal-case tracking-normal font-normal">required</span>
             </label>
             <input
               ref={titleRef}
@@ -291,7 +314,8 @@ export default function AddActivityModal({
               placeholder="e.g. Run Tough Farmer obstacle course at Meredith Farm"
               maxLength={200}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition"
+              style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
             />
           </div>
 
@@ -300,11 +324,11 @@ export default function AddActivityModal({
             <button
               type="button"
               onClick={() => setIncludeToday(!includeToday)}
-              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${
-                includeToday
-                  ? 'bg-emerald-500 border-emerald-500'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
+              className="w-5 h-5 rounded flex items-center justify-center transition flex-shrink-0"
+              style={includeToday
+                ? { background: 'rgba(52,211,153,0.9)', border: '1px solid rgba(52,211,153,0.6)' }
+                : { background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }
+              }
             >
               {includeToday && (
                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,7 +336,7 @@ export default function AddActivityModal({
                 </svg>
               )}
             </button>
-            <span className="text-sm text-gray-700">Add to To-Do List</span>
+            <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Add to To-Do List</span>
           </div>
 
           {/* Behavior Change toggle */}
@@ -321,11 +345,11 @@ export default function AddActivityModal({
               <button
                 type="button"
                 onClick={() => setTaskType(prev => prev === 'daily' ? 'one-time' : 'daily')}
-                className={`w-5 h-5 rounded border-2 flex items-center justify-center transition ${
-                  taskType === 'daily'
-                    ? 'bg-indigo-500 border-indigo-500'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
+                className="w-5 h-5 rounded flex items-center justify-center transition flex-shrink-0"
+                style={taskType === 'daily'
+                  ? { background: 'rgba(99,102,241,0.9)', border: '1px solid rgba(99,102,241,0.6)' }
+                  : { background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }
+                }
               >
                 {taskType === 'daily' && (
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,9 +357,9 @@ export default function AddActivityModal({
                   </svg>
                 )}
               </button>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                 🔁 Make this a behavior change
-                <span className="block text-[10px] text-gray-400">Resets daily — comes back each morning</span>
+                <span className="block text-[10px]" style={{ color: 'var(--color-text-dim)' }}>Resets daily — comes back each morning</span>
               </span>
             </div>
           )}
@@ -343,13 +367,14 @@ export default function AddActivityModal({
           {/* Sub-activities */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-700">
-                Sub-activities <span className="text-gray-400 font-normal">(optional)</span>
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-dim)' }}>
+                Sub-activities <span className="normal-case tracking-normal font-normal" style={{ color: 'var(--color-text-dim)' }}>(optional)</span>
               </p>
               <button
                 type="button"
                 onClick={addSubDraft}
-                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition"
+                className="text-xs font-semibold transition hover:opacity-70"
+                style={{ color: 'rgba(52,211,153,0.8)' }}
               >
                 + Add sub-activity
               </button>
@@ -357,8 +382,8 @@ export default function AddActivityModal({
 
             <div className="space-y-2">
               {subActivityDrafts.map((sa, idx) => (
-                <div key={sa.id} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
-                  <span className="text-[10px] text-gray-400 font-mono w-5">
+                <div key={sa.id} className="flex items-center gap-2 rounded-xl p-2" style={{ background: 'var(--color-surface)' }}>
+                  <span className="text-[10px] font-mono w-5" style={{ color: 'var(--color-text-dim)' }}>
                     {String.fromCharCode(97 + idx)}.
                   </span>
                   <input
@@ -367,16 +392,17 @@ export default function AddActivityModal({
                     onChange={e => updateSubDraft(sa.id, { title: e.target.value })}
                     placeholder="e.g. Call Gil about schedule"
                     maxLength={140}
-                    className="flex-1 px-2 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition"
+                    className="flex-1 px-2 py-1.5 rounded-lg text-xs focus:outline-none transition"
+                    style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
                   />
                   <button
                     type="button"
                     onClick={() => updateSubDraft(sa.id, { includeToday: !sa.includeToday })}
-                    className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition flex-shrink-0 ${
-                      sa.includeToday
-                        ? 'bg-emerald-500 border-emerald-500'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
+                    className="w-3.5 h-3.5 rounded flex items-center justify-center transition flex-shrink-0"
+                    style={sa.includeToday
+                      ? { background: 'rgba(52,211,153,0.9)', border: '1px solid rgba(52,211,153,0.6)' }
+                      : { background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }
+                    }
                     title="Add to To-Do"
                   >
                     {sa.includeToday && (
@@ -388,7 +414,8 @@ export default function AddActivityModal({
                   <button
                     type="button"
                     onClick={() => removeSubDraft(sa.id)}
-                    className="text-gray-300 hover:text-red-400 transition text-xs"
+                    className="transition text-xs opacity-40 hover:opacity-80"
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
                     ✕
                   </button>
@@ -397,24 +424,19 @@ export default function AddActivityModal({
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition disabled:opacity-50 shadow-lg shadow-emerald-200"
-            >
-              {saving ? 'Saving…' : `Add Activity${(selectedGoalIds.length + newGoalDrafts.length) > 0 ? ` → ${(selectedGoalIds.length + newGoalDrafts.length)} goal${(selectedGoalIds.length + newGoalDrafts.length) > 1 ? 's' : ''}` : ''}`}
-            </button>
-          </div>
+          {/* Add Activity button */}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full py-3.5 rounded-xl text-sm font-bold transition-all disabled:opacity-30"
+            style={{
+              background: canSubmit ? 'linear-gradient(135deg, #10b981, #14b8a6)' : 'var(--color-surface-2)',
+              color: '#fff',
+              boxShadow: canSubmit ? '0 4px 20px rgba(16,185,129,0.3)' : 'none',
+            }}
+          >
+            {saving ? 'Saving…' : `Add Activity${(selectedGoalIds.length + newGoalDrafts.length) > 0 ? ` → ${(selectedGoalIds.length + newGoalDrafts.length)} goal${(selectedGoalIds.length + newGoalDrafts.length) > 1 ? 's' : ''}` : ''}`}
+          </button>
         </form>
       </div>
     </div>

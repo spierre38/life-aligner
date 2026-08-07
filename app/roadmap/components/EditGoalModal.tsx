@@ -1,22 +1,14 @@
 'use client';
 
 /**
- * EditGoalModal.tsx — Phase 2
+ * EditGoalModal.tsx — Themed rewrite
  *
- * Edit an existing goal's title, why, and connections (categories, values,
- * interests). Pre-populated from the goal's current data.
- *
- * Also provides a "Delete this goal" soft-delete action (sets status to
- * 'deleted', does not remove from DB — keeps data for analytics).
- *
- * Same visual design language as AddGoalModal, so the two feel like
- * the same component family.
+ * Matches AddGoalModal's dark/themed design language.
+ * Uses var(--color-*) tokens so it respects dark/light mode.
  */
 
 import { useState, useEffect, useRef } from 'react';
 import type { Goal } from '@/lib/roadmap-types';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface EditGoalModalProps {
   goal: Goal;
@@ -28,43 +20,51 @@ interface EditGoalModalProps {
   onDelete: (goalId: string) => void;
 }
 
-// ─── Chip picker ──────────────────────────────────────────────────────────────
+// ─── Chip Picker ──────────────────────────────────────────────────────────────
 
 function ChipPicker({
   label,
+  labelColor,
+  icon,
   items,
   selected,
   onToggle,
-  color,
+  accentStyle,
 }: {
   label: string;
+  labelColor: string;
+  icon: string;
   items: string[];
   selected: string[];
   onToggle: (item: string) => void;
-  color: 'purple' | 'blue' | 'rose';
+  accentStyle: { bg: string; border: string; text: string };
 }) {
   if (items.length === 0) return null;
-  const filled = {
-    purple: 'bg-purple-600 text-white border-purple-600',
-    blue: 'bg-blue-600 text-white border-blue-600',
-    rose: 'bg-rose-500 text-white border-rose-500',
-  }[color];
-  const outlined = 'border border-gray-300 text-gray-700 hover:border-gray-400 bg-white';
-
   return (
     <div>
-      <p className="text-sm font-semibold text-gray-700 mb-2">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-widest mb-2.5 flex items-center gap-2"
+        style={{ color: labelColor }}>
+        <span>{icon}</span>{label}
+      </p>
       <div className="flex flex-wrap gap-2">
-        {items.map(item => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => onToggle(item)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${selected.includes(item) ? filled : outlined}`}
-          >
-            {item}
-          </button>
-        ))}
+        {items.map(item => {
+          const active = selected.includes(item);
+          return (
+            <button
+              key={item}
+              type="button"
+              onClick={() => onToggle(item)}
+              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 hover:scale-105 active:scale-95"
+              style={
+                active
+                  ? { background: accentStyle.bg, border: `1px solid ${accentStyle.border}`, color: accentStyle.text }
+                  : { background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }
+              }
+            >
+              {item}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -87,6 +87,7 @@ export default function EditGoalModal({
   const [selectedValues, setSelectedValues] = useState<string[]>(goal.connectedValues);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(goal.connectedInterests);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -122,35 +123,70 @@ export default function EditGoalModal({
     onSave(updated);
   };
 
-  const handleDelete = () => {
-    if (window.confirm(`Delete "${goal.title}"? This cannot be undone.`)) {
-      onDelete(goal.id);
-    }
+  const inputStyle = {
+    background: 'var(--color-surface-2)',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text)',
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-label="Edit goal"
     >
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden my-8">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
-          <p className="text-indigo-200 text-xs font-semibold uppercase tracking-widest mb-1">
-            Edit Goal
-          </p>
-          <h2 className="text-2xl font-bold text-white">Update your goal</h2>
+      <div
+        className="w-full sm:max-w-lg flex flex-col rounded-t-3xl sm:rounded-3xl overflow-hidden"
+        style={{
+          background: 'var(--color-bg)',
+          border: '1px solid var(--color-border)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+          maxHeight: '92dvh',
+        }}
+      >
+        {/* ── Header ── */}
+        <div
+          className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.12) 50%, rgba(244,63,94,0.08) 100%)',
+            borderBottom: '1px solid var(--color-border)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm font-medium transition hover:opacity-70"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            Cancel
+          </button>
+          <div className="text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(168,85,247,0.8)' }}>
+              Edit Goal
+            </p>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Update your goal</h2>
+          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            className="text-sm font-semibold transition-opacity"
+            style={{ color: canSubmit ? '#a78bfa' : 'var(--color-text-dim)', opacity: canSubmit ? 1 : 0.4 }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-8 py-7 space-y-5">
-          {/* Title */}
+        {/* ── Scrollable form ── */}
+        <form onSubmit={handleSubmit} className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto flex-1">
+
+          {/* Goal title */}
           <div>
-            <label htmlFor="edit-goal-title" className="block text-sm font-semibold text-gray-700 mb-2">
-              Goal title <span className="text-red-500">*</span>
+            <label htmlFor="edit-goal-title" className="block text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: 'var(--color-text-dim)' }}>
+              Goal title <span className="text-red-400 normal-case tracking-normal font-normal">required</span>
             </label>
             <input
               ref={titleRef}
@@ -160,16 +196,18 @@ export default function EditGoalModal({
               onChange={e => setTitle(e.target.value)}
               maxLength={140}
               required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              placeholder="Start with an action (e.g. 'Run a marathon')"
+              className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition"
+              style={inputStyle}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{title.length}/140</p>
+            <p className="text-[10px] mt-1 text-right" style={{ color: 'var(--color-text-dim)' }}>{title.length}/140</p>
           </div>
 
           {/* Why */}
           <div>
-            <label htmlFor="edit-goal-why" className="block text-sm font-semibold text-gray-700 mb-2">
-              Why does this matter?{' '}
-              <span className="text-gray-400 font-normal">(optional)</span>
+            <label htmlFor="edit-goal-why" className="block text-xs font-semibold uppercase tracking-widest mb-2"
+              style={{ color: 'var(--color-text-dim)' }}>
+              Why does this matter? <span className="normal-case tracking-normal font-normal" style={{ color: 'var(--color-text-dim)' }}>(optional)</span>
             </label>
             <textarea
               id="edit-goal-why"
@@ -177,61 +215,91 @@ export default function EditGoalModal({
               onChange={e => setWhy(e.target.value)}
               maxLength={500}
               rows={3}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 text-gray-900 text-base placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+              placeholder="What will this change in your life?"
+              className="w-full px-4 py-3 rounded-xl text-sm resize-none focus:outline-none transition"
+              style={inputStyle}
             />
           </div>
 
-          {/* Chip pickers */}
-          <ChipPicker
-            label="Life Categories"
-            items={allCategories}
-            selected={selectedCategories}
-            onToggle={item => toggle(selectedCategories, setSelectedCategories, item)}
-            color="purple"
-          />
-          <ChipPicker
-            label="Values"
-            items={savedValues}
-            selected={selectedValues}
-            onToggle={item => toggle(selectedValues, setSelectedValues, item)}
-            color="blue"
-          />
-          <ChipPicker
-            label="Interests"
-            items={savedInterests}
-            selected={selectedInterests}
-            onToggle={item => toggle(selectedInterests, setSelectedInterests, item)}
-            color="rose"
-          />
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold hover:from-indigo-700 hover:to-purple-700 transition disabled:opacity-50 shadow-lg shadow-indigo-200"
-            >
-              {saving ? 'Saving…' : 'Save Changes'}
-            </button>
+          {/* LifeFrame connections */}
+          <div className="space-y-4 pt-1">
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-dim)' }}>
+              Connect to your LifeFrame
+            </p>
+            <ChipPicker
+              label="Life Categories"
+              labelColor="rgba(168,85,247,0.8)"
+              icon="■"
+              items={allCategories}
+              selected={selectedCategories}
+              onToggle={item => toggle(selectedCategories, setSelectedCategories, item)}
+              accentStyle={{ bg: 'rgba(168,85,247,0.2)', border: 'rgba(168,85,247,0.5)', text: '#c4b5fd' }}
+            />
+            <ChipPicker
+              label="Values"
+              labelColor="rgba(96,165,250,0.8)"
+              icon="◆"
+              items={savedValues}
+              selected={selectedValues}
+              onToggle={item => toggle(selectedValues, setSelectedValues, item)}
+              accentStyle={{ bg: 'rgba(96,165,250,0.2)', border: 'rgba(96,165,250,0.5)', text: '#93c5fd' }}
+            />
+            <ChipPicker
+              label="Interests"
+              labelColor="rgba(251,113,133,0.8)"
+              icon="♡"
+              items={savedInterests}
+              selected={selectedInterests}
+              onToggle={item => toggle(selectedInterests, setSelectedInterests, item)}
+              accentStyle={{ bg: 'rgba(251,113,133,0.2)', border: 'rgba(251,113,133,0.5)', text: '#fda4af' }}
+            />
           </div>
 
+          {/* Save button */}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full py-3.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-30"
+            style={{
+              background: canSubmit ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'var(--color-surface-2)',
+              color: '#fff',
+              boxShadow: canSubmit ? '0 4px 20px rgba(168,85,247,0.3)' : 'none',
+            }}
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+
           {/* Delete */}
-          <div className="text-center pt-1">
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="text-red-500 hover:text-red-600 text-sm font-medium transition"
-            >
-              Delete this goal
-            </button>
+          <div className="text-center pb-2">
+            {confirmDelete ? (
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Are you sure?</span>
+                <button
+                  type="button"
+                  onClick={() => onDelete(goal.id)}
+                  className="text-xs font-semibold text-red-400 hover:text-red-300 transition"
+                >
+                  Yes, delete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="text-xs transition"
+                  style={{ color: 'var(--color-text-dim)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="text-xs transition hover:opacity-80"
+                style={{ color: 'rgba(248,113,113,0.6)' }}
+              >
+                Delete this goal
+              </button>
+            )}
           </div>
         </form>
       </div>

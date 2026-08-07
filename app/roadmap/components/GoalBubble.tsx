@@ -177,10 +177,15 @@ export default function GoalBubble({
           0%, 100% { transform: translateY(0px) scale(1); }
           50%       { transform: translateY(-3px) scale(1.04); }
         }
+        @keyframes gb-card-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.5), 0 8px 32px rgba(0,0,0,0.5); }
+          50%       { box-shadow: 0 0 0 4px rgba(168,85,247,0.2), 0 8px 32px rgba(0,0,0,0.5); }
+        }
         .gb-float      { animation: gb-float 3.8s ease-in-out infinite; }
         .gb-float-slow { animation: gb-float-slow 5.1s ease-in-out infinite; }
         .gb-drift      { animation: gb-drift 6s ease-in-out infinite; }
         .gb-why-bob    { animation: gb-why-bob 2.6s ease-in-out infinite; }
+        .gb-card-pulse { animation: gb-card-pulse 1.8s ease-in-out infinite; }
       `}</style>
 
       <div
@@ -307,30 +312,70 @@ export default function GoalBubble({
           </div>
         )}
 
-        {/* ── Hover mini-index card ─────────────────────────────────── */}
+        {/* ── Hover mini-index card — 4 info boxes, pulsing, clickable ─── */}
         {isHovered && !isDragging && !showWhyTooltip && (
           <div
-            className="absolute left-1/2 -translate-x-1/2 pointer-events-none z-40"
-            style={{ top: containerPad + BUBBLE_SIZE + 8 }}
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-auto z-40 cursor-pointer"
+            style={{ top: containerPad + BUBBLE_SIZE + 10 }}
+            onClick={() => onOpen(goal.id)}
           >
-            <div className="bg-slate-800/95 backdrop-blur-sm text-white text-xs rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[140px]">
-
-              {activities > 0 && (
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                  <span>{done}/{activities} activities done</span>
+            <div
+              className="gb-card-pulse backdrop-blur-md text-xs rounded-2xl overflow-hidden border transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'rgba(15,15,25,0.92)',
+                border: '1px solid rgba(168,85,247,0.35)',
+                minWidth: 180,
+                maxWidth: 220,
+              }}
+            >
+              {/* 4 info rows */}
+              <div className="p-3 space-y-2">
+                {/* Life Category */}
+                {goal.connectedCategories.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(168,85,247,0.7)', minWidth: 52 }}>Category</span>
+                    <span className="text-white/80 font-medium truncate text-[10px]">{goal.connectedCategories[0]}</span>
+                  </div>
+                )}
+                {/* Activities progress */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(52,211,153,0.7)', minWidth: 52 }}>Progress</span>
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <div className="flex-1 h-1 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: activities > 0 ? `${Math.round((done / activities) * 100)}%` : '0%',
+                          background: 'rgba(52,211,153,0.8)',
+                        }}
+                      />
+                    </div>
+                    <span className="text-white/60 text-[10px] flex-shrink-0">{activities > 0 ? `${done}/${activities}` : 'No activities'}</span>
+                  </div>
                 </div>
-              )}
-              {goal.connectedCategories.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {goal.connectedCategories.map(cat => (
-                    <span key={cat} className="bg-white/10 px-2 py-0.5 rounded-full text-[10px] font-medium">{cat}</span>
-                  ))}
-                </div>
-              )}
-              {activities === 0 && goal.connectedCategories.length === 0 && (
-                <span className="text-white/50">Click to add details</span>
-              )}
+                {/* Top Value */}
+                {goal.connectedValues.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'rgba(96,165,250,0.7)', minWidth: 52 }}>Value</span>
+                    <span className="text-white/80 font-medium truncate text-[10px]">{goal.connectedValues[0]}</span>
+                  </div>
+                )}
+                {/* Why snippet */}
+                {goal.why && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: 'rgba(251,191,36,0.7)', minWidth: 52 }}>Why</span>
+                    <span className="text-white/60 text-[10px] leading-relaxed line-clamp-2">{goal.why}</span>
+                  </div>
+                )}
+              </div>
+              {/* Click hint */}
+              <div className="px-3 py-2 flex items-center justify-center gap-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(168,85,247,0.1)' }}>
+                <svg className="w-3 h-3" style={{ color: 'rgba(168,85,247,0.8)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span className="text-[9px] font-semibold" style={{ color: 'rgba(168,85,247,0.8)' }}>Click to open</span>
+              </div>
             </div>
           </div>
         )}

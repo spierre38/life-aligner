@@ -107,6 +107,107 @@ function AmbientOrb({
   );
 }
 
+// ─── By-Category list view ───────────────────────────────────────────────────
+
+function ByCategoryView({
+  roadmap,
+  onOpenGoal,
+}: {
+  roadmap: RoadmapData;
+  onOpenGoal: (id: string) => void;
+}) {
+  const activeGoals = roadmap.goals.filter(g => g.status === 'active');
+
+  // Group goals by their first connected category (or 'Uncategorized')
+  const grouped: Record<string, Goal[]> = {};
+  for (const goal of activeGoals) {
+    const cat = goal.connectedCategories[0] ?? 'Uncategorized';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(goal);
+  }
+  const sections = Object.entries(grouped).sort(([a], [b]) =>
+    a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+  );
+
+  function stringToHue(s: string): number {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+    return Math.abs(h) % 360;
+  }
+
+  return (
+    <div className="absolute inset-0 z-20 overflow-y-auto" style={{ background: 'var(--color-bg)' }}>
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+        {sections.map(([cat, goals]) => {
+          const hue = cat !== 'Uncategorized' ? stringToHue(cat) : 240;
+          return (
+            <div key={cat}>
+              {/* Category header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ background: `hsl(${hue},65%,55%)` }}
+                />
+                <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: `hsl(${hue},55%,60%)` }}>
+                  {cat}
+                </h2>
+                <div className="flex-1 h-px" style={{ background: `hsla(${hue},40%,50%,0.2)` }} />
+                <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
+                  {goals.length} {goals.length === 1 ? 'goal' : 'goals'}
+                </span>
+              </div>
+              {/* Goal rows */}
+              <div className="space-y-2 ml-6">
+                {goals.map(goal => {
+                  const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
+                  const done = acts.filter(a => a.completed).length;
+                  return (
+                    <button
+                      key={goal.id}
+                      onClick={() => onOpenGoal(goal.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99] group"
+                      style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                    >
+                      {/* Color dot */}
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: `hsl(${hue},65%,55%)` }}
+                      />
+                      {/* Title */}
+                      <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                        {goal.title}
+                      </span>
+                      {/* Progress */}
+                      {acts.length > 0 && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="w-16 h-1.5 rounded-full" style={{ background: 'var(--color-surface-2)' }}>
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${Math.round((done / acts.length) * 100)}%`,
+                                background: `hsl(${hue},60%,55%)`,
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>{done}/{acts.length}</span>
+                        </div>
+                      )}
+                      {/* Arrow */}
+                      <svg className="w-4 h-4 opacity-0 group-hover:opacity-60 transition" style={{ color: 'var(--color-text-dim)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── Mobile card ──────────────────────────────────────────────────────────────
 
 function MobileGoalCard({ goal, activityCount, doneCount, onEdit, onDelete }: {
@@ -162,6 +263,7 @@ export default function BubbleCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 800 });
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [viewMode, setViewMode] = useState<'canvas' | 'byCategory'>('canvas');
   const [isMobile, setIsMobile] = useState(false);
   const [hoveredGoalId, setHoveredGoalId] = useState<string | null>(null);
   const [flyTo, setFlyTo] = useState<{ goalId: string; x: number; y: number } | null>(null);
@@ -388,7 +490,33 @@ export default function BubbleCanvas({
           }}
         >
           {/* Add goal FAB */}
-          <div className="fixed top-20 right-6 z-40 flex gap-2">
+          <div className="fixed top-20 right-6 z-40 flex gap-2 items-center">
+            {/* View toggle */}
+            <div
+              className="flex rounded-full overflow-hidden"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            >
+              <button
+                onClick={() => setViewMode('canvas')}
+                className="px-3 py-2 text-xs font-semibold transition-all"
+                style={viewMode === 'canvas'
+                  ? { background: 'rgba(255,255,255,0.12)', color: 'var(--color-text)' }
+                  : { color: 'var(--color-text-dim)' }
+                }
+              >
+                Canvas
+              </button>
+              <button
+                onClick={() => setViewMode('byCategory')}
+                className="px-3 py-2 text-xs font-semibold transition-all"
+                style={viewMode === 'byCategory'
+                  ? { background: 'rgba(168,85,247,0.2)', color: '#c4b5fd' }
+                  : { color: 'var(--color-text-dim)' }
+                }
+              >
+                By Category
+              </button>
+            </div>
             <button
               onClick={onReviewAll}
               aria-label="Review all activities and goals"
@@ -413,6 +541,11 @@ export default function BubbleCanvas({
               Add goal
             </button>
           </div>
+
+          {/* By-Category view overlay */}
+          {viewMode === 'byCategory' && (
+            <ByCategoryView roadmap={roadmap} onOpenGoal={onOpenGoal} />
+          )}
 
           {/* Radial glow center */}
           <div
