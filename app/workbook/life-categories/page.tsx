@@ -84,8 +84,19 @@ type PurposeElement = {
 };
 
 // ============================================================================
-// MAIN COMPONENT
+// SUB-CATEGORY EXAMPLES — per workbook
 // ============================================================================
+
+const SUBCATEGORY_EXAMPLES: Record<string, string[]> = {
+    'Health':        ['Physical Health', 'Mental Health', 'Nutrition', 'Sleep', 'Fitness', 'Preventive Care'],
+    'Relationships': ['Spouse / Partner', 'Children', 'Parents', 'Siblings', 'Close Friends', 'Extended Family'],
+    'Community':     ['Volunteering', 'Civic Engagement', 'Neighborhood', 'Faith Community', 'Clubs & Groups'],
+    'Education':     ['Formal Degree', 'Online Courses', 'Reading', 'Skill Development', 'Mentorship'],
+    'Career':        ['Job Performance', 'Leadership', 'Networking', 'Side Projects', 'Work-Life Balance'],
+    'Financial':     ['Savings', 'Investing', 'Debt Reduction', 'Budgeting', 'Retirement Planning'],
+    'Spirituality':  ['Prayer / Meditation', 'Faith Practice', 'Inner Peace', 'Mindfulness', 'Gratitude'],
+    'Creative':      ['Art & Design', 'Writing', 'Music', 'Photography', 'Crafts & Making'],
+};
 
 export default function LifeCategoriesWorksheet() {
     const router = useRouter();
@@ -987,31 +998,66 @@ export default function LifeCategoriesWorksheet() {
                                                             )}
 
                                                             {isEditing ? (
-                                                                <div className="flex gap-1.5">
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="e.g., Physical Health, Mental Health..."
-                                                                        value={customSubCategory}
-                                                                        onChange={(e) => setCustomSubCategory(e.target.value)}
-                                                                        onKeyDown={(e) => e.key === 'Enter' && addSubCategory(category.name)}
-                                                                        className="flex-1 px-3 py-1.5 rounded-lg focus:outline-none text-xs transition"
-                                                                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
-                                                                        autoFocus
-                                                                    />
-                                                                    <button
-                                                                        onClick={() => addSubCategory(category.name)}
-                                                                        className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
-                                                                        style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
-                                                                    >
-                                                                        ✓
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => { setEditingCategory(null); setCustomSubCategory(''); }}
-                                                                        className="px-3 py-1.5 rounded-lg text-xs transition hover:opacity-70"
-                                                                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
-                                                                    >
-                                                                        ✕
-                                                                    </button>
+                                                                <div className="space-y-2">
+                                                                    {/* Suggestion chips */}
+                                                                    {(() => {
+                                                                        const suggestions = (SUBCATEGORY_EXAMPLES[category.name] || []).filter(
+                                                                            s => !category.subCategories.includes(s)
+                                                                        );
+                                                                        if (suggestions.length === 0) return null;
+                                                                        return (
+                                                                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                                                                {suggestions.slice(0, 4).map(s => (
+                                                                                    <button
+                                                                                        key={s}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setCategoryDetails(prev => prev.map(cat =>
+                                                                                                cat.name === category.name
+                                                                                                    ? { ...cat, subCategories: [...cat.subCategories, s] }
+                                                                                                    : cat
+                                                                                            ));
+                                                                                        }}
+                                                                                        className="px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all hover:scale-105 active:scale-95"
+                                                                                        style={{
+                                                                                            background: colors.glow,
+                                                                                            border: `1px solid ${colors.border}`,
+                                                                                            color: colors.accent,
+                                                                                        }}
+                                                                                    >
+                                                                                        + {s}
+                                                                                    </button>
+                                                                                ))}
+                                                                            </div>
+                                                                        );
+                                                                    })()}
+
+                                                                    <div className="flex gap-1.5">
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder={`e.g., ${(SUBCATEGORY_EXAMPLES[category.name] || ['Physical Health, Mental Health'])[0]}...`}
+                                                                            value={customSubCategory}
+                                                                            onChange={(e) => setCustomSubCategory(e.target.value)}
+                                                                            onKeyDown={(e) => e.key === 'Enter' && addSubCategory(category.name)}
+                                                                            className="flex-1 px-3 py-1.5 rounded-lg focus:outline-none text-xs transition"
+                                                                            style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+                                                                            autoFocus
+                                                                        />
+                                                                        <button
+                                                                            onClick={() => addSubCategory(category.name)}
+                                                                            className="px-3 py-1.5 rounded-lg text-xs font-bold transition hover:opacity-80"
+                                                                            style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
+                                                                        >
+                                                                            ✓
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => { setEditingCategory(null); setCustomSubCategory(''); }}
+                                                                            className="px-3 py-1.5 rounded-lg text-xs transition hover:opacity-70"
+                                                                            style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             ) : (
                                                                 <button
