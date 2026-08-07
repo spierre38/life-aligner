@@ -46,48 +46,72 @@ export function RealSocialProof() {
                     </div>
                 </div>
 
-                {/* Real Stats */}
+                {/* Real Stats — dashboard card style */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-10 sm:mt-16">
                     <div
-                        className="text-center rounded-2xl p-5 sm:p-8 transition-all hover:-translate-y-1"
-                        style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}
+                        className="rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:scale-[1.01]"
+                        style={{ background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(168,85,247,0.25)', boxShadow: '0 0 40px rgba(168,85,247,0.08)' }}
                     >
-                        <div
-                            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
-                            style={{ background: 'linear-gradient(135deg, #3b82f6, #a855f7)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
-                        >
-                            40+
+                        <div className="text-center p-5 sm:p-8">
+                            <div
+                                className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
+                                style={{ background: 'linear-gradient(135deg, #a855f7, #f97316)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
+                            >
+                                40+
+                            </div>
+                            <p className="text-white/70 text-base sm:text-lg">Years of Real-World Testing</p>
+                            <p className="text-xs sm:text-sm text-white/30 mt-2">Created at age 19, refined over decades</p>
                         </div>
-                        <p className="text-white/70 text-base sm:text-lg">Years of Real-World Testing</p>
-                        <p className="text-xs sm:text-sm text-white/30 mt-2">Created at age 19, refined over decades</p>
+                        <div className="relative h-20 overflow-hidden">
+                            <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.6)' }} />
+                            <div className="absolute bottom-0 left-1/4 w-28 h-16 rounded-full blur-2xl" style={{ background: 'rgba(168,85,247,0.55)' }} />
+                            <div className="absolute bottom-0 left-1/2 w-24 h-14 rounded-full blur-2xl" style={{ background: 'rgba(249,115,22,0.45)' }} />
+                            <div className="absolute bottom-0 right-1/4 w-20 h-12 rounded-full blur-2xl" style={{ background: 'rgba(236,72,153,0.35)' }} />
+                        </div>
                     </div>
 
                     <div
-                        className="text-center rounded-2xl p-5 sm:p-8 transition-all hover:-translate-y-1"
-                        style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.15)' }}
+                        className="rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:scale-[1.01]"
+                        style={{ background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(20,184,166,0.25)', boxShadow: '0 0 40px rgba(20,184,166,0.08)' }}
                     >
-                        <div
-                            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
-                            style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
-                        >
-                            $2B+
+                        <div className="text-center p-5 sm:p-8">
+                            <div
+                                className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
+                                style={{ background: 'linear-gradient(135deg, #14b8a6, #3b82f6)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
+                            >
+                                $2B+
+                            </div>
+                            <p className="text-white/70 text-base sm:text-lg">Company Built Using This Framework</p>
+                            <p className="text-xs sm:text-sm text-white/30 mt-2">Tim grew EBSCO using these exact tools</p>
                         </div>
-                        <p className="text-white/70 text-base sm:text-lg">Company Built Using This Framework</p>
-                        <p className="text-xs sm:text-sm text-white/30 mt-2">Tim grew EBSCO using these exact tools</p>
+                        <div className="relative h-20 overflow-hidden">
+                            <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.6)' }} />
+                            <div className="absolute bottom-0 left-1/4 w-28 h-16 rounded-full blur-2xl" style={{ background: 'rgba(20,184,166,0.55)' }} />
+                            <div className="absolute bottom-0 left-1/2 w-24 h-14 rounded-full blur-2xl" style={{ background: 'rgba(16,185,129,0.4)' }} />
+                            <div className="absolute bottom-0 right-1/4 w-20 h-12 rounded-full blur-2xl" style={{ background: 'rgba(59,130,246,0.3)' }} />
+                        </div>
                     </div>
 
                     <div
-                        className="text-center rounded-2xl p-5 sm:p-8 transition-all hover:-translate-y-1"
-                        style={{ background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.15)' }}
+                        className="rounded-2xl overflow-hidden transition-all hover:-translate-y-1 hover:scale-[1.01]"
+                        style={{ background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(59,130,246,0.25)', boxShadow: '0 0 40px rgba(59,130,246,0.08)' }}
                     >
-                        <div
-                            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
-                            style={{ background: 'linear-gradient(135deg, #ec4899, #f97316)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
-                        >
-                            Proven
+                        <div className="text-center p-5 sm:p-8">
+                            <div
+                                className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
+                                style={{ background: 'linear-gradient(135deg, #3b82f6, #14b8a6)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}
+                            >
+                                Proven
+                            </div>
+                            <p className="text-white/70 text-base sm:text-lg">Time-Tested Framework</p>
+                            <p className="text-xs sm:text-sm text-white/30 mt-2">Validated by decades of consistent results</p>
                         </div>
-                        <p className="text-white/70 text-base sm:text-lg">Time-Tested Framework</p>
-                        <p className="text-xs sm:text-sm text-white/30 mt-2">Validated by decades of consistent results</p>
+                        <div className="relative h-20 overflow-hidden">
+                            <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.6)' }} />
+                            <div className="absolute bottom-0 left-1/4 w-28 h-16 rounded-full blur-2xl" style={{ background: 'rgba(59,130,246,0.5)' }} />
+                            <div className="absolute bottom-0 left-1/2 w-24 h-14 rounded-full blur-2xl" style={{ background: 'rgba(99,102,241,0.4)' }} />
+                            <div className="absolute bottom-0 right-1/4 w-20 h-12 rounded-full blur-2xl" style={{ background: 'rgba(14,165,233,0.35)' }} />
+                        </div>
                     </div>
                 </div>
             </div>

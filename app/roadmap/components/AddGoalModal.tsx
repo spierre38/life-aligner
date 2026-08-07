@@ -295,7 +295,7 @@ export default function AddGoalModal({
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. Join 3 new communities"
+              placeholder="Start with an action (e.g. 'Run a marathon')"
               maxLength={140}
               required
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
@@ -309,6 +309,9 @@ export default function AddGoalModal({
               onBlur={e =>  { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.05)'; }}
             />
             <p className="text-right text-xs mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>{title.length}/140</p>
+            <p className="text-xs mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              💡 Goals can also be <strong style={{ color: 'rgba(255,255,255,0.5)' }}>Behavior Changes</strong> — e.g. &ldquo;Build a daily reading habit&rdquo; or &ldquo;Stop procrastinating.&rdquo; You&apos;ll set activities to support it.
+            </p>
           </div>
 
           {/* 2. LifeFrame connections → click to inject into why */}

@@ -447,40 +447,74 @@ export default function Home() {
               <div className="space-y-5">
                 <Reveal delay={0}>
                   <div
-                    className="p-5 sm:p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1"
-                    style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', boxShadow: '0 0 30px rgba(168,85,247,0.06)' }}
+                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01]"
+                    style={{ background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(168,85,247,0.25)', boxShadow: '0 0 40px rgba(168,85,247,0.08)' }}
                   >
-                    <h3 className="text-xl sm:text-2xl font-bold text-white/90 mb-3 sm:mb-4">Your Values</h3>
-                    <p className="text-white/45">
-                      The principles and standards of behavior that guide your life decisions
-                      and bring you deep satisfaction.
-                    </p>
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white" style={{ background: 'rgba(168,85,247,0.3)', border: '1px solid rgba(168,85,247,0.4)' }}>1</div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-white/90">Your Values</h3>
+                      </div>
+                      <p className="text-white/50 text-sm leading-relaxed">
+                        The principles and standards of behavior that guide your life decisions
+                        and bring you deep satisfaction.
+                      </p>
+                    </div>
+                    {/* Dashboard-style glow orb */}
+                    <div className="relative h-24 overflow-hidden">
+                      <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.6)' }} />
+                      <div className="absolute bottom-0 left-1/4 w-32 h-20 rounded-full blur-2xl" style={{ background: 'rgba(168,85,247,0.5)' }} />
+                      <div className="absolute bottom-0 left-1/2 w-28 h-16 rounded-full blur-2xl" style={{ background: 'rgba(249,115,22,0.45)' }} />
+                      <div className="absolute bottom-0 right-1/4 w-24 h-14 rounded-full blur-2xl" style={{ background: 'rgba(236,72,153,0.35)' }} />
+                    </div>
                   </div>
                 </Reveal>
 
                 <Reveal delay={100}>
                   <div
-                    className="p-5 sm:p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1"
-                    style={{ background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.2)', boxShadow: '0 0 30px rgba(236,72,153,0.06)' }}
+                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01]"
+                    style={{ background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(20,184,166,0.25)', boxShadow: '0 0 40px rgba(20,184,166,0.08)' }}
                   >
-                    <h3 className="text-xl sm:text-2xl font-bold text-white/90 mb-3 sm:mb-4">Your Interests</h3>
-                    <p className="text-white/45">
-                      Activities that bring you joy, rejuvenation, and allow you to deploy
-                      your creativity to benefit others.
-                    </p>
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white" style={{ background: 'rgba(20,184,166,0.3)', border: '1px solid rgba(20,184,166,0.4)' }}>2</div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-white/90">Your Interests</h3>
+                      </div>
+                      <p className="text-white/50 text-sm leading-relaxed">
+                        Activities that bring you joy, rejuvenation, and allow you to deploy
+                        your creativity to benefit others.
+                      </p>
+                    </div>
+                    <div className="relative h-24 overflow-hidden">
+                      <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.6)' }} />
+                      <div className="absolute bottom-0 left-1/4 w-32 h-20 rounded-full blur-2xl" style={{ background: 'rgba(20,184,166,0.55)' }} />
+                      <div className="absolute bottom-0 left-1/2 w-28 h-16 rounded-full blur-2xl" style={{ background: 'rgba(16,185,129,0.4)' }} />
+                      <div className="absolute bottom-0 right-1/4 w-24 h-14 rounded-full blur-2xl" style={{ background: 'rgba(59,130,246,0.3)' }} />
+                    </div>
                   </div>
                 </Reveal>
 
                 <Reveal delay={200}>
                   <div
-                    className="p-5 sm:p-7 rounded-2xl transition-all duration-300 hover:-translate-y-1"
-                    style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)', boxShadow: '0 0 30px rgba(251,191,36,0.06)' }}
+                    className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01]"
+                    style={{ background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(59,130,246,0.25)', boxShadow: '0 0 40px rgba(59,130,246,0.08)' }}
                   >
-                    <h3 className="text-xl sm:text-2xl font-bold text-white/90 mb-3 sm:mb-4">Your Purpose</h3>
-                    <p className="text-white/45">
-                      Long-term goals that are both meaningful to you and beneficial to others,
-                      driven by your deeply held beliefs.
-                    </p>
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white" style={{ background: 'rgba(59,130,246,0.3)', border: '1px solid rgba(59,130,246,0.4)' }}>3</div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-white/90">Your Purpose</h3>
+                      </div>
+                      <p className="text-white/50 text-sm leading-relaxed">
+                        Long-term goals that are both meaningful to you and beneficial to others,
+                        driven by your deeply held beliefs.
+                      </p>
+                    </div>
+                    <div className="relative h-24 overflow-hidden">
+                      <div className="absolute inset-0" style={{ background: 'rgba(10,10,20,0.6)' }} />
+                      <div className="absolute bottom-0 left-1/4 w-32 h-20 rounded-full blur-2xl" style={{ background: 'rgba(59,130,246,0.5)' }} />
+                      <div className="absolute bottom-0 left-1/2 w-28 h-16 rounded-full blur-2xl" style={{ background: 'rgba(99,102,241,0.4)' }} />
+                      <div className="absolute bottom-0 right-1/4 w-24 h-14 rounded-full blur-2xl" style={{ background: 'rgba(14,165,233,0.35)' }} />
+                    </div>
                   </div>
                 </Reveal>
               </div>

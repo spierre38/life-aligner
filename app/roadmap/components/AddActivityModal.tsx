@@ -172,7 +172,7 @@ export default function AddActivityModal({
                 <div className="mt-3 space-y-2">
                   {savedCategories.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-bold text-purple-600 uppercase mb-1">Categories</p>
+                      <p className="text-[10px] font-bold text-purple-600 uppercase mb-1">Life Categories</p>
                       <div className="flex flex-wrap gap-1">
                         {savedCategories.map(c => (
                           <span key={c} className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-[10px] font-medium">{c}</span>

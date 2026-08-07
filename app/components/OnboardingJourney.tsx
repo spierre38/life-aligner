@@ -474,7 +474,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                         <div className="text-center mb-8">
                             <p className="text-xs font-bold tracking-[0.3em] uppercase text-gray-400 mb-2">Your Path Forward</p>
                             <h2 className="text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-cormorant), Georgia, serif' }}>Journey to Contentment</h2>
-                            <p className="text-gray-500 text-sm">9 principles. One transformed life.</p>
+                            <p className="text-gray-500 text-sm">9 principles to build a life around.</p>
                         </div>
                         <div className="grid grid-cols-3 gap-3 mb-8">
                             {JOURNEY_STOPS.map((stop, i) => (
@@ -532,6 +532,11 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
                                 </div>
                                 {hasQuestion ? (
                                     <>
+                                        {stop.field === 'marital_status' && (
+                                            <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2 mb-3 leading-relaxed">
+                                                We ask a few personal questions to personalize your experience. You can skip any you prefer not to answer.
+                                            </p>
+                                        )}
                                         <p className="text-sm font-medium text-gray-700 mb-4">{stop.question}</p>
                                         <div className="space-y-2 mb-4">
                                             {stop.options!.map(opt => (

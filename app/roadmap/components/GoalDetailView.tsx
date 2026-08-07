@@ -111,7 +111,7 @@ function AiCoachPanel({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             {SPARKLE_ICON}
-            <h3 className="text-white font-bold text-sm">Tim's Coaching</h3>
+            <h3 className="text-white font-bold text-sm">Coaching</h3>
           </div>
           {status === 'done' && (
             <button
@@ -537,7 +537,7 @@ export default function GoalDetailView({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="hidden sm:inline">Back to canvas</span>
+            <span className="hidden sm:inline">Back to Goals</span>
             <span className="sm:hidden">Back</span>
           </button>
           <span className="text-xs font-medium text-white/40 truncate max-w-[50%] text-right">{goal.title}</span>

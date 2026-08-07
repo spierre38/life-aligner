@@ -85,7 +85,7 @@ export default function WelcomeAnimation({ onComplete, userName }: WelcomeAnimat
                             </div>
                             <h2 className="text-5xl font-bold text-gray-900 mb-4">Tim Collins</h2>
                             <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                                Built a <strong className="text-blue-600">$2B company</strong> using these 9 principles.<br />
+                                Built a <strong className="text-blue-600">$2B company</strong> using these 9 principles to build a life around.<br />
                                 Now he&apos;s sharing the complete roadmap with you.
                             </p>
                             <div className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl shadow-lg">
