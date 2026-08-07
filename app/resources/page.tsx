@@ -123,7 +123,7 @@ export default function ResourcesPage() {
             description: 'Common questions answered',
             icon: '❓',
             url: '/faq',
-            available: false
+            available: true
         },
         {
             title: 'Schedule 1-on-1 Coaching',
