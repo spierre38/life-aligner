@@ -107,7 +107,91 @@ function AmbientOrb({
   );
 }
 
-// ─── By-Category list view ───────────────────────────────────────────────────
+// ─── By-Category bubble view ──────────────────────────────────────────────────
+
+const BLOB_PATHS_MINI = [
+  'M 52,9 C 76,6 94,24 91,50 C 88,76 68,95 44,91 C 20,87 6,67 9,43 C 12,19 31,12 52,9 Z',
+  'M 50,8 C 74,5 93,22 94,46 C 95,70 78,92 54,92 C 30,92 7,76 8,52 C 9,28 29,11 50,8 Z',
+  'M 46,9 C 70,6 90,26 88,52 C 86,78 64,96 40,91 C 16,86 5,65 9,41 C 13,17 26,12 46,9 Z',
+  'M 56,8 C 79,9 94,30 91,54 C 88,78 69,95 45,91 C 21,87 5,68 9,44 C 13,20 35,7 56,8 Z',
+];
+
+function GoalMicroBubble({
+  goal,
+  hue,
+  idx,
+  activities,
+  done,
+  onOpen,
+}: {
+  goal: Goal;
+  hue: number;
+  idx: number;
+  activities: number;
+  done: number;
+  onOpen: (id: string) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const blobPath = BLOB_PATHS_MINI[goal.blobVariant ?? (idx % 4)];
+  const gradId = `cat-grad-${goal.id.slice(0, 8)}`;
+  const BSIZE = 100;
+
+  return (
+    <div className="relative flex flex-col items-center" style={{ width: BSIZE + 24 }}>
+      <style>{`
+        @keyframes micro-float-${idx % 3} {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(${-4 - (idx % 3) * 2}px); }
+        }
+        .micro-float-${idx % 3} { animation: micro-float-${idx % 3} ${3.5 + (idx % 3) * 0.8}s ease-in-out infinite; }
+      `}</style>
+      <button
+        onClick={() => onOpen(goal.id)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        className={`relative cursor-pointer micro-float-${idx % 3} transition-transform duration-200 ${hovered ? 'scale-110' : 'scale-100'}`}
+        style={{ width: BSIZE, height: BSIZE, background: 'none', border: 'none', padding: 0 }}
+        aria-label={`Open goal: ${goal.title}`}
+      >
+        <svg viewBox="0 0 100 100" width={BSIZE} height={BSIZE} aria-hidden>
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={`hsl(${hue}, 65%, ${hovered ? 60 : 52}%)`} />
+              <stop offset="100%" stopColor={`hsl(${(hue + 28) % 360}, 75%, ${hovered ? 45 : 38}%)`} />
+            </linearGradient>
+            <radialGradient id={`sheen-c-${goal.id.slice(0,6)}`} cx="30%" cy="25%" r="50%">
+              <stop offset="0%" stopColor="white" />
+              <stop offset="100%" stopColor="transparent" />
+            </radialGradient>
+          </defs>
+          <path d={blobPath} fill={`url(#${gradId})`} />
+          <path d={blobPath} fill={`url(#sheen-c-${goal.id.slice(0,6)})`} opacity={hovered ? 0.22 : 0.1} />
+        </svg>
+        {/* Title overlay */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2"
+        >
+          <p className="text-white text-[10px] font-bold text-center leading-tight drop-shadow-sm"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)', maxWidth: '80%' }}>
+            {goal.title.length > 28 ? goal.title.slice(0, 26) + '…' : goal.title}
+          </p>
+          {activities > 0 && (
+            <p className="text-white/70 text-[8px] font-medium mt-0.5">{done}/{activities}</p>
+          )}
+        </div>
+      </button>
+      {/* Hover tooltip */}
+      {hovered && goal.connectedCategories.length > 1 && (
+        <div
+          className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-[9px] font-semibold px-2 py-1 rounded-lg z-50 whitespace-nowrap pointer-events-none"
+          style={{ background: 'rgba(0,0,0,0.8)', color: '#fff' }}
+        >
+          {goal.connectedCategories.slice(1).join(' · ')}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ByCategoryView({
   roadmap,
@@ -129,84 +213,96 @@ function ByCategoryView({
     a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
   );
 
-  function stringToHue(s: string): number {
+  function catHue(name: string): number {
     let h = 5381;
-    for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+    for (let i = 0; i < name.length; i++) h = (h * 33) ^ name.charCodeAt(i);
     return Math.abs(h) % 360;
   }
 
   return (
-    <div className="absolute inset-0 z-20 overflow-y-auto" style={{ background: 'var(--color-bg)' }}>
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-        {sections.map(([cat, goals]) => {
-          const hue = cat !== 'Uncategorized' ? stringToHue(cat) : 240;
-          return (
-            <div key={cat}>
-              {/* Category header */}
-              <div className="flex items-center gap-3 mb-3">
+    <div
+      className="absolute inset-0 z-20 overflow-y-auto pt-20 pb-16"
+      style={{ background: 'var(--mesh-canvas, var(--color-bg))' }}
+    >
+      {/* Radial glow */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(139,92,246,0.07) 0%, transparent 70%)' }}
+      />
+
+      <div className="relative max-w-6xl mx-auto px-4">
+        {/* Grid of category zones */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sections.map(([cat, goals]) => {
+            const hue = cat !== 'Uncategorized' ? catHue(cat) : 240;
+            let globalIdx = 0;
+            return (
+              <div
+                key={cat}
+                className="rounded-3xl overflow-hidden"
+                style={{
+                  background: `radial-gradient(ellipse 80% 60% at 50% 20%, hsla(${hue},60%,40%,0.12) 0%, transparent 70%), var(--color-surface)`,
+                  border: `1px solid hsla(${hue},50%,50%,0.2)`,
+                  boxShadow: `0 0 40px hsla(${hue},60%,40%,0.08)`,
+                  minHeight: 180,
+                }}
+              >
+                {/* Zone header */}
                 <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ background: `hsl(${hue},65%,55%)` }}
-                />
-                <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: `hsl(${hue},55%,60%)` }}>
-                  {cat}
-                </h2>
-                <div className="flex-1 h-px" style={{ background: `hsla(${hue},40%,50%,0.2)` }} />
-                <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
-                  {goals.length} {goals.length === 1 ? 'goal' : 'goals'}
-                </span>
-              </div>
-              {/* Goal rows */}
-              <div className="space-y-2 ml-6">
-                {goals.map(goal => {
-                  const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
-                  const done = acts.filter(a => a.completed).length;
-                  return (
-                    <button
-                      key={goal.id}
-                      onClick={() => onOpenGoal(goal.id)}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all hover:scale-[1.01] active:scale-[0.99] group"
-                      style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                  className="px-5 py-4 flex items-center justify-between"
+                  style={{
+                    borderBottom: `1px solid hsla(${hue},50%,50%,0.15)`,
+                    background: `hsla(${hue},60%,40%,0.08)`,
+                  }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ background: `hsl(${hue},65%,55%)`, boxShadow: `0 0 8px hsl(${hue},65%,55%)` }}
+                    />
+                    <h2
+                      className="text-xs font-bold uppercase tracking-widest"
+                      style={{ color: `hsl(${hue},55%,65%)` }}
                     >
-                      {/* Color dot */}
-                      <div
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: `hsl(${hue},65%,55%)` }}
+                      {cat}
+                    </h2>
+                  </div>
+                  <span
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: `hsla(${hue},60%,50%,0.15)`, color: `hsl(${hue},55%,65%)` }}
+                  >
+                    {goals.length} {goals.length === 1 ? 'goal' : 'goals'}
+                  </span>
+                </div>
+
+                {/* Bubble cluster */}
+                <div className="p-4 flex flex-wrap gap-3 justify-center">
+                  {goals.map((goal, i) => {
+                    const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
+                    const done = acts.filter(a => a.completed).length;
+                    const nodeIdx = globalIdx++;
+                    return (
+                      <GoalMicroBubble
+                        key={goal.id}
+                        goal={goal}
+                        hue={hue}
+                        idx={nodeIdx}
+                        activities={acts.length}
+                        done={done}
+                        onOpen={onOpenGoal}
                       />
-                      {/* Title */}
-                      <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                        {goal.title}
-                      </span>
-                      {/* Progress */}
-                      {acts.length > 0 && (
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="w-16 h-1.5 rounded-full" style={{ background: 'var(--color-surface-2)' }}>
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${Math.round((done / acts.length) * 100)}%`,
-                                background: `hsl(${hue},60%,55%)`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs" style={{ color: 'var(--color-text-dim)' }}>{done}/{acts.length}</span>
-                        </div>
-                      )}
-                      {/* Arrow */}
-                      <svg className="w-4 h-4 opacity-0 group-hover:opacity-60 transition" style={{ color: 'var(--color-text-dim)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
+
 
 // ─── Mobile card ──────────────────────────────────────────────────────────────
 
