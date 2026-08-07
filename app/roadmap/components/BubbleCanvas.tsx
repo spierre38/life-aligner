@@ -128,70 +128,6 @@ const FTUE_BLOB_PATHS = [
   'M 56,8 C 79,9 94,30 91,54 C 88,78 69,95 45,91 C 21,87 5,68 9,44 C 13,20 35,7 56,8 Z',
 ];
 
-function FTUEStyleBubble({
-  label,
-  subtitle,
-  gradIdx,
-  blobIdx,
-  size,
-  animDelay,
-  animClass,
-  onClick,
-}: {
-  label: string;
-  subtitle?: string;
-  gradIdx: number;
-  blobIdx: number;
-  size: number;
-  animDelay: string;
-  animClass: string;
-  onClick: () => void;
-}) {
-  const grad = CAT_GRADIENTS[gradIdx % CAT_GRADIENTS.length];
-  const blob = FTUE_BLOB_PATHS[blobIdx % FTUE_BLOB_PATHS.length];
-  const gradId = `bycat-grad-${gradIdx}-${blobIdx}-${label.slice(0,4).replace(/\s/g,'')}`;
-  const sheenId = `bycat-sheen-${gradIdx}-${label.slice(0,4).replace(/\s/g,'')}`;
-
-  return (
-    <div className={animClass} style={{ animationDelay: animDelay }}>
-      <button
-        onClick={onClick}
-        className="group relative focus:outline-none rounded-full"
-        aria-label={label}
-        style={{ width: size, height: size }}
-      >
-        <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden>
-          <defs>
-            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={grad.from} />
-              <stop offset="100%" stopColor={grad.to} />
-            </linearGradient>
-            <radialGradient id={sheenId} cx="30%" cy="25%" r="50%">
-              <stop offset="0%" stopColor="white" />
-              <stop offset="100%" stopColor="transparent" />
-            </radialGradient>
-          </defs>
-          {/* Shadow */}
-          <path d={blob} fill="rgba(0,0,0,0.25)" transform="translate(3,5) scale(0.97)" className="transition-opacity duration-300 opacity-60 group-hover:opacity-80" />
-          {/* Fill */}
-          <path d={blob} fill={`url(#${gradId})`} className="transition-all duration-300" />
-          {/* Sheen */}
-          <path d={blob} fill={`url(#${sheenId})`} opacity="0.13" className="transition-opacity duration-300 group-hover:opacity-22" />
-        </svg>
-        <span
-          className="absolute inset-0 flex flex-col items-center justify-center text-white font-bold text-center leading-tight px-2 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
-          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
-        >
-          <span style={{ fontSize: size >= 130 ? 14 : 10 }}>{label.length > 18 ? label.slice(0,16)+'…' : label}</span>
-          {subtitle && (
-            <span className="mt-0.5 opacity-70" style={{ fontSize: size >= 130 ? 10 : 8 }}>{subtitle}</span>
-          )}
-        </span>
-      </button>
-    </div>
-  );
-}
-
 function ByCategoryView({
   roadmap,
   onOpenGoal,
@@ -199,126 +135,221 @@ function ByCategoryView({
   roadmap: RoadmapData;
   onOpenGoal: (id: string) => void;
 }) {
+  // ── drill-down state ──────────────────────────────────────────────────────
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   const activeGoals = roadmap.goals.filter(g => g.status === 'active');
 
-  // Group goals by first connected category
-  const grouped: Record<string, Goal[]> = {};
-  for (const goal of activeGoals) {
-    const cat = goal.connectedCategories[0] ?? 'Uncategorized';
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(goal);
-  }
-  const sections = Object.entries(grouped).sort(([a], [b]) =>
-    a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
+  // Build the list of categories that actually have goals
+  const categoriesWithGoals = (() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    for (const goal of activeGoals) {
+      const cat = goal.connectedCategories[0] ?? 'Uncategorized';
+      if (!seen.has(cat)) { seen.add(cat); list.push(cat); }
+    }
+    return list.sort((a, b) => a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : 0);
+  })();
+
+  const goalsForCategory = (cat: string) =>
+    activeGoals.filter(g => (g.connectedCategories[0] ?? 'Uncategorized') === cat);
+
+  const catIdx = (cat: string) => Math.max(categoriesWithGoals.indexOf(cat), 0);
+
+  // ── shared styles ─────────────────────────────────────────────────────────
+  const shared = (
+    <style>{`
+      @keyframes bycat-float {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50%       { transform: translateY(-10px) scale(1.02); }
+      }
+      @keyframes bycat-float-slow {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50%       { transform: translateY(-6px) scale(1.01); }
+      }
+      .bycat-float      { animation: bycat-float 3.6s ease-in-out infinite; }
+      .bycat-float-slow { animation: bycat-float-slow 4.8s ease-in-out infinite; }
+    `}</style>
   );
 
-  return (
-    <div
-      className="absolute inset-0 z-20 overflow-y-auto pt-24 pb-20"
-      style={{ background: 'var(--mesh-canvas, var(--color-bg))' }}
-    >
-      <style>{`
-        @keyframes bycat-float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50%       { transform: translateY(-8px) scale(1.02); }
-        }
-        @keyframes bycat-float-slow {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50%       { transform: translateY(-5px) scale(1.01); }
-        }
-        .bycat-float      { animation: bycat-float 3.6s ease-in-out infinite; }
-        .bycat-float-slow { animation: bycat-float-slow 4.8s ease-in-out infinite; }
-      `}</style>
-
-      {/* Ambient glow */}
+  // ── LEVEL 1 — All categories ──────────────────────────────────────────────
+  if (!selectedCategory) {
+    return (
       <div
-        className="pointer-events-none fixed inset-0"
-        style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(139,92,246,0.08) 0%, transparent 70%)' }}
-      />
+        className="absolute inset-0 z-20 overflow-y-auto pt-navbar pb-20"
+        style={{ background: 'var(--mesh-canvas, var(--color-bg))' }}
+      >
+        {shared}
+        <div className="pointer-events-none fixed inset-0" style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(139,92,246,0.08) 0%, transparent 70%)' }} />
 
-      <div className="relative max-w-5xl mx-auto px-5 space-y-16">
-        {sections.map(([cat, goals], catIdx) => (
-          <div key={cat}>
-            {/* Category label + bubbles in one flowing row */}
-            <div className="flex flex-wrap items-center gap-6 sm:gap-8 justify-center">
-              {/* Large category "header" bubble — non-clickable, just a label */}
-              <div className="flex flex-col items-center gap-2">
-                <div className="bycat-float" style={{ animationDelay: `${catIdx * 0.3}s` }}>
-                  <div className="relative" style={{ width: 140, height: 140 }}>
-                    <svg viewBox="0 0 100 100" width={140} height={140} aria-hidden>
+        <div className="relative max-w-5xl mx-auto px-5 py-10 md:py-16">
+          {/* Header */}
+          <div className="text-center mb-10 md:mb-14">
+            <p className="text-xs font-bold tracking-[0.3em] uppercase mb-3" style={{ color: 'var(--color-text-dim)' }}>By Category</p>
+            <h1 className="text-3xl md:text-5xl font-bold mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+              Your Life Categories
+            </h1>
+            <p className="text-sm md:text-base" style={{ color: 'var(--color-text-muted)' }}>
+              Pick a category to see its goals.
+            </p>
+          </div>
+
+          {/* Category bubbles — FTUE-style grid */}
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8" role="list" aria-label="Life categories">
+            {categoriesWithGoals.map((cat, i) => {
+              const goals = goalsForCategory(cat);
+              const grad = CAT_GRADIENTS[i % CAT_GRADIENTS.length];
+              const blob = FTUE_BLOB_PATHS[i % 4];
+              const gradId = `lvl1-grad-${i}`;
+              const sheenId = `lvl1-sheen-${i}`;
+              const delay = `${(i * 0.45).toFixed(2)}s`;
+              const animCls = i % 2 === 0 ? 'bycat-float' : 'bycat-float-slow';
+              return (
+                <div key={cat} role="listitem" className={animCls} style={{ animationDelay: delay }}>
+                  <button
+                    onClick={() => setSelectedCategory(cat)}
+                    aria-label={`View ${cat} goals`}
+                    className="group relative focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-400 rounded-full"
+                  >
+                    <svg viewBox="0 0 100 100" className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 transition-transform duration-300 group-hover:scale-110 group-active:scale-95" aria-hidden>
                       <defs>
-                        <linearGradient id={`cat-head-${catIdx}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor={CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].from} />
-                          <stop offset="100%" stopColor={CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].to} />
+                        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={grad.from} />
+                          <stop offset="100%" stopColor={grad.to} />
                         </linearGradient>
-                        <radialGradient id={`cat-sheen-${catIdx}`} cx="30%" cy="25%" r="50%">
+                        <radialGradient id={sheenId} cx="30%" cy="25%" r="50%">
                           <stop offset="0%" stopColor="white" />
                           <stop offset="100%" stopColor="transparent" />
                         </radialGradient>
                       </defs>
-                      <path d={FTUE_BLOB_PATHS[catIdx % 4]} fill="rgba(0,0,0,0.2)" transform="translate(3,5) scale(0.97)" opacity="0.6" />
-                      <path d={FTUE_BLOB_PATHS[catIdx % 4]} fill={`url(#cat-head-${catIdx})`} />
-                      <path d={FTUE_BLOB_PATHS[catIdx % 4]} fill={`url(#cat-sheen-${catIdx})`} opacity="0.15" />
+                      <path d={blob} fill="rgba(0,0,0,0.25)" transform="translate(3,5) scale(0.97)" className="opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+                      <path d={blob} fill={`url(#${gradId})`} className="transition-all duration-300" />
+                      <path d={blob} fill={`url(#${sheenId})`} opacity="0.12" className="group-hover:opacity-22 transition-opacity duration-300" />
                     </svg>
-                    <span
-                      className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-3 pointer-events-none"
-                      style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
-                    >
-                      <span className="text-sm font-bold leading-tight">{cat}</span>
-                      <span className="text-[10px] mt-1 opacity-70">{goals.length} {goals.length === 1 ? 'goal' : 'goals'}</span>
+                    <span className="absolute inset-0 flex flex-col items-center justify-center text-white text-center leading-tight px-3 drop-shadow-sm">
+                      <span className="text-sm md:text-base font-bold">{cat}</span>
+                      <span className="text-[10px] md:text-xs mt-1 opacity-70">{goals.length} {goals.length === 1 ? 'goal' : 'goals'}</span>
                     </span>
-                  </div>
+                  </button>
                 </div>
-                {/* Connector dots */}
-                <div className="flex gap-1">
-                  {[0,1,2].map(i => (
-                    <div
-                      key={i}
-                      className="w-1 h-1 rounded-full"
-                      style={{ background: CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].from, opacity: 0.4 - i * 0.1 }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Goal bubbles — smaller, same style */}
-              <div className="flex flex-wrap gap-4 sm:gap-6 justify-center items-center flex-1">
-                {goals.map((goal, gIdx) => {
-                  const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
-                  const done = acts.filter(a => a.completed).length;
-                  const subtitle = acts.length > 0 ? `${done}/${acts.length}` : undefined;
-                  return (
-                    <FTUEStyleBubble
-                      key={goal.id}
-                      label={goal.title}
-                      subtitle={subtitle}
-                      gradIdx={catIdx}
-                      blobIdx={(gIdx + 1) % 4}
-                      size={100}
-                      animDelay={`${catIdx * 0.3 + gIdx * 0.45}s`}
-                      animClass={gIdx % 2 === 0 ? 'bycat-float' : 'bycat-float-slow'}
-                      onClick={() => onOpenGoal(goal.id)}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Divider */}
-            {catIdx < sections.length - 1 && (
-              <div
-                className="mt-10 h-px opacity-20 mx-auto w-3/4"
-                style={{ background: `linear-gradient(to right, transparent, ${CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].from}, transparent)` }}
-              />
-            )}
+              );
+            })}
           </div>
-        ))}
+
+          <p className="text-center text-xs mt-10 md:mt-16" style={{ color: 'var(--color-text-dim)' }}>
+            Click a category to explore its goals.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── LEVEL 2 — Goals within selected category ──────────────────────────────
+  const ci = catIdx(selectedCategory);
+  const grad = CAT_GRADIENTS[ci % CAT_GRADIENTS.length];
+  const categoryGoals = goalsForCategory(selectedCategory);
+
+  return (
+    <div
+      className="absolute inset-0 z-20 overflow-y-auto pt-navbar pb-20"
+      style={{ background: 'var(--mesh-canvas, var(--color-bg))' }}
+    >
+      {shared}
+      {/* Category-tinted ambient glow */}
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{ background: `radial-gradient(ellipse 60% 40% at 50% 30%, ${grad.from}14 0%, transparent 70%)` }}
+      />
+
+      <div className="relative max-w-5xl mx-auto px-5 py-10 md:py-16">
+        {/* Breadcrumb / back nav */}
+        <div className="mb-10 flex items-center gap-3">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className="flex items-center gap-2 text-sm font-medium transition hover:opacity-80"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            All Categories
+          </button>
+          <span style={{ color: 'var(--color-text-dim)' }}>/</span>
+          <span className="text-sm font-bold" style={{ color: grad.from }}>{selectedCategory}</span>
+        </div>
+
+        {/* Header */}
+        <div className="text-center mb-10 md:mb-14">
+          <p className="text-xs font-bold tracking-[0.3em] uppercase mb-3" style={{ color: grad.from + 'cc' }}>
+            {selectedCategory}
+          </p>
+          <h1 className="text-3xl md:text-5xl font-bold mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+            Your Goals
+          </h1>
+          <p className="text-sm md:text-base" style={{ color: 'var(--color-text-muted)' }}>
+            {categoryGoals.length === 0
+              ? 'No goals in this category yet.'
+              : 'Click a goal to see its activities and details.'}
+          </p>
+        </div>
+
+        {categoryGoals.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-4">🎯</p>
+            <p className="text-sm font-medium mb-6" style={{ color: 'var(--color-text-muted)' }}>
+              No goals yet in {selectedCategory}.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8" role="list" aria-label={`Goals in ${selectedCategory}`}>
+            {categoryGoals.map((goal, gIdx) => {
+              const blob = FTUE_BLOB_PATHS[(gIdx + 1) % 4];
+              const gradId = `lvl2-grad-${ci}-${gIdx}`;
+              const sheenId = `lvl2-sheen-${ci}-${gIdx}`;
+              const delay = `${(gIdx * 0.45).toFixed(2)}s`;
+              const animCls = gIdx % 2 === 0 ? 'bycat-float' : 'bycat-float-slow';
+              const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
+              const done = acts.filter(a => a.completed).length;
+              return (
+                <div key={goal.id} role="listitem" className={animCls} style={{ animationDelay: delay }}>
+                  <button
+                    onClick={() => onOpenGoal(goal.id)}
+                    aria-label={`Open goal: ${goal.title}`}
+                    className="group relative focus:outline-none focus-visible:ring-4 focus-visible:ring-purple-400 rounded-full"
+                  >
+                    <svg viewBox="0 0 100 100" className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 transition-transform duration-300 group-hover:scale-110 group-active:scale-95" aria-hidden>
+                      <defs>
+                        <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={grad.from} />
+                          <stop offset="100%" stopColor={grad.to} />
+                        </linearGradient>
+                        <radialGradient id={sheenId} cx="30%" cy="25%" r="50%">
+                          <stop offset="0%" stopColor="white" />
+                          <stop offset="100%" stopColor="transparent" />
+                        </radialGradient>
+                      </defs>
+                      <path d={blob} fill="rgba(0,0,0,0.25)" transform="translate(3,5) scale(0.97)" className="opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+                      <path d={blob} fill={`url(#${gradId})`} className="transition-all duration-300" />
+                      <path d={blob} fill={`url(#${sheenId})`} opacity="0.12" className="group-hover:opacity-22 transition-opacity duration-300" />
+                    </svg>
+                    <span className="absolute inset-0 flex flex-col items-center justify-center text-white text-center leading-tight px-3 drop-shadow-sm">
+                      <span className="text-[11px] md:text-sm font-bold leading-snug">
+                        {goal.title.length > 24 ? goal.title.slice(0, 22) + '…' : goal.title}
+                      </span>
+                      {acts.length > 0 && (
+                        <span className="text-[9px] md:text-[10px] mt-1 opacity-70">{done}/{acts.length} activities</span>
+                      )}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-
 
 // ─── Mobile card ──────────────────────────────────────────────────────────────
 
