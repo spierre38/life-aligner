@@ -107,88 +107,87 @@ function AmbientOrb({
   );
 }
 
-// ─── By-Category bubble view ──────────────────────────────────────────────────
+// ─── By-Category bubble view (FTUE-matching style) ───────────────────────────
 
-const BLOB_PATHS_MINI = [
+// Same gradient palette as FTUECategoryPicker
+const CAT_GRADIENTS = [
+  { from: '#7C3AED', to: '#4F46E5' }, // violet → indigo
+  { from: '#DB2777', to: '#9D174D' }, // pink → rose
+  { from: '#0891B2', to: '#0E7490' }, // cyan → teal
+  { from: '#D97706', to: '#B45309' }, // amber → yellow
+  { from: '#059669', to: '#047857' }, // emerald → green
+  { from: '#2563EB', to: '#1D4ED8' }, // blue → indigo
+  { from: '#DC2626', to: '#B91C1C' }, // red → rose
+  { from: '#7C3AED', to: '#6D28D9' }, // purple → violet
+];
+
+const FTUE_BLOB_PATHS = [
   'M 52,9 C 76,6 94,24 91,50 C 88,76 68,95 44,91 C 20,87 6,67 9,43 C 12,19 31,12 52,9 Z',
   'M 50,8 C 74,5 93,22 94,46 C 95,70 78,92 54,92 C 30,92 7,76 8,52 C 9,28 29,11 50,8 Z',
   'M 46,9 C 70,6 90,26 88,52 C 86,78 64,96 40,91 C 16,86 5,65 9,41 C 13,17 26,12 46,9 Z',
   'M 56,8 C 79,9 94,30 91,54 C 88,78 69,95 45,91 C 21,87 5,68 9,44 C 13,20 35,7 56,8 Z',
 ];
 
-function GoalMicroBubble({
-  goal,
-  hue,
-  idx,
-  activities,
-  done,
-  onOpen,
+function FTUEStyleBubble({
+  label,
+  subtitle,
+  gradIdx,
+  blobIdx,
+  size,
+  animDelay,
+  animClass,
+  onClick,
 }: {
-  goal: Goal;
-  hue: number;
-  idx: number;
-  activities: number;
-  done: number;
-  onOpen: (id: string) => void;
+  label: string;
+  subtitle?: string;
+  gradIdx: number;
+  blobIdx: number;
+  size: number;
+  animDelay: string;
+  animClass: string;
+  onClick: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
-  const blobPath = BLOB_PATHS_MINI[goal.blobVariant ?? (idx % 4)];
-  const gradId = `cat-grad-${goal.id.slice(0, 8)}`;
-  const BSIZE = 100;
+  const grad = CAT_GRADIENTS[gradIdx % CAT_GRADIENTS.length];
+  const blob = FTUE_BLOB_PATHS[blobIdx % FTUE_BLOB_PATHS.length];
+  const gradId = `bycat-grad-${gradIdx}-${blobIdx}-${label.slice(0,4).replace(/\s/g,'')}`;
+  const sheenId = `bycat-sheen-${gradIdx}-${label.slice(0,4).replace(/\s/g,'')}`;
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: BSIZE + 24 }}>
-      <style>{`
-        @keyframes micro-float-${idx % 3} {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(${-4 - (idx % 3) * 2}px); }
-        }
-        .micro-float-${idx % 3} { animation: micro-float-${idx % 3} ${3.5 + (idx % 3) * 0.8}s ease-in-out infinite; }
-      `}</style>
+    <div className={animClass} style={{ animationDelay: animDelay }}>
       <button
-        onClick={() => onOpen(goal.id)}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        className={`relative cursor-pointer micro-float-${idx % 3} transition-transform duration-200 ${hovered ? 'scale-110' : 'scale-100'}`}
-        style={{ width: BSIZE, height: BSIZE, background: 'none', border: 'none', padding: 0 }}
-        aria-label={`Open goal: ${goal.title}`}
+        onClick={onClick}
+        className="group relative focus:outline-none rounded-full"
+        aria-label={label}
+        style={{ width: size, height: size }}
       >
-        <svg viewBox="0 0 100 100" width={BSIZE} height={BSIZE} aria-hidden>
+        <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden>
           <defs>
             <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={`hsl(${hue}, 65%, ${hovered ? 60 : 52}%)`} />
-              <stop offset="100%" stopColor={`hsl(${(hue + 28) % 360}, 75%, ${hovered ? 45 : 38}%)`} />
+              <stop offset="0%" stopColor={grad.from} />
+              <stop offset="100%" stopColor={grad.to} />
             </linearGradient>
-            <radialGradient id={`sheen-c-${goal.id.slice(0,6)}`} cx="30%" cy="25%" r="50%">
+            <radialGradient id={sheenId} cx="30%" cy="25%" r="50%">
               <stop offset="0%" stopColor="white" />
               <stop offset="100%" stopColor="transparent" />
             </radialGradient>
           </defs>
-          <path d={blobPath} fill={`url(#${gradId})`} />
-          <path d={blobPath} fill={`url(#sheen-c-${goal.id.slice(0,6)})`} opacity={hovered ? 0.22 : 0.1} />
+          {/* Shadow */}
+          <path d={blob} fill="rgba(0,0,0,0.25)" transform="translate(3,5) scale(0.97)" className="transition-opacity duration-300 opacity-60 group-hover:opacity-80" />
+          {/* Fill */}
+          <path d={blob} fill={`url(#${gradId})`} className="transition-all duration-300" />
+          {/* Sheen */}
+          <path d={blob} fill={`url(#${sheenId})`} opacity="0.13" className="transition-opacity duration-300 group-hover:opacity-22" />
         </svg>
-        {/* Title overlay */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2"
+        <span
+          className="absolute inset-0 flex flex-col items-center justify-center text-white font-bold text-center leading-tight px-2 drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}
         >
-          <p className="text-white text-[10px] font-bold text-center leading-tight drop-shadow-sm"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)', maxWidth: '80%' }}>
-            {goal.title.length > 28 ? goal.title.slice(0, 26) + '…' : goal.title}
-          </p>
-          {activities > 0 && (
-            <p className="text-white/70 text-[8px] font-medium mt-0.5">{done}/{activities}</p>
+          <span style={{ fontSize: size >= 130 ? 14 : 10 }}>{label.length > 18 ? label.slice(0,16)+'…' : label}</span>
+          {subtitle && (
+            <span className="mt-0.5 opacity-70" style={{ fontSize: size >= 130 ? 10 : 8 }}>{subtitle}</span>
           )}
-        </div>
+        </span>
       </button>
-      {/* Hover tooltip */}
-      {hovered && goal.connectedCategories.length > 1 && (
-        <div
-          className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-[9px] font-semibold px-2 py-1 rounded-lg z-50 whitespace-nowrap pointer-events-none"
-          style={{ background: 'rgba(0,0,0,0.8)', color: '#fff' }}
-        >
-          {goal.connectedCategories.slice(1).join(' · ')}
-        </div>
-      )}
     </div>
   );
 }
@@ -202,7 +201,7 @@ function ByCategoryView({
 }) {
   const activeGoals = roadmap.goals.filter(g => g.status === 'active');
 
-  // Group goals by their first connected category (or 'Uncategorized')
+  // Group goals by first connected category
   const grouped: Record<string, Goal[]> = {};
   for (const goal of activeGoals) {
     const cat = goal.connectedCategories[0] ?? 'Uncategorized';
@@ -213,95 +212,112 @@ function ByCategoryView({
     a === 'Uncategorized' ? 1 : b === 'Uncategorized' ? -1 : a.localeCompare(b)
   );
 
-  function catHue(name: string): number {
-    let h = 5381;
-    for (let i = 0; i < name.length; i++) h = (h * 33) ^ name.charCodeAt(i);
-    return Math.abs(h) % 360;
-  }
-
   return (
     <div
-      className="absolute inset-0 z-20 overflow-y-auto pt-20 pb-16"
+      className="absolute inset-0 z-20 overflow-y-auto pt-24 pb-20"
       style={{ background: 'var(--mesh-canvas, var(--color-bg))' }}
     >
-      {/* Radial glow */}
+      <style>{`
+        @keyframes bycat-float {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50%       { transform: translateY(-8px) scale(1.02); }
+        }
+        @keyframes bycat-float-slow {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50%       { transform: translateY(-5px) scale(1.01); }
+        }
+        .bycat-float      { animation: bycat-float 3.6s ease-in-out infinite; }
+        .bycat-float-slow { animation: bycat-float-slow 4.8s ease-in-out infinite; }
+      `}</style>
+
+      {/* Ambient glow */}
       <div
         className="pointer-events-none fixed inset-0"
-        style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(139,92,246,0.07) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 30%, rgba(139,92,246,0.08) 0%, transparent 70%)' }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-4">
-        {/* Grid of category zones */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sections.map(([cat, goals]) => {
-            const hue = cat !== 'Uncategorized' ? catHue(cat) : 240;
-            let globalIdx = 0;
-            return (
-              <div
-                key={cat}
-                className="rounded-3xl overflow-hidden"
-                style={{
-                  background: `radial-gradient(ellipse 80% 60% at 50% 20%, hsla(${hue},60%,40%,0.12) 0%, transparent 70%), var(--color-surface)`,
-                  border: `1px solid hsla(${hue},50%,50%,0.2)`,
-                  boxShadow: `0 0 40px hsla(${hue},60%,40%,0.08)`,
-                  minHeight: 180,
-                }}
-              >
-                {/* Zone header */}
-                <div
-                  className="px-5 py-4 flex items-center justify-between"
-                  style={{
-                    borderBottom: `1px solid hsla(${hue},50%,50%,0.15)`,
-                    background: `hsla(${hue},60%,40%,0.08)`,
-                  }}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ background: `hsl(${hue},65%,55%)`, boxShadow: `0 0 8px hsl(${hue},65%,55%)` }}
-                    />
-                    <h2
-                      className="text-xs font-bold uppercase tracking-widest"
-                      style={{ color: `hsl(${hue},55%,65%)` }}
+      <div className="relative max-w-5xl mx-auto px-5 space-y-16">
+        {sections.map(([cat, goals], catIdx) => (
+          <div key={cat}>
+            {/* Category label + bubbles in one flowing row */}
+            <div className="flex flex-wrap items-center gap-6 sm:gap-8 justify-center">
+              {/* Large category "header" bubble — non-clickable, just a label */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="bycat-float" style={{ animationDelay: `${catIdx * 0.3}s` }}>
+                  <div className="relative" style={{ width: 140, height: 140 }}>
+                    <svg viewBox="0 0 100 100" width={140} height={140} aria-hidden>
+                      <defs>
+                        <linearGradient id={`cat-head-${catIdx}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor={CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].from} />
+                          <stop offset="100%" stopColor={CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].to} />
+                        </linearGradient>
+                        <radialGradient id={`cat-sheen-${catIdx}`} cx="30%" cy="25%" r="50%">
+                          <stop offset="0%" stopColor="white" />
+                          <stop offset="100%" stopColor="transparent" />
+                        </radialGradient>
+                      </defs>
+                      <path d={FTUE_BLOB_PATHS[catIdx % 4]} fill="rgba(0,0,0,0.2)" transform="translate(3,5) scale(0.97)" opacity="0.6" />
+                      <path d={FTUE_BLOB_PATHS[catIdx % 4]} fill={`url(#cat-head-${catIdx})`} />
+                      <path d={FTUE_BLOB_PATHS[catIdx % 4]} fill={`url(#cat-sheen-${catIdx})`} opacity="0.15" />
+                    </svg>
+                    <span
+                      className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-3 pointer-events-none"
+                      style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
                     >
-                      {cat}
-                    </h2>
+                      <span className="text-sm font-bold leading-tight">{cat}</span>
+                      <span className="text-[10px] mt-1 opacity-70">{goals.length} {goals.length === 1 ? 'goal' : 'goals'}</span>
+                    </span>
                   </div>
-                  <span
-                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: `hsla(${hue},60%,50%,0.15)`, color: `hsl(${hue},55%,65%)` }}
-                  >
-                    {goals.length} {goals.length === 1 ? 'goal' : 'goals'}
-                  </span>
                 </div>
-
-                {/* Bubble cluster */}
-                <div className="p-4 flex flex-wrap gap-3 justify-center">
-                  {goals.map((goal, i) => {
-                    const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
-                    const done = acts.filter(a => a.completed).length;
-                    const nodeIdx = globalIdx++;
-                    return (
-                      <GoalMicroBubble
-                        key={goal.id}
-                        goal={goal}
-                        hue={hue}
-                        idx={nodeIdx}
-                        activities={acts.length}
-                        done={done}
-                        onOpen={onOpenGoal}
-                      />
-                    );
-                  })}
+                {/* Connector dots */}
+                <div className="flex gap-1">
+                  {[0,1,2].map(i => (
+                    <div
+                      key={i}
+                      className="w-1 h-1 rounded-full"
+                      style={{ background: CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].from, opacity: 0.4 - i * 0.1 }}
+                    />
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
+
+              {/* Goal bubbles — smaller, same style */}
+              <div className="flex flex-wrap gap-4 sm:gap-6 justify-center items-center flex-1">
+                {goals.map((goal, gIdx) => {
+                  const acts = roadmap.activities.filter(a => a.connectedGoalIds.includes(goal.id));
+                  const done = acts.filter(a => a.completed).length;
+                  const subtitle = acts.length > 0 ? `${done}/${acts.length}` : undefined;
+                  return (
+                    <FTUEStyleBubble
+                      key={goal.id}
+                      label={goal.title}
+                      subtitle={subtitle}
+                      gradIdx={catIdx}
+                      blobIdx={(gIdx + 1) % 4}
+                      size={100}
+                      animDelay={`${catIdx * 0.3 + gIdx * 0.45}s`}
+                      animClass={gIdx % 2 === 0 ? 'bycat-float' : 'bycat-float-slow'}
+                      onClick={() => onOpenGoal(goal.id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Divider */}
+            {catIdx < sections.length - 1 && (
+              <div
+                className="mt-10 h-px opacity-20 mx-auto w-3/4"
+                style={{ background: `linear-gradient(to right, transparent, ${CAT_GRADIENTS[catIdx % CAT_GRADIENTS.length].from}, transparent)` }}
+              />
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
+
 
 
 // ─── Mobile card ──────────────────────────────────────────────────────────────

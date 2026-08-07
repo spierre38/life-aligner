@@ -922,7 +922,7 @@ export default function LifeCategoriesWorksheet() {
                                     {categoryDetails.length > 0 && (
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Break It Down</h3>
+                                                <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Add Sub-Categories</h3>
                                                 <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-dim)' }}>
                                                     What matters within each area?
                                                 </span>
