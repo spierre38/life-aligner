@@ -512,14 +512,14 @@ export default function RoadmapPage() {
         />
       )}
 
-      {/* Bubble Canvas (desktop) / Mobile Goal List (mobile) */}
-      {activeGoals.length > 0 && !isMobile && (
+      {/* Bubble Canvas (desktop) — rendered unconditionally so toolbar always shows */}
+      {!isMobile && (
         <BubbleCanvas
           roadmap={roadmap}
           savedValues={savedValues}
           savedInterests={savedInterests}
           onAddGoal={() => setAddGoalOpen(true)}
-          onAddActivity={() => setAddActivityOpen(true)}
+          onAddActivity={(goalId) => { setAddActivityForGoalId(goalId ?? null); setAddActivityOpen(true); }}
           onEditGoal={setEditingGoal}
           onDeleteGoal={handleDeleteGoal}
           onPositionChange={handlePositionChange}

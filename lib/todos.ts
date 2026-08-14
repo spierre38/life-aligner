@@ -475,9 +475,32 @@ export async function deleteManualTodo(todoId: string) {
 
 // ─── UPDATE ORDER (no-op for now) ─────────────────────────────────────────────
 
-export async function updateTodoOrder(_orderedTodos: TodoItem[]) {
-  return { error: null };
+export async function updateTodoOrder(orderedTodos: TodoItem[]) {
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
+
+    // Build a map of id → priority for fast lookup
+    const priorityMap = new Map<string, number>();
+    orderedTodos.forEach((todo, index) => {
+      priorityMap.set(todo.id, index + 1);
+    });
+
+    // All todos (roadmap activities and standalone) live in roadmap.activities
+    if (roadmap.activities) {
+      roadmap.activities = roadmap.activities.map(a => {
+        const priority = priorityMap.get(a.id);
+        return priority !== undefined ? { ...a, priority } : a;
+      });
+    }
+
+    const { error: saveErr } = await saveRoadmapContent(userId, roadmap);
+    return { error: saveErr };
+  } catch (err) {
+    return { error: err };
+  }
 }
+
 
 // ─── RESCHEDULE TODO (change deadline bucket) ─────────────────────────────────
 

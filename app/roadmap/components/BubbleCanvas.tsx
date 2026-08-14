@@ -24,7 +24,7 @@ interface BubbleCanvasProps {
   savedValues: string[];
   savedInterests: string[];
   onAddGoal: () => void;
-  onAddActivity: () => void;
+  onAddActivity: (goalId?: string | null) => void;
   onEditGoal: (goal: Goal) => void;
   onDeleteGoal: (goalId: string) => void;
   onPositionChange: (goalId: string, position: { x: number; y: number }) => void;
@@ -540,7 +540,7 @@ export default function BubbleCanvas({
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={onAddActivity}
+              onClick={() => onAddActivity()}
               className="bg-emerald-600/80 hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-full transition shadow-lg flex items-center justify-center gap-2"
             >
               <span className="text-lg leading-none">+</span> Add an activity
@@ -565,7 +565,7 @@ export default function BubbleCanvas({
                 className="bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 text-sm font-semibold px-3 py-2 rounded-full transition">
                 Review All
               </button>
-              <button onClick={onAddActivity}
+              <button onClick={() => onAddActivity()}
                 className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-sm font-semibold px-3 py-2 rounded-full transition">
                 + Activity
               </button>
@@ -621,9 +621,11 @@ export default function BubbleCanvas({
       {/* ── Desktop: bubble canvas ───────────────────────────────────── */}
       {activeGoals.length > 0 && !isMobile && (
         <div
-          className="relative w-full overflow-hidden"
+          className="relative w-full"
           style={{
             height: canvasHeight,
+            overflowX: 'auto',
+            overflowY: 'hidden',
             transition: flyTo ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease' : 'none',
             transform: flyTo
               ? `scale(2.5) translate(${(canvasSize.width / 2 - flyTo.x) * 0.3}px, ${(canvasSize.height / 2 - flyTo.y) * 0.3}px)`
@@ -632,7 +634,7 @@ export default function BubbleCanvas({
             transformOrigin: flyTo ? `${flyTo.x}px ${flyTo.y}px` : 'center center',
           }}
         >
-          {/* Add goal FAB */}
+          {/* Add goal FAB — always visible on desktop when not mobile */}
           <div className="fixed top-20 right-6 z-40 flex gap-2 items-center">
             {/* View toggle */}
             <div
@@ -668,9 +670,10 @@ export default function BubbleCanvas({
               Review All
             </button>
             <button
-              onClick={onAddActivity}
+              onClick={() => onAddActivity(hoveredGoalId)}
               aria-label="Add a new activity"
               className="bg-emerald-600/80 hover:bg-emerald-600 text-white font-semibold text-sm px-4 py-2.5 rounded-full transition shadow-lg shadow-emerald-900/40 flex items-center gap-2"
+              title={hoveredGoalId ? 'Add activity to hovered goal' : 'Add activity'}
             >
               <span className="text-lg leading-none">+</span>
               Add activity

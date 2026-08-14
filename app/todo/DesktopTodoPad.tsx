@@ -1004,8 +1004,11 @@ export default function DesktopTodoPad() {
                                                                     )}
                                                                     {todo.text}
                                                                     {todo.goal_title && (
-                                                                        <span className="text-xs opacity-40 ml-2">
-                                                                            [{todo.goal_title}]
+                                                                        <span
+                                                                            className="text-sm font-medium ml-2"
+                                                                            style={{ color: todo.source === 'roadmap' ? '#1d4ed8' : '#15803d', opacity: 0.75 }}
+                                                                        >
+                                                                            → {todo.goal_title}
                                                                         </span>
                                                                     )}
                                                                 </span>

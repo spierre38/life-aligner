@@ -752,15 +752,15 @@ export default function InterestsWorksheet() {
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Your Progress</span>
                                         <span className="text-2xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
-                                            {selectedExisting.size + selectedExploring.size} / 10
+                                            {selectedExisting.size + selectedExploring.size} / 4
                                         </span>
                                     </div>
 
                                     {/* Dual Progress Bars */}
                                     <div className="flex items-center gap-3 mb-4">
                                         {[
-                                            { label: 'Existing', count: 5, type: 'existing' as const, color: 'rgba(0,200,100,0.8)' },
-                                            { label: 'Exploring', count: 5, type: 'exploring' as const, color: 'rgba(100,120,255,0.8)' }
+                                            { label: 'Existing', count: 3, type: 'existing' as const, color: 'rgba(0,200,100,0.8)' },
+                                            { label: 'Exploring', count: 1, type: 'exploring' as const, color: 'rgba(100,120,255,0.8)' }
                                         ].map((milestone) => {
                                             const currentCount = milestone.type === 'existing' ? selectedExisting.size : selectedExploring.size;
                                             const isComplete = currentCount >= milestone.count;
@@ -794,11 +794,11 @@ export default function InterestsWorksheet() {
                                         </svg>
                                         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                                             {selectedExisting.size === 0 && selectedExploring.size === 0 ? (
-                                                <><strong>Getting started:</strong> Pick at least 5 existing interests and 5 to explore.</>
-                                            ) : selectedExisting.size < 5 ? (
-                                                <><strong>Nice start!</strong> Add {5 - selectedExisting.size} more existing interest{selectedExisting.size === 4 ? '' : 's'} to reach the minimum.</>
-                                            ) : selectedExploring.size < 5 ? (
-                                                <><strong>Great existing interests!</strong> Now add {5 - selectedExploring.size} more interests to explore.</>
+                                                <><strong>Getting started:</strong> Pick at least 3 existing interests and 1 to explore.</>
+                                            ) : selectedExisting.size < 3 ? (
+                                                <><strong>Nice start!</strong> Add {3 - selectedExisting.size} more existing interest{selectedExisting.size === 2 ? '' : 's'} to reach the minimum.</>
+                                            ) : selectedExploring.size < 1 ? (
+                                                <><strong>Great existing interests!</strong> Now add 1 interest to explore.</>
                                             ) : (
                                                 <><strong>Excellent work!</strong> You can save now, or keep exploring more interests.</>
                                             )}

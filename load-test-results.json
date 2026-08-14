@@ -1,0 +1,378 @@
+{
+  "options": {
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "max",
+      "p(90)",
+      "p(95)"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdOutTTY": false,
+    "isStdErrTTY": false,
+    "testRunDurationMs": 123782.5087
+  },
+  "metrics": {
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.7784531698287825,
+        "min": 0,
+        "med": 0,
+        "max": 118.8843,
+        "p(90)": 0,
+        "p(95)": 0
+      }
+    },
+    "supabase_read_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 48.79901280271479,
+        "min": 29,
+        "med": 46,
+        "max": 454,
+        "p(90)": 58,
+        "p(95)": 63
+      },
+      "thresholds": {
+        "p(95)<1000": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 0.06355129569643679,
+        "min": 0,
+        "med": 0,
+        "max": 4.7778,
+        "p(90)": 0.3503,
+        "p(95)": 0.46875
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 2,
+        "min": 2,
+        "max": 100
+      }
+    },
+    "vus_max": {
+      "contains": "default",
+      "values": {
+        "value": 100,
+        "min": 100,
+        "max": 100
+      },
+      "type": "gauge"
+    },
+    "page_load_ms": {
+      "values": {
+        "avg": 45.914391485423415,
+        "min": 21,
+        "med": 38,
+        "max": 207,
+        "p(90)": 60,
+        "p(95)": 81
+      },
+      "thresholds": {
+        "p(95)<3000": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 4193.5136,
+        "p(95)": 4231.9223,
+        "avg": 4087.758655807501,
+        "min": 4017.1136,
+        "med": 4062.7225,
+        "max": 4600.5567
+      }
+    },
+    "failed_requests": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 6483,
+        "rate": 52.37412028635028
+      }
+    },
+    "group_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 1217.12805,
+        "max": 1508.2162,
+        "p(90)": 1372.50772,
+        "p(95)": 1419.0491349999998,
+        "avg": 1043.4026025913927,
+        "min": 714.6948
+      }
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 20.7107,
+        "med": 44.0859,
+        "max": 454.4345,
+        "p(90)": 57.781549999999996,
+        "p(95)": 63.83925,
+        "avg": 46.075049051365184
+      },
+      "thresholds": {
+        "p(95)<4000": {
+          "ok": true
+        }
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 1583284,
+        "rate": 12790.854027989175
+      }
+    },
+    "data_received": {
+      "values": {
+        "count": 225037932,
+        "rate": 1818010.7542124812
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 12966,
+        "rate": 104.74824057270057
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "values": {
+        "p(90)": 57.61112,
+        "p(95)": 61.53915,
+        "avg": 47.69247191115233,
+        "min": 29.3304,
+        "med": 46.1486,
+        "max": 454.4345
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "http_req_failed": {
+      "values": {
+        "fails": 6483,
+        "rate": 0.5,
+        "passes": 6483
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 150.5371,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 1.209477302174919,
+        "min": 0,
+        "med": 0
+      }
+    },
+    "http_req_connecting": {
+      "contains": "time",
+      "values": {
+        "min": 0,
+        "med": 0,
+        "max": 46.5464,
+        "p(90)": 0,
+        "p(95)": 0,
+        "avg": 0.4247361792380073
+      },
+      "type": "trend"
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 19449,
+        "fails": 6483,
+        "rate": 0.75
+      }
+    },
+    "http_req_waiting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 453.815,
+        "p(90)": 51.9868,
+        "p(95)": 56.440200000000004,
+        "avg": 40.83120380996443,
+        "min": 19.7528,
+        "med": 40.32905
+      }
+    },
+    "http_req_receiving": {
+      "contains": "time",
+      "values": {
+        "max": 156.0682,
+        "p(90)": 18.92595,
+        "p(95)": 21.76125,
+        "avg": 5.180293945704131,
+        "min": 0,
+        "med": 0.839
+      },
+      "type": "trend"
+    },
+    "error_rate": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "fails": 6483,
+        "rate": 0.5,
+        "passes": 6483
+      },
+      "thresholds": {
+        "rate<0.05": {
+          "ok": false
+        }
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 2161,
+        "rate": 17.458040095450094
+      }
+    }
+  },
+  "root_group": {
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [
+      {
+        "groups": [],
+        "checks": [
+            {
+              "id": "d08ec557af022838bc2f626e7e4d2ed9",
+              "passes": 0,
+              "fails": 2161,
+              "name": "home: status 200",
+              "path": "::1. Page / CDN Layer::home: status 200"
+            },
+            {
+              "id": "50d8759e0737ab8d4ae60201d148fd23",
+              "passes": 2161,
+              "fails": 0,
+              "name": "home: < 3s",
+              "path": "::1. Page / CDN Layer::home: < 3s"
+            },
+            {
+              "id": "4953bbbdd9ab4d9987792e371181fecd",
+              "passes": 0,
+              "fails": 2161,
+              "name": "login: status 200",
+              "path": "::1. Page / CDN Layer::login: status 200"
+            },
+            {
+              "id": "bd021c692ca05c83cc0adefba28cd0ed",
+              "passes": 2161,
+              "fails": 0,
+              "name": "login: < 3s",
+              "path": "::1. Page / CDN Layer::login: < 3s"
+            },
+            {
+              "name": "faq: status 200",
+              "path": "::1. Page / CDN Layer::faq: status 200",
+              "id": "354b136764a59adde3d72aeff132be1e",
+              "passes": 0,
+              "fails": 2161
+            },
+            {
+              "name": "faq: < 3s",
+              "path": "::1. Page / CDN Layer::faq: < 3s",
+              "id": "23b97728cab184384c8756ce08d045a2",
+              "passes": 2161,
+              "fails": 0
+            }
+          ],
+        "name": "1. Page / CDN Layer",
+        "path": "::1. Page / CDN Layer",
+        "id": "37c855c7e268e7c028cf559e5ca2c430"
+      },
+      {
+        "name": "2. Supabase REST Layer",
+        "path": "::2. Supabase REST Layer",
+        "id": "5fe293b847cfcc1a2faf0c7bcb314f9b",
+        "groups": [],
+        "checks": [
+            {
+              "name": "auth health 200",
+              "path": "::2. Supabase REST Layer::auth health 200",
+              "id": "25cd9194c7610d514a7c42a6a812ca36",
+              "passes": 2161,
+              "fails": 0
+            },
+            {
+              "name": "auth health <1s",
+              "path": "::2. Supabase REST Layer::auth health <1s",
+              "id": "4fa771ff42ab1d6fb51de028570b9036",
+              "passes": 2161,
+              "fails": 0
+            },
+            {
+              "id": "da8629a8553c85554662f5fd49ae6801",
+              "passes": 2161,
+              "fails": 0,
+              "name": "profiles db responds",
+              "path": "::2. Supabase REST Layer::profiles db responds"
+            },
+            {
+              "name": "profiles db <1.5s",
+              "path": "::2. Supabase REST Layer::profiles db <1.5s",
+              "id": "923085c3e2157c83371959f05895788e",
+              "passes": 2161,
+              "fails": 0
+            },
+            {
+              "name": "auth health 2 ok",
+              "path": "::2. Supabase REST Layer::auth health 2 ok",
+              "id": "f3e4fa3a9efe77e9e52e22d087621421",
+              "passes": 2161,
+              "fails": 0
+            },
+            {
+              "fails": 0,
+              "name": "auth health 2 <1s",
+              "path": "::2. Supabase REST Layer::auth health 2 <1s",
+              "id": "f9af64d4ae71669610ac7f997d37b362",
+              "passes": 2161
+            }
+          ]
+      }
+    ],
+    "checks": [],
+    "name": ""
+  }
+}

@@ -394,10 +394,14 @@ export default function GoalBubble({
               <span className="text-white text-lg leading-none select-none">⋮</span>
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-8 w-36 bg-white rounded-xl shadow-2xl border border-gray-200 py-1 z-50">
+              <div className="absolute right-0 top-8 w-36 rounded-xl shadow-2xl py-1 z-50"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowMenu(false); onEdit(goal); }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="w-full text-left px-4 py-2 text-sm transition-colors"
+                  style={{ color: 'var(--color-text-muted)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-2)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   Edit goal
                 </button>
@@ -409,7 +413,10 @@ export default function GoalBubble({
                       onDelete(goal.id);
                     }
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="w-full text-left px-4 py-2 text-sm transition-colors"
+                  style={{ color: '#f87171' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.1)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   Delete goal
                 </button>
