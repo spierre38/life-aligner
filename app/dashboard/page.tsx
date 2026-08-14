@@ -238,6 +238,13 @@ export default function DashboardPage() {
                 }
 
                 setCompletion(evaluateLifeFrameCompletion(worksheets ?? []));
+
+                // Load urgent tasks for Today's Focus card (inside mounted guard)
+                const { data: todoData } = await getAllTodos();
+                if (!mounted) return;
+                if (todoData) {
+                    setUrgentTodos(todoData.filter(t => !t.completed && (t.urgency === 'overdue' || t.urgency === 'today')));
+                }
             } catch (err) {
                 console.error('Dashboard load error:', err);
                 if (mounted) setLoadError(true);
@@ -247,13 +254,6 @@ export default function DashboardPage() {
         };
 
         load();
-
-        // Load urgent tasks for Today's Focus card
-        getAllTodos().then(({ data }) => {
-            if (data) {
-                setUrgentTodos(data.filter(t => !t.completed && (t.urgency === 'overdue' || t.urgency === 'today')));
-            }
-        }).catch(() => {});
 
         return () => { mounted = false; };
     }, [router]);

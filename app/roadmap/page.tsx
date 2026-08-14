@@ -80,6 +80,11 @@ export default function RoadmapPage() {
   }, []);
 
   const saveSeq = useRef(0);
+  // Always-current reference to roadmap — avoids stale closures in handlers
+  const roadmapRef = useRef<RoadmapData>(emptyRoadmapData());
+  roadmapRef.current = roadmap;
+  // Debounce ref for position saves
+  const positionDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Data loading ────────────────────────────────────────────────────────────
 
@@ -168,6 +173,7 @@ export default function RoadmapPage() {
     if (!result.ok) {
       showToast.error(result.error ?? 'Failed to save. Please try again.');
     }
+  // userId is the only real dependency — roadmap is read from roadmapRef
   }, [userId]);
 
   // ── Goal-level handlers ─────────────────────────────────────────────────────
@@ -178,40 +184,42 @@ export default function RoadmapPage() {
   ) => {
     setFtueCategory(null);
     setAddGoalOpen(false);
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      goals: [...roadmap.goals, goal],
-      activities: [...roadmap.activities, ...newActivities],
+      ...current,
+      goals: [...current.goals, goal],
+      activities: [...current.activities, ...newActivities],
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   const handleEditGoal = useCallback(async (updated: Goal) => {
     setEditingGoal(null);
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      goals: roadmap.goals.map(g => g.id === updated.id ? updated : g),
+      ...current,
+      goals: current.goals.map(g => g.id === updated.id ? updated : g),
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   const handleDeleteGoal = useCallback(async (goalId: string) => {
     setEditingGoal(null);
     setDetailGoalId(null);
     setCompletingGoal(null);
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      goals: roadmap.goals.map(g =>
+      ...current,
+      goals: current.goals.map(g =>
         g.id === goalId
           ? { ...g, status: 'deleted' as const, deletedAt: new Date().toISOString() }
           : g
       ),
-      // Also disconnect deleted goal from all activities
-      activities: roadmap.activities.map(a => ({
+      activities: current.activities.map(a => ({
         ...a,
         connectedGoalIds: a.connectedGoalIds.filter(id => id !== goalId),
       })),
     });
     showToast.success('Goal deleted.');
-  }, [roadmap, persist]);
+  }, [persist]);
 
   /** Open the CompletionModal for a goal */
   const handleCompleteGoal = useCallback((goal: Goal) => {
@@ -222,21 +230,18 @@ export default function RoadmapPage() {
   const handleCompleteConfirm = useCallback(async (data: CompletionData) => {
     if (!completingGoal) return;
     const now = new Date().toISOString();
-
-    // Upload cover photo if provided
     let coverImageUrl: string | undefined;
     if (data.coverFile && userId) {
       try {
-        // Reuse uploadReflectionImage — store cover at userId/covers/goalId.jpg
         coverImageUrl = await uploadReflectionImage(data.coverFile, userId, 'covers', completingGoal.id) ?? undefined;
       } catch (err) {
         console.warn('[completion] Cover upload failed:', err);
       }
     }
-
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      goals: roadmap.goals.map(g =>
+      ...current,
+      goals: current.goals.map(g =>
         g.id === completingGoal.id
           ? {
               ...g,
@@ -252,7 +257,7 @@ export default function RoadmapPage() {
     setCompletingGoal(null);
     setDetailGoalId(null);
     showToast.success('Chapter saved to your Reflections ✨');
-  }, [completingGoal, roadmap, persist, userId]);
+  }, [completingGoal, persist, userId]);
 
   /** Add a journal entry (reflection) to a goal, optionally with images */
   const handleAddReflection = useCallback(async (
@@ -262,8 +267,6 @@ export default function RoadmapPage() {
     images?: File[]
   ) => {
     const entryId = crypto.randomUUID();
-
-    // Upload images if provided (gracefully handles missing bucket)
     let imageUrls: string[] = [];
     if (images && images.length > 0 && userId) {
       const uploads = await Promise.all(
@@ -276,7 +279,6 @@ export default function RoadmapPage() {
       );
       imageUrls = uploads.filter((url): url is string => url !== null);
     }
-
     const entry = {
       id: entryId,
       text,
@@ -284,33 +286,40 @@ export default function RoadmapPage() {
       mood,
       ...(imageUrls.length > 0 ? { images: imageUrls } : {}),
     };
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      goals: roadmap.goals.map(g =>
+      ...current,
+      goals: current.goals.map(g =>
         g.id === goalId
           ? { ...g, reflections: [...(g.reflections ?? []), entry] }
           : g
       ),
     });
     showToast.success(imageUrls.length > 0 ? `Reflection saved with ${imageUrls.length} photo${imageUrls.length > 1 ? 's' : ''} →` : 'Reflection saved →');
-  }, [roadmap, persist, userId]);
+  }, [persist, userId]);
 
   const handlePositionChange = useCallback(async (
     goalId: string,
     position: { x: number; y: number }
   ) => {
-    await persist({
-      ...roadmap,
-      goals: roadmap.goals.map(g => g.id === goalId ? { ...g, position } : g),
-    });
-  }, [roadmap, persist]);
+    // Update local state immediately for snappy feel
+    setRoadmap(prev => ({
+      ...prev,
+      goals: prev.goals.map(g => g.id === goalId ? { ...g, position } : g),
+    }));
+    // Debounce the actual save to avoid per-pixel API calls
+    if (positionDebounce.current) clearTimeout(positionDebounce.current);
+    positionDebounce.current = setTimeout(async () => {
+      const current = roadmapRef.current;
+      await persist(current);
+    }, 500);
+  }, [persist]);
 
   // ── Activity-level handlers ─────────────────────────────────────────────────
 
   const handleAddActivity = useCallback(async (activity: Activity, newGoalTitles: string[] = []) => {
     setAddActivityOpen(false);
     setAddActivityForGoalId(null);
-
     const now = new Date().toISOString();
     const newGoals: Goal[] = newGoalTitles.map(title => ({
       id: crypto.randomUUID(),
@@ -323,18 +332,17 @@ export default function RoadmapPage() {
       createdAt: now,
       updatedAt: now,
     }));
-
     const finalActivity = {
       ...activity,
       connectedGoalIds: [...activity.connectedGoalIds, ...newGoals.map(g => g.id)],
     };
-
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      goals: [...roadmap.goals, ...newGoals],
-      activities: [...roadmap.activities, finalActivity],
+      ...current,
+      goals: [...current.goals, ...newGoals],
+      activities: [...current.activities, finalActivity],
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   const handleCreateActivityInline = useCallback(async (
     goalId: string,
@@ -352,59 +360,64 @@ export default function RoadmapPage() {
       createdAt: now,
       updatedAt: now,
     };
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      activities: [...roadmap.activities, newActivity],
+      ...current,
+      activities: [...current.activities, newActivity],
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   const handleToggleActivityComplete = useCallback(async (
     activityId: string,
     completed: boolean
   ) => {
     const now = new Date().toISOString();
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      activities: roadmap.activities.map(a =>
+      ...current,
+      activities: current.activities.map(a =>
         a.id === activityId
           ? { ...a, completed, completedAt: completed ? now : undefined, updatedAt: now }
           : a
       ),
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   const handleToggleActivityIncludeToday = useCallback(async (
     activityId: string,
     includeToday: boolean
   ) => {
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      activities: roadmap.activities.map(a =>
+      ...current,
+      activities: current.activities.map(a =>
         a.id === activityId
           ? { ...a, includeToday, updatedAt: new Date().toISOString() }
           : a
       ),
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   const handleDeleteActivity = useCallback(async (activityId: string) => {
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      activities: roadmap.activities.filter(a => a.id !== activityId),
+      ...current,
+      activities: current.activities.filter(a => a.id !== activityId),
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
   /** Replace an activity with an edited version (title, sub-activities, etc.) */
   const handleEditActivitySave = useCallback(async (updated: Activity) => {
     setEditingActivity(null);
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      activities: roadmap.activities.map(a =>
+      ...current,
+      activities: current.activities.map(a =>
         a.id === updated.id ? updated : a
       ),
     });
     showToast.success('Activity updated.');
-  }, [roadmap, persist]);
+  }, [persist]);
 
   // ── SubActivity handlers ────────────────────────────────────────────────────
 
@@ -414,9 +427,10 @@ export default function RoadmapPage() {
     completed: boolean
   ) => {
     const now = new Date().toISOString();
+    const current = roadmapRef.current;
     await persist({
-      ...roadmap,
-      activities: roadmap.activities.map(a =>
+      ...current,
+      activities: current.activities.map(a =>
         a.id === activityId
           ? {
               ...a,
@@ -430,13 +444,9 @@ export default function RoadmapPage() {
           : a
       ),
     });
-  }, [roadmap, persist]);
+  }, [persist]);
 
-  // ── Ask Tim stub ────────────────────────────────────────────────────────────
-
-  const handleAskTim = useCallback(() => {
-    showToast.info('AI coaching is live! Click a goal to see Tim\'s coaching.');
-  }, []);
+  // ── Ask Tim (stub removed — AI coaching is in GoalDetailView) ────────────────
 
   // ── Derived state ───────────────────────────────────────────────────────────
 
@@ -508,7 +518,7 @@ export default function RoadmapPage() {
         <FTUECategoryPicker
           categories={categories}
           onSelectCategory={setFtueCategory}
-          onAskTim={handleAskTim}
+          onAskTim={() => {}}
         />
       )}
 

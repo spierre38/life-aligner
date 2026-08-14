@@ -230,7 +230,7 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
     } catch (parseErr) {
       console.error('[AI Coach] Failed to parse Gemini response:', rawText);
       return NextResponse.json(
-        { error: 'AI response was not in the expected format. Please try again.', debug: rawText?.substring(0, 300) },
+        { error: 'AI response was not in the expected format. Please try again.' },
         { status: 502 }
       );
     }
@@ -243,7 +243,7 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
       profileHash,
     };
 
-    // Update the goal's aiContent in the roadmap
+    // Update the goal's aiContent in the roadmap — explicitly preserve activities to avoid data loss
     const updatedGoals = goals.map((g: any) =>
       g.id === goalId ? { ...g, aiContent } : g
     );
@@ -251,7 +251,13 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
     await supabase
       .from('workbook_entries')
       .update({
-        content: { ...roadmapContent, goals: updatedGoals, updated_at: new Date().toISOString() },
+        content: {
+          ...roadmapContent,
+          goals: updatedGoals,
+          // Explicitly preserve activities array — do NOT drop it on concurrent writes
+          activities: roadmapContent.activities ?? [],
+          updated_at: new Date().toISOString(),
+        },
       })
       .eq('user_id', user.id)
       .eq('category', 'roadmap');

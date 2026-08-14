@@ -10,6 +10,7 @@ import ServiceWorkerRegistrar from "@/app/components/ServiceWorkerRegistrar";
 import InstallPromptBanner from "@/app/components/InstallPromptBanner";
 import ScrollToTop from "@/app/components/ScrollToTop";
 import MobileBottomNav from "@/app/components/MobileBottomNav";
+import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 
 // Tim 2026 primary font — matches the kit's typography spec exactly.
 // Exposed as --font-inter, used by globals.css --font-primary token.
@@ -90,7 +91,9 @@ export default function RootLayout({
                     <InstallPromptBanner />
                     <ScrollToTop />
                     <ToastProvider>
-                        {children}
+                        <ErrorBoundary>
+                            {children}
+                        </ErrorBoundary>
                     </ToastProvider>
                     <MobileBottomNav />
                     <Toaster

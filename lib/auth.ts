@@ -53,18 +53,20 @@ export async function signUp(email: string, password: string, fullName: string):
             };
         }
 
-        // Wait a moment for the trigger to complete
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Retry profile lookup — DB trigger can take up to ~1s on cold starts
+        let profile = null;
+        for (let attempt = 0; attempt < 5; attempt++) {
+            await new Promise(resolve => setTimeout(resolve, 200 + attempt * 200)); // 200ms, 400ms, 600ms, 800ms, 1000ms
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', authData.user.id)
+                .maybeSingle();
+            if (profileData) { profile = profileData; break; }
+        }
 
-        // Verify profile was created by trigger
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', authData.user.id)
-            .single();
-
-        if (profileError || !profile) {
-            console.error('Profile was not created by trigger:', profileError);
+        if (!profile) {
+            console.error('Profile was not created by trigger after 5 retries');
             // This is a critical error - trigger failed
             return {
                 success: false,

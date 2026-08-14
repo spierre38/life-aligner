@@ -449,11 +449,98 @@ export async function addManualTodo(text: string, options?: {
         category: options?.category,
         due_date,
         urgency: computeUrgency(due_date, false),
-        priority: content.activities.length,
+        // Use max existing includeToday priority + 1 so new items appear at the bottom
+      priority: content.activities.filter(a => a.includeToday).reduce((max, a) => Math.max(max, (a as any).priority ?? 0), 0) + 1,
         sub_goals: [],
       },
       error: updateError,
     };
+  } catch (err) {
+    return { error: err };
+  }
+}
+
+// ─── EDIT TODO TEXT ──────────────────────────────────────────────────────────
+
+/** Update the title of any activity (manual or roadmap) by its id. */
+export async function editTodoText(todoId: string, text: string) {
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
+    let found = false;
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id !== todoId) return a;
+      found = true;
+      return { ...a, title: text, updatedAt: new Date().toISOString() };
+    });
+    if (!found) return { error: { message: 'Todo not found' } };
+    return saveRoadmapContent(userId, roadmap);
+  } catch (err) {
+    return { error: err };
+  }
+}
+
+// ─── EDIT SUB-GOAL TEXT ───────────────────────────────────────────────────────
+
+/** Update the title of a sub-activity by its id. */
+export async function editSubGoalText(todoId: string, subGoalId: string, text: string) {
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id !== todoId) return a;
+      return {
+        ...a,
+        updatedAt: new Date().toISOString(),
+        subActivities: a.subActivities.map(sa =>
+          sa.id === subGoalId ? { ...sa, title: text } : sa
+        ),
+      };
+    });
+    return saveRoadmapContent(userId, roadmap);
+  } catch (err) {
+    return { error: err };
+  }
+}
+
+// ─── DELETE SUB-GOAL FROM TODO ────────────────────────────────────────────────
+
+/** Remove a sub-activity from its parent activity. */
+export async function deleteSubGoalFromTodo(todoId: string, subGoalId: string) {
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id !== todoId) return a;
+      return {
+        ...a,
+        updatedAt: new Date().toISOString(),
+        subActivities: a.subActivities.filter(sa => sa.id !== subGoalId),
+      };
+    });
+    return saveRoadmapContent(userId, roadmap);
+  } catch (err) {
+    return { error: err };
+  }
+}
+
+// ─── REORDER SUB-GOALS ────────────────────────────────────────────────────────
+
+/** Reorder sub-activities of an activity given an ordered list of sub-goal ids. */
+export async function reorderSubGoals(todoId: string, orderedSubGoalIds: string[]) {
+  try {
+    const { data: roadmap, userId, error: loadErr } = await loadRoadmapContent();
+    if (loadErr || !roadmap || !userId) return { error: loadErr || { message: 'No roadmap' } };
+    roadmap.activities = roadmap.activities.map(a => {
+      if (a.id !== todoId) return a;
+      const byId = new Map(a.subActivities.map(sa => [sa.id, sa]));
+      const reordered = orderedSubGoalIds.map(id => byId.get(id)).filter(Boolean) as typeof a.subActivities;
+      // Append any sub-activities not in the ordered list at the end (safety)
+      const reorderedIds = new Set(orderedSubGoalIds);
+      const remaining = a.subActivities.filter(sa => !reorderedIds.has(sa.id));
+      return { ...a, updatedAt: new Date().toISOString(), subActivities: [...reordered, ...remaining] };
+    });
+    return saveRoadmapContent(userId, roadmap);
   } catch (err) {
     return { error: err };
   }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, toggleTodoVisibility, TodoItem } from '@/lib/todos';
+import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, toggleTodoVisibility, editTodoText, editSubGoalText, deleteSubGoalFromTodo, reorderSubGoals, type TodoItem } from '@/lib/todos';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -266,11 +266,10 @@ export default function DesktopTodoPad() {
         }
     };
 
-    const handleDragEnd = (result: any) => {
+    const handleDragEnd = async (result: any) => {
         if (!result.destination) return;
 
-        // Drag over the full visible list (completed items stay in place)
-        const visible = todos.filter(t => !t.hidden);
+        const visible = Array.from(todos.filter(t => !t.hidden));
         const hidden = todos.filter(t => t.hidden);
         const [reorderedItem] = visible.splice(result.source.index, 1);
         visible.splice(result.destination.index, 0, reorderedItem);
@@ -282,10 +281,11 @@ export default function DesktopTodoPad() {
 
         const merged = [...reordered, ...hidden];
         setTodos(merged);
-        updateTodoOrder(merged);
+        const { error } = await updateTodoOrder(merged);
+        if (error) showToast.error('Failed to save order. Refresh to restore.');
     };
 
-    const handleSubGoalDragEnd = (result: any, todoId: string) => {
+    const handleSubGoalDragEnd = async (result: any, todoId: string) => {
         if (!result.destination) return;
 
         const todo = todos.find(t => t.id === todoId);
@@ -295,8 +295,16 @@ export default function DesktopTodoPad() {
         const [reorderedSubGoal] = subGoals.splice(result.source.index, 1);
         subGoals.splice(result.destination.index, 0, reorderedSubGoal);
 
-        // Update the todo with new sub-goal order
-        updateSubGoalOrder(todoId, todo.source, subGoals);
+        // Optimistic local update
+        setTodos(prev => prev.map(t =>
+            t.id === todoId ? { ...t, sub_goals: subGoals } : t
+        ));
+
+        const { error } = await reorderSubGoals(todoId, subGoals.map(sg => sg.id));
+        if (error) {
+            showToast.error('Failed to save sub-goal order.');
+            loadTodos(); // revert on failure
+        }
     };
 
     const updateSubGoalOrder = async (todoId: string, source: 'roadmap' | 'manual', newSubGoals: any[]) => {
@@ -354,168 +362,41 @@ export default function DesktopTodoPad() {
         setEditText(text);
     };
 
-    const saveEditTodo = async (todoId: string, source: 'roadmap' | 'manual') => {
+    const saveEditTodo = async (todoId: string) => {
         if (!editText.trim()) return;
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return { ...activity, text: editText.trim() };
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return { ...todo, text: editText.trim() };
-                }
-                return todo;
-            });
+        const { error } = await editTodoText(todoId, editText.trim());
+        if (error) {
+            showToast.error('Failed to update todo');
+        } else {
+            setEditingTodo(null);
+            setEditText('');
+            loadTodos();
+            showToast.success('Updated!');
         }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        setEditingTodo(null);
-        setEditText('');
-        loadTodos();
-        showToast.success('Updated!');
     };
 
-    const saveEditSubGoal = async (todoId: string, subGoalId: string, source: 'roadmap' | 'manual') => {
+    const saveEditSubGoal = async (todoId: string, subGoalId: string) => {
         if (!editText.trim()) return;
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        const updateSubGoal = (todo: any) => {
-            if (todo.sub_goals) {
-                todo.sub_goals = todo.sub_goals.map((sg: any) =>
-                    sg.id === subGoalId ? { ...sg, text: editText.trim() } : sg
-                );
-            }
-            return todo;
-        };
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return updateSubGoal(activity);
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return updateSubGoal(todo);
-                }
-                return todo;
-            });
+        const { error } = await editSubGoalText(todoId, subGoalId, editText.trim());
+        if (error) {
+            showToast.error('Failed to update sub-goal');
+        } else {
+            setEditingSubGoal(null);
+            setEditText('');
+            loadTodos();
+            showToast.success('Updated!');
         }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        setEditingSubGoal(null);
-        setEditText('');
-        loadTodos();
-        showToast.success('Updated!');
     };
 
-    const deleteSubGoal = async (todoId: string, subGoalId: string, source: 'roadmap' | 'manual') => {
+    const deleteSubGoal = async (todoId: string, subGoalId: string) => {
         if (!confirm('Delete this sub-goal?')) return;
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: roadmapEntry } = await supabase
-            .from('workbook_entries')
-            .select('content')
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap')
-            .single();
-
-        if (!roadmapEntry) return;
-
-        const content = roadmapEntry.content;
-
-        const removeSubGoal = (todo: any) => {
-            if (todo.sub_goals) {
-                todo.sub_goals = todo.sub_goals.filter((sg: any) => sg.id !== subGoalId);
-            }
-            return todo;
-        };
-
-        if (source === 'roadmap' && content.items) {
-            content.items = content.items.map((item: any) => {
-                if (item.activities) {
-                    item.activities = item.activities.map((activity: any) => {
-                        if (typeof activity === 'object' && activity.id === todoId) {
-                            return removeSubGoal(activity);
-                        }
-                        return activity;
-                    });
-                }
-                return item;
-            });
-        } else if (source === 'manual' && content.manual_todos) {
-            content.manual_todos = content.manual_todos.map((todo: any) => {
-                if (todo.id === todoId) {
-                    return removeSubGoal(todo);
-                }
-                return todo;
-            });
+        const { error } = await deleteSubGoalFromTodo(todoId, subGoalId);
+        if (error) {
+            showToast.error('Failed to delete sub-goal');
+        } else {
+            loadTodos();
+            showToast.success('Deleted!');
         }
-
-        await supabase
-            .from('workbook_entries')
-            .update({ content, updated_at: new Date().toISOString() })
-            .eq('user_id', user.id)
-            .eq('category', 'roadmap');
-
-        loadTodos();
-        showToast.success('Deleted!');
     };
 
     const getSubGoalLabel = (priority: number, subIndex: number) => {
@@ -772,9 +653,9 @@ export default function DesktopTodoPad() {
                                                             type="text"
                                                             value={editText}
                                                             onChange={(e) => setEditText(e.target.value)}
-                                                            onBlur={() => saveEditTodo(todo.id, todo.source)}
+                                                            onBlur={() => saveEditTodo(todo.id)}
                                                             onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') saveEditTodo(todo.id, todo.source);
+                                                                if (e.key === 'Enter') saveEditTodo(todo.id);
                                                                 if (e.key === 'Escape') { setEditingTodo(null); setEditText(''); }
                                                             }}
                                                             className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
@@ -880,9 +761,9 @@ export default function DesktopTodoPad() {
                                                                         type="text"
                                                                         value={editText}
                                                                         onChange={(e) => setEditText(e.target.value)}
-                                                                        onBlur={() => saveEditSubGoal(todo.id, subGoal.id, todo.source)}
+                                                                        onBlur={() => saveEditSubGoal(todo.id, subGoal.id)}
                                                                         onKeyDown={(e) => {
-                                                                            if (e.key === 'Enter') saveEditSubGoal(todo.id, subGoal.id, todo.source);
+                                                                            if (e.key === 'Enter') saveEditSubGoal(todo.id, subGoal.id);
                                                                             if (e.key === 'Escape') { setEditingSubGoal(null); setEditText(''); }
                                                                         }}
                                                                         className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
@@ -901,7 +782,7 @@ export default function DesktopTodoPad() {
 
                                                                 {/* Delete Sub-Goal Button */}
                                                                 <button
-                                                                    onClick={() => deleteSubGoal(todo.id, subGoal.id, todo.source)}
+                                                                    onClick={() => deleteSubGoal(todo.id, subGoal.id)}
                                                                     className="opacity-0 group-hover/sub:opacity-100 text-gray-400 hover:text-red-600 transition-all"
                                                                 >
                                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -979,9 +860,9 @@ export default function DesktopTodoPad() {
                                                                     type="text"
                                                                     value={editText}
                                                                     onChange={(e) => setEditText(e.target.value)}
-                                                                    onBlur={() => saveEditTodo(todo.id, todo.source)}
+                                                                    onBlur={() => saveEditTodo(todo.id)}
                                                                     onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') saveEditTodo(todo.id, todo.source);
+                                                                        if (e.key === 'Enter') saveEditTodo(todo.id);
                                                                         if (e.key === 'Escape') { setEditingTodo(null); setEditText(''); }
                                                                     }}
                                                                     className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
@@ -1115,9 +996,9 @@ export default function DesktopTodoPad() {
                                                                                                     type="text"
                                                                                                     value={editText}
                                                                                                     onChange={(e) => setEditText(e.target.value)}
-                                                                                                    onBlur={() => saveEditSubGoal(todo.id, subGoal.id, todo.source)}
+                                                                                                    onBlur={() => saveEditSubGoal(todo.id, subGoal.id)}
                                                                                                     onKeyDown={(e) => {
-                                                                                                        if (e.key === 'Enter') saveEditSubGoal(todo.id, subGoal.id, todo.source);
+                                                                                                        if (e.key === 'Enter') saveEditSubGoal(todo.id, subGoal.id);
                                                                                                         if (e.key === 'Escape') { setEditingSubGoal(null); setEditText(''); }
                                                                                                     }}
                                                                                                     className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
@@ -1136,7 +1017,7 @@ export default function DesktopTodoPad() {
 
                                                                                             {/* Delete Sub-Goal Button */}
                                                                                             <button
-                                                                                                onClick={() => deleteSubGoal(todo.id, subGoal.id, todo.source)}
+                                                                                                onClick={() => deleteSubGoal(todo.id, subGoal.id)}
                                                                                                 className="opacity-0 group-hover/sub:opacity-100 text-gray-400 hover:text-red-600 transition-all"
                                                                                             >
                                                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
