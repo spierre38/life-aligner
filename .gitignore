@@ -9,6 +9,11 @@
 # testing
 /coverage
 
+# load testing binaries
+/k6-bin/
+k6-portable.zip
+load-test-results.json
+
 # next.js
 /.next/
 /out/
