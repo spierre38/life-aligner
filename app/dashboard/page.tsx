@@ -430,22 +430,24 @@ export default function DashboardPage() {
                                     <span aria-hidden>→</span>
                                 </Link>
 
-                                <button
-                                    onClick={() => {
-                                        const v1 = getVideo('v1-welcome');
-                                        if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
-                                    }}
-                                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
-                                    style={{
-                                        background: 'rgba(255,255,255,0.08)',
-                                        border: '1px solid rgba(255,255,255,0.18)',
-                                        color: 'white',
-                                        backdropFilter: 'blur(8px)',
-                                    }}
-                                >
-                                    <span className="text-purple-300">▶</span>
-                                    <span>Watch Welcome from Tim (5 min)</span>
-                                </button>
+                                {state === 'new' && (
+                                    <button
+                                        onClick={() => {
+                                            const v1 = getVideo('v1-welcome');
+                                            if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
+                                        }}
+                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.08)',
+                                            border: '1px solid rgba(255,255,255,0.18)',
+                                            color: 'white',
+                                            backdropFilter: 'blur(8px)',
+                                        }}
+                                    >
+                                        <span className="text-purple-300">▶</span>
+                                        <span>Watch Welcome from Tim (5 min)</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </section>
