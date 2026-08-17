@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { FrameworkVideo } from '@/lib/videos';
@@ -6,6 +6,8 @@ import { WATCH_THRESHOLD, trackVideoEvent } from '@/lib/video-progress';
 
 interface VideoPlayerProps {
   video: FrameworkVideo;
+  /** Direct CDN URL â€” pass the blob URL from lib/videos.ts storageKey */
+  src: string;
   onClose: () => void;
   onWatched?: (videoId: string) => void;
 }
@@ -13,78 +15,42 @@ interface VideoPlayerProps {
 /**
  * Full-screen modal video player.
  *
- * - Fetches a 1-hour signed URL from the server on mount
- * - Uses native HTML5 <video> with controls (same as marketing page)
+ * - Streams directly from Vercel Blob CDN (no API round-trip)
+ * - Native HTML5 <video> with controls
  * - Tracks playback: fires GA event at start, marks "watched" at 95%
- * - Reports watched status to server via POST /api/videos/signed-url
+ * - Reports watched status to server via POST /api/videos/watch
  */
-export default function VideoPlayer({ video, onClose, onWatched }: VideoPlayerProps) {
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function VideoPlayer({ video, src, onClose, onWatched }: VideoPlayerProps) {
   const [hasStarted, setHasStarted] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Fetch signed URL on mount
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchUrl() {
-      try {
-        const res = await fetch(`/api/videos/signed-url?videoId=${encodeURIComponent(video.id)}`);
-        if (!cancelled) {
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({ error: 'Failed to load video' }));
-            setError(data.error || 'Failed to load video');
-          } else {
-            const data = await res.json();
-            setSignedUrl(data.signedUrl);
-          }
-          setLoading(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setError('Network error. Check your connection and try again.');
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchUrl();
-    return () => { cancelled = true; };
-  }, [video.id]);
 
   // Mark video as watched (server + callback)
   const markWatched = useCallback(async () => {
     if (hasCompleted) return;
     setHasCompleted(true);
-
     trackVideoEvent('video_completed', video.id, video.title);
     onWatched?.(video.id);
 
     try {
-      await fetch('/api/videos/signed-url', {
+      await fetch('/api/videos/watch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoId: video.id }),
       });
     } catch {
-      // Silent fail — watch progress is best-effort
+      // Silent fail â€” watch progress is best-effort
     }
   }, [video.id, video.title, hasCompleted, onWatched]);
 
-  // Track playback progress
+  // Track 95% completion
   const handleTimeUpdate = useCallback(() => {
     const el = videoRef.current;
     if (!el || hasCompleted || !el.duration) return;
-
-    if (el.currentTime / el.duration >= WATCH_THRESHOLD) {
-      markWatched();
-    }
+    if (el.currentTime / el.duration >= WATCH_THRESHOLD) markWatched();
   }, [hasCompleted, markWatched]);
 
-  // Track video start
+  // Track video start for GA
   const handlePlay = useCallback(() => {
     if (!hasStarted) {
       setHasStarted(true);
@@ -94,14 +60,12 @@ export default function VideoPlayer({ video, onClose, onWatched }: VideoPlayerPr
 
   // Close on Escape
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  // Prevent body scroll while modal is open
+  // Prevent body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
@@ -139,7 +103,7 @@ export default function VideoPlayer({ video, onClose, onWatched }: VideoPlayerPr
           </button>
         </div>
 
-        {/* Video Container */}
+        {/* Video */}
         <div
           className="aspect-video rounded-xl md:rounded-2xl overflow-hidden relative"
           style={{
@@ -148,43 +112,19 @@ export default function VideoPlayer({ video, onClose, onWatched }: VideoPlayerPr
             boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           }}
         >
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 border-3 border-white/20 border-t-purple-400 rounded-full animate-spin" />
-            </div>
-          )}
-
-          {error && (
-            <div className="absolute inset-0 flex items-center justify-center text-center p-8">
-              <div>
-                <div className="text-4xl mb-4">📡</div>
-                <p className="text-white/70 text-sm mb-2">{error}</p>
-                <button
-                  onClick={onClose}
-                  className="text-sm font-medium px-4 py-2 rounded-lg mt-2"
-                  style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }}
-                >
-                  Go back
-                </button>
-              </div>
-            </div>
-          )}
-
-          {signedUrl && (
-            <video
-              ref={videoRef}
-              className="w-full h-full object-contain"
-              src={signedUrl}
-              controls
-              playsInline
-              preload="metadata"
-              autoPlay
-              onPlay={handlePlay}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={markWatched}
-              aria-label={video.title}
-            />
-          )}
+          <video
+            ref={videoRef}
+            className="w-full h-full object-contain"
+            src={src}
+            controls
+            playsInline
+            preload="metadata"
+            autoPlay
+            onPlay={handlePlay}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={markWatched}
+            aria-label={video.title}
+          />
 
           {/* Watched badge */}
           {hasCompleted && (
@@ -197,7 +137,7 @@ export default function VideoPlayer({ video, onClose, onWatched }: VideoPlayerPr
               }}
             >
               <span className="text-xs font-semibold" style={{ color: 'rgba(34,197,94,0.9)' }}>
-                ✓ Watched
+                âœ“ Watched
               </span>
             </div>
           )}
@@ -211,3 +151,9 @@ export default function VideoPlayer({ video, onClose, onWatched }: VideoPlayerPr
     </div>
   );
 }
+
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import type { FrameworkVideo } from '@/lib/videos';
+import { WATCH_THRESHOLD, trackVideoEvent } from '@/lib/video-progress';
+

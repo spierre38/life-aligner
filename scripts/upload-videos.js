@@ -1,25 +1,22 @@
 /**
  * scripts/upload-videos.js
  *
- * Uploads local MP4/M4V files to the Supabase Storage private bucket 'framework-videos'.
+ * Uploads local MP4/M4V files to Vercel Blob storage.
  *
  * Usage:
  *   node scripts/upload-videos.js <path-to-folder-or-file>
  *
  * Example:
- *   node scripts/upload-videos.js "C:\Users\...\Downloads"
- *   node scripts/upload-videos.js "C:\Users\...\Downloads\v1-welcome.mp4"
+ *   node scripts/upload-videos.js "C:\Users\...\Desktop"
  *
- * Requires in .env.local:
- *   NEXT_PUBLIC_SUPABASE_URL
- *   SUPABASE_SERVICE_ROLE_KEY (or pass via env: SUPABASE_SERVICE_ROLE_KEY=... node ...)
+ * Requires BLOB_READ_WRITE_TOKEN in .env.local
  */
 
 const fs = require('fs');
 const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
+const { Readable } = require('stream');
 
-// Load .env.local if present
+// Load .env.local
 const envPath = path.resolve(process.cwd(), '.env.local');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
@@ -30,81 +27,68 @@ if (fs.existsSync(envPath)) {
     if (idx !== -1) {
       const key = trimmed.slice(0, idx).trim();
       const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
-      if (!process.env[key]) {
-        process.env[key] = val;
-      }
+      if (!process.env[key]) process.env[key] = val;
     }
   }
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local');
+const token = process.env.BLOB_READ_WRITE_TOKEN;
+if (!token) {
+  console.error('âŒ Missing BLOB_READ_WRITE_TOKEN in .env.local');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-const BUCKET = 'framework-videos';
-
-// Known video filename mapping
+// Known video filename mapping: local file -> blob pathname
 const VIDEO_MAP = {
-  1: 'v1-welcome.mp4',
-  2: 'v2-contentment.mp4',
-  3: 'v3-improvement.mp4',
-  4: 'v4-goals.mp4',
-  5: 'v5-lifeframe-roadmap.mp4',
-  6: 'v6-your-story.mp4',
+  1: 'framework-videos/v1-welcome.mp4',
+  2: 'framework-videos/v2-contentment.mp4',
+  3: 'framework-videos/v3-improvement.mp4',
+  4: 'framework-videos/v4-goals.mp4',
+  5: 'framework-videos/v5-lifeframe-roadmap.mp4',
+  6: 'framework-videos/v6-your-story.mp4',
 };
 
-function matchStorageKey(filename) {
+function matchBlobPath(filename) {
   const lower = filename.toLowerCase();
 
-  // Explicit check for "#1", "# 1", "v1", "video 1" etc.
   const hashMatch = lower.match(/(?:#|v|video\s*)(\d+)/i);
   if (hashMatch && hashMatch[1]) {
     const num = parseInt(hashMatch[1], 10);
-    if (VIDEO_MAP[num]) {
-      return VIDEO_MAP[num];
-    }
+    if (VIDEO_MAP[num]) return VIDEO_MAP[num];
   }
 
-  // Check for title keywords
-  if (lower.includes('welcome')) return 'v1-welcome.mp4';
-  if (lower.includes('contentment')) return 'v2-contentment.mp4';
-  if (lower.includes('continuous') || lower.includes('improvement')) return 'v3-improvement.mp4';
-  if (lower.includes('goals') || lower.includes('begin with')) return 'v4-goals.mp4';
-  if (lower.includes('lifeframe') || lower.includes('roadmap')) return 'v5-lifeframe-roadmap.mp4';
-  if (lower.includes('story') || lower.includes('tim')) return 'v6-your-story.mp4';
+  if (lower.includes('welcome')) return VIDEO_MAP[1];
+  if (lower.includes('contentment')) return VIDEO_MAP[2];
+  if (lower.includes('continuous') || lower.includes('improvement')) return VIDEO_MAP[3];
+  if (lower.includes('goals') || lower.includes('begin')) return VIDEO_MAP[4];
+  if (lower.includes('lifeframe') || lower.includes('roadmap')) return VIDEO_MAP[5];
+  if (lower.includes('story')) return VIDEO_MAP[6];
 
-  if (lower.endsWith('.mp4') || lower.endsWith('.m4v') || lower.endsWith('.mov')) {
-    const ext = path.extname(filename);
-    return path.basename(filename, ext) + '.mp4';
+  const ext = path.extname(filename).toLowerCase();
+  if (['.mp4', '.m4v', '.mov'].includes(ext)) {
+    return 'framework-videos/' + path.basename(filename, ext) + '.mp4';
   }
   return null;
 }
 
-async function uploadFile(filePath, targetKey) {
-  console.log(`\n⏳ Uploading: ${path.basename(filePath)} -> bucket '${BUCKET}/${targetKey}'`);
+async function uploadFile(filePath, blobPathname) {
+  const { put } = await import('@vercel/blob');
+  console.log(`\nâ³ Uploading: ${path.basename(filePath)}`);
+  console.log(`   â†’ Blob: ${blobPathname}`);
+  const sizeMb = (fs.statSync(filePath).size / (1024 * 1024)).toFixed(1);
+  console.log(`   Size: ${sizeMb} MB`);
+
   const fileBuffer = fs.readFileSync(filePath);
-  const fileSizeMb = (fileBuffer.length / (1024 * 1024)).toFixed(2);
-  console.log(`   Size: ${fileSizeMb} MB`);
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .upload(targetKey, fileBuffer, {
-      contentType: 'video/mp4',
-      upsert: true,
-    });
+  const blob = await put(blobPathname, fileBuffer, {
+    access: 'public',
+    token,
+    contentType: 'video/mp4',
+    addRandomSuffix: true,
+  });
 
-  if (error) {
-    console.error(`❌ Failed to upload ${targetKey}:`, error.message);
-    return false;
-  }
-
-  console.log(`✅ Uploaded successfully: ${targetKey}`);
-  return true;
+  console.log(`âœ… Uploaded: ${blob.url}`);
+  return blob.url;
 }
 
 async function main() {
@@ -116,55 +100,59 @@ async function main() {
 
   const resolved = path.resolve(targetPath);
   if (!fs.existsSync(resolved)) {
-    console.error(`❌ Path does not exist: ${resolved}`);
+    console.error(`âŒ Path does not exist: ${resolved}`);
     process.exit(1);
   }
 
   const stat = fs.statSync(resolved);
-  let filesToUpload = [];
+  const filesToUpload = [];
 
   if (stat.isDirectory()) {
-    const entries = fs.readdirSync(resolved);
-    for (const entry of entries) {
+    for (const entry of fs.readdirSync(resolved)) {
       const ext = path.extname(entry).toLowerCase();
       if (['.mp4', '.m4v', '.mov'].includes(ext)) {
-        const full = path.join(resolved, entry);
-        const key = matchStorageKey(entry);
-        if (key) {
-          filesToUpload.push({ full, key });
+        const blobPath = matchBlobPath(entry);
+        if (blobPath) {
+          filesToUpload.push({ full: path.join(resolved, entry), blobPath });
         } else {
-          console.warn(`⚠️ Could not automatically match key for: ${entry}`);
+          console.warn(`âš ï¸  Could not match blob path for: ${entry}`);
         }
       }
     }
   } else {
-    const key = matchStorageKey(path.basename(resolved));
-    if (key) {
-      filesToUpload.push({ full: resolved, key });
-    } else {
-      console.error(`❌ Could not determine target key for: ${resolved}`);
+    const blobPath = matchBlobPath(path.basename(resolved));
+    if (!blobPath) {
+      console.error(`âŒ Could not determine blob path for: ${resolved}`);
       process.exit(1);
     }
+    filesToUpload.push({ full: resolved, blobPath });
   }
 
   if (filesToUpload.length === 0) {
-    console.log('No video files found to upload.');
+    console.log('No video files found.');
     return;
   }
 
-  console.log(`Found ${filesToUpload.length} file(s) to upload to '${BUCKET}':`);
-  filesToUpload.forEach(f => console.log(` - ${path.basename(f.full)} => ${f.key}`));
+  console.log(`\nFound ${filesToUpload.length} file(s) to upload:`);
+  filesToUpload.forEach(f => console.log(`  ${path.basename(f.full)} â†’ ${f.blobPath}`));
 
-  let successCount = 0;
+  const results = [];
   for (const item of filesToUpload) {
-    const ok = await uploadFile(item.full, item.key);
-    if (ok) successCount++;
+    try {
+      const url = await uploadFile(item.full, item.blobPath);
+      results.push({ blobPath: item.blobPath, url });
+    } catch (err) {
+      console.error(`âŒ Failed: ${item.blobPath} â€” ${err.message}`);
+    }
   }
 
-  console.log(`\n🎉 Finished: ${successCount}/${filesToUpload.length} video(s) uploaded.`);
+  console.log(`\nðŸŽ‰ Done: ${results.length}/${filesToUpload.length} uploaded.`);
+  console.log('\nðŸ“‹ Blob URLs (update lib/videos.ts with these):');
+  results.forEach(r => console.log(`  ${r.blobPath}: ${r.url}`));
 }
 
 main().catch(err => {
-  console.error('Fatal error:', err);
+  console.error('Fatal:', err);
   process.exit(1);
 });
+

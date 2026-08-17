@@ -30,7 +30,8 @@ export interface VideoStatus {
   video: FrameworkVideo;
   unlocked: boolean;
   watched: boolean;
-  available: boolean;   // has a storageKey (file uploaded)
+  /** Whether the video file is available in blob storage */
+  available: boolean;
 }
 
 /** Parse raw JSONB from profiles.video_progress into typed shape */
@@ -95,7 +96,7 @@ export function getVideoStatuses(
     video,
     unlocked: isCriteriaMet(video.unlockCriteria, completion, roadmap, watchedSet),
     watched: watchedSet.has(video.id),
-    available: video.storageKey !== null,
+    available: video.blobUrl !== null,
   }));
 }
 

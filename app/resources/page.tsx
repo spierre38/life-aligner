@@ -51,7 +51,7 @@ function getUnlockLink(video: FrameworkVideo): string {
 export default function ResourcesPage() {
   const [statuses, setStatuses] = useState<VideoStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeVideo, setActiveVideo] = useState<FrameworkVideo | null>(null);
+  const [activeVideo, setActiveVideo] = useState<{ video: FrameworkVideo; src: string } | null>(null);
   const [filter, setFilter] = useState<CategoryFilter>('all');
 
   // Load user state and compute video statuses
@@ -115,6 +115,11 @@ export default function ResourcesPage() {
     setStatuses(prev => prev.map(s =>
       s.video.id === videoId ? { ...s, watched: true } : s
     ));
+    // Also close the player if it was the active one
+    setActiveVideo(prev => {
+      if (prev && prev.video.id === videoId) return null;
+      return prev;
+    });
   }, []);
 
   // Filtered statuses
@@ -211,7 +216,8 @@ export default function ResourcesPage() {
                   key={status.video.id}
                   status={status}
                   onPlay={() => {
-                    setActiveVideo(status.video);
+                    if (!status.video.blobUrl) return;
+                    setActiveVideo({ video: status.video, src: status.video.blobUrl });
                     trackVideoEvent('video_started', status.video.id, status.video.title);
                   }}
                 />
@@ -314,7 +320,8 @@ export default function ResourcesPage() {
       {/* â”€â”€ Video Player Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {activeVideo && (
         <VideoPlayer
-          video={activeVideo}
+          video={activeVideo.video}
+          src={activeVideo.src}
           onClose={() => setActiveVideo(null)}
           onWatched={handleVideoWatched}
         />

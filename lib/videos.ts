@@ -34,8 +34,8 @@ export interface FrameworkVideo {
   description: string;
   /** Approximate duration string */
   duration: string;
-  /** Supabase Storage key in the framework-videos bucket. null = not yet delivered */
-  storageKey: string | null;
+  /** Vercel Blob CDN URL. null = not yet delivered */
+  blobUrl: string | null;
   /** What the user must do to unlock this video */
   unlockCriteria: UnlockCriteria;
   /** Human-readable unlock instruction shown on locked cards */
@@ -55,7 +55,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Welcome to the Tim Collins Framework',
     description: 'Tim introduces the framework and explains how defining your values, interests, and purpose creates a foundation for lasting contentment.',
     duration: '5:17',
-    storageKey: 'v1-welcome.mp4',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v1-welcome-OtEUATHH2afAEdWYhs9o4VP4GTA0WX.mp4',
     unlockCriteria: { type: 'signup' },
     unlockHint: 'Available now',
     category: 'intro',
@@ -67,7 +67,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'What is Contentment?',
     description: 'Understanding the difference between happiness and sustained contentment — and why values-aligned action is the key.',
     duration: '4:33',
-    storageKey: 'v2-contentment.mp4',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v2-contentment-jVWdBfyGKRQoZDPmuMaJedzcOVKlx9.mp4',
     unlockCriteria: { type: 'signup' },
     unlockHint: 'Available now',
     category: 'intro',
@@ -79,7 +79,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'The Process of Continuous Improvement',
     description: 'How the cycle of vision, goals, activities, action, and learning creates lasting change.',
     duration: '7:25',
-    storageKey: 'v3-improvement.mp4',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v3-improvement-miwZTKixYdfCh972g3pq5j7nNxukwv.mp4',
     unlockCriteria: { type: 'watched', videoIds: ['v1-welcome', 'v2-contentment'] },
     unlockHint: 'Watch videos 1 & 2 to unlock',
     category: 'intro',
@@ -93,7 +93,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Goals — Begin with the End in Mind',
     description: 'How to set meaningful goals that connect your daily activities to your larger purpose.',
     duration: '3:82',
-    storageKey: 'v4-goals.mp4',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v4-goals-NGE9WUixMEDRvVyCPR6ZIyTkMQ12UP.mp4',
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'values' },
     unlockHint: 'Complete your Values worksheet to unlock',
     category: 'lifeframe',
@@ -105,7 +105,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'The LifeFrame & Roadmap',
     description: 'How to use the LifeFrame to organize your life into categories and build a personal roadmap.',
     duration: '2:50',
-    storageKey: 'v5-lifeframe-roadmap.mp4',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v5-lifeframe-roadmap-R7NIu9lyNmmEHk62TEme5aqOzKiOIX.mp4',
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'life_categories' },
     unlockHint: 'Complete your Life Categories to unlock',
     category: 'lifeframe',
@@ -117,7 +117,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Your Story — Tim\'s Life Story',
     description: 'Tim shares his personal story and how the framework shaped his path.',
     duration: '4:33',
-    storageKey: 'v6-your-story.mp4',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v6-your-story-Qr8WWjGfz1bnpVW1D3Hm0FzRuxUVUI.mp4',
     unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
     unlockHint: 'Complete your LifeFrame to unlock',
     category: 'lifeframe',
@@ -141,7 +141,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Values, Interests & Life Categories',
     description: 'A deeper dive into the three pillars of your LifeFrame.',
     duration: '~5 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
     unlockHint: 'Complete your LifeFrame to unlock',
     category: 'lifeframe',
@@ -152,7 +152,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Be Open Minded, Positive & Your Word',
     description: 'Character traits that support your journey toward contentment.',
     duration: '~6 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_goal' },
     unlockHint: 'Add your first goal to unlock',
     category: 'bonus',
@@ -163,7 +163,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Values — Worksheet Deep Dive',
     description: 'Detailed guide to completing your Values worksheet effectively.',
     duration: '~4 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'values' },
     unlockHint: 'Complete your Values worksheet to unlock',
     category: 'lifeframe',
@@ -174,7 +174,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Understanding Your Interests',
     description: 'Finding the activities that bring you energy and fulfillment.',
     duration: '~4 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'interests' },
     unlockHint: 'Complete your Interests worksheet to unlock',
     category: 'lifeframe',
@@ -185,7 +185,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Life Categories (Part 1)',
     description: 'Defining the key areas of your life to focus on.',
     duration: '~5 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'life_categories' },
     unlockHint: 'Complete your Life Categories to unlock',
     category: 'lifeframe',
@@ -196,7 +196,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Life Categories (Part 2)',
     description: 'Connecting categories to your values and purpose.',
     duration: '~4 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'life_categories' },
     unlockHint: 'Complete your Life Categories to unlock',
     category: 'lifeframe',
@@ -207,7 +207,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Community & Relationships',
     description: 'How your community shapes your path to contentment.',
     duration: '~4 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_goal' },
     unlockHint: 'Add your first goal to unlock',
     category: 'bonus',
@@ -218,7 +218,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Finding Your Purpose',
     description: 'How to define and pursue a meaningful purpose.',
     duration: '~5 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
     unlockHint: 'Complete your LifeFrame to unlock',
     category: 'lifeframe',
@@ -229,7 +229,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Worksheet 3: Instructions',
     description: 'Step-by-step guide for the Goals & Activities worksheet.',
     duration: '~3 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
     unlockHint: 'Complete your LifeFrame to unlock',
     category: 'roadmap',
@@ -240,7 +240,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Goals & Behavior Changes',
     description: 'Setting actionable goals and tracking behavior changes.',
     duration: '~4 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_goal' },
     unlockHint: 'Add your first goal to unlock',
     category: 'roadmap',
@@ -251,7 +251,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Minimize Regrets',
     description: 'Using the framework to reduce future regret.',
     duration: '~4 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_goal' },
     unlockHint: 'Add your first goal to unlock',
     category: 'bonus',
@@ -262,7 +262,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Chart Your Own Course',
     description: 'Taking ownership of your journey.',
     duration: '~3 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_activity' },
     unlockHint: 'Add your first activity to unlock',
     category: 'roadmap',
@@ -273,7 +273,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'The Tough Farmer',
     description: 'Lessons on resilience and perseverance.',
     duration: '~6 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_todo' },
     unlockHint: 'Complete your first to-do to unlock',
     category: 'bonus',
@@ -284,7 +284,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Worksheet 5: Goals & Activities',
     description: 'Filling out the Goals & Activities worksheet.',
     duration: '~5 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_goal' },
     unlockHint: 'Add your first goal to unlock',
     category: 'roadmap',
@@ -295,7 +295,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     title: 'Summary & Next Steps',
     description: 'Wrapping up the framework and planning your next steps.',
     duration: '~3 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'first_todo' },
     unlockHint: 'Complete your first to-do to unlock',
     category: 'roadmap',
@@ -304,8 +304,8 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/** Videos that have actual files uploaded (playable) */
-export const AVAILABLE_VIDEOS = VIDEO_CATALOG.filter(v => v.storageKey !== null);
+/** Videos that have actual blob URLs uploaded (playable) */
+export const AVAILABLE_VIDEOS = VIDEO_CATALOG.filter(v => v.blobUrl !== null);
 
 /** Get a video by ID */
 export function getVideo(id: string): FrameworkVideo | undefined {
