@@ -238,15 +238,39 @@ export default function ResourcesPage() {
               style={{ color: 'var(--color-text)' }}
             >
               <span
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}
-              >📥</span>
+              >
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </span>
               Downloads
             </h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { title: 'The Tim Collins Framework', desc: 'Complete book (PDF)', icon: '📖', href: '/downloads/lifealigner-book.pdf', available: true },
-                { title: 'Printable Workbook', desc: 'Physical worksheets for offline use', icon: '📝', href: '/downloads/lifealigner-workbook.pdf', available: true },
+                {
+                  title: 'The Tim Collins Framework',
+                  desc: 'Complete book (PDF)',
+                  icon: (
+                    <svg className="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  ),
+                  href: '/downloads/lifealigner-book.pdf',
+                  available: true,
+                },
+                {
+                  title: 'Printable Workbook',
+                  desc: 'Physical worksheets for offline use',
+                  icon: (
+                    <svg className="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  ),
+                  href: '/downloads/lifealigner-workbook.pdf',
+                  available: true,
+                },
               ].map(dl => (
                 <a
                   key={dl.title}
@@ -260,7 +284,9 @@ export default function ResourcesPage() {
                     cursor: dl.available ? 'pointer' : 'not-allowed',
                   }}
                 >
-                  <span className="text-2xl">{dl.icon}</span>
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-surface-2)' }}>
+                    {dl.icon}
+                  </div>
                   <div className="flex-1">
                     <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{dl.title}</h3>
                     <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{dl.desc}</p>
@@ -299,8 +325,8 @@ export default function ResourcesPage() {
                   border: '1px solid rgba(139,92,246,0.3)',
                 }}
               >
-                <span>🗂️</span>
                 <span>View LifeFrame</span>
+                <span>→</span>
               </Link>
               <Link
                 href="/roadmap"
@@ -311,8 +337,8 @@ export default function ResourcesPage() {
                   border: '1px solid var(--color-border)',
                 }}
               >
-                <span>🗺️</span>
                 <span>Open Roadmap</span>
+                <span>→</span>
               </Link>
             </div>
           </div>
@@ -388,7 +414,9 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
           </div>
         ) : isLocked ? (
           <div className="text-center px-6 z-10">
-            <div className="text-3xl mb-2">🔒</div>
+            <svg className="w-7 h-7 mx-auto mb-2 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
             <p className="text-xs font-medium" style={{ color: 'rgba(167,139,250,0.7)' }}>
               {video.unlockHint}
             </p>
@@ -406,7 +434,9 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
           </div>
         ) : (
           <div className="text-center z-10">
-            <div className="text-3xl mb-2">🎬</div>
+            <svg className="w-7 h-7 mx-auto mb-2 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+            </svg>
             <div
               className="text-xs font-semibold tracking-wider uppercase px-3 py-1 rounded-full"
               style={{

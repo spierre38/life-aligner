@@ -402,10 +402,43 @@ export default function AuthNavbar() {
 
                     {/* Nav rows */}
                     {[
-                        { href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute, label: 'View LifeFrame', icon: '🗂️' },
-                        { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap', icon: '🗺️' },
-                        { href: '/resources', label: 'Resources & Videos', icon: '📚' },
-                        { href: '/settings', label: 'Settings', icon: '⚙️' },
+                        {
+                            href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute,
+                            label: 'View LifeFrame',
+                            icon: (
+                                <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            ),
+                        },
+                        {
+                            href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute,
+                            label: 'My Roadmap',
+                            icon: (
+                                <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                </svg>
+                            ),
+                        },
+                        {
+                            href: '/resources',
+                            label: 'Resources & Videos',
+                            icon: (
+                                <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            ),
+                        },
+                        {
+                            href: '/settings',
+                            label: 'Settings',
+                            icon: (
+                                <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            ),
+                        },
                     ].map(item => (
                         <Link
                             key={item.href + item.label}
@@ -414,7 +447,7 @@ export default function AuthNavbar() {
                             className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98]"
                             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
                         >
-                            <span className="text-base">{item.icon}</span>
+                            <span className="flex-shrink-0">{item.icon}</span>
                             <span className="text-sm font-medium text-white/80">{item.label}</span>
                             <svg className="w-4 h-4 ml-auto text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -431,7 +464,9 @@ export default function AuthNavbar() {
                             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all active:scale-[0.98] mt-2"
                             style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}
                         >
-                            <span className="text-base">🚪</span>
+                            <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
                             <span className="text-sm font-medium text-red-400">Sign Out</span>
                         </button>
                     </div>
