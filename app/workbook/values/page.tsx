@@ -3,6 +3,8 @@
 import { trackValuesSaved } from '@/lib/analytics';
 import { useToast } from '@/app/components/Toast';
 import { logActivity } from '@/lib/accountability';
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo } from '@/lib/videos';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -90,6 +92,7 @@ export default function ValuesWorksheet() {
     const [editingPriority, setEditingPriority] = useState<{ name: string, value: string } | null>(null);
     const [showFewValuesConfirm, setShowFewValuesConfirm] = useState(false);
     const [showTooManyValuesConfirm, setShowTooManyValuesConfirm] = useState(false);
+    const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
     // Scroll to top when transitioning between steps
     const goToStep = (step: number) => {
@@ -505,26 +508,30 @@ export default function ValuesWorksheet() {
                                 >
                                     {/* Video area */}
                                     <div
-                                        className="relative aspect-video flex items-center justify-center"
-                                        style={{ background: 'linear-gradient(135deg, rgba(15,15,20,1) 0%, rgba(30,20,50,1) 100%)' }}
+                                        className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all"
+                                        style={{ background: 'linear-gradient(135deg, rgba(30,15,60,1) 0%, rgba(15,10,25,1) 100%)' }}
+                                        onClick={() => {
+                                            const v1 = getVideo('v1-welcome');
+                                            if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
+                                        }}
                                     >
-                                        <div className="text-center">
+                                        <div className="text-center z-10">
                                             <div
-                                                className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4"
-                                                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
+                                                style={{ background: 'rgba(139,92,246,0.25)', backdropFilter: 'blur(10px)', border: '2px solid rgba(167,139,250,0.5)' }}
                                             >
-                                                <svg className="w-12 h-12 text-white/60" fill="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-9 h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-2xl font-light text-white/80 mb-2" style={{ letterSpacing: '-0.02em' }}>Video Coming Soon</p>
-                                            <p className="text-sm text-white/40">Understanding Your Values</p>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(167,139,250,0.9)' }}>Watch Introduction</p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Welcome to the Tim Collins Framework</p>
                                         </div>
                                         <div
-                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-sm"
-                                            style={{ background: 'rgba(0,0,0,0.5)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}
+                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium"
+                                            style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}
                                         >
-                                            5 min
+                                            5:17
                                         </div>
                                     </div>
 
@@ -1179,6 +1186,15 @@ export default function ValuesWorksheet() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Video Player Modal */}
+            {activeVideo && (
+                <VideoPlayer
+                    video={activeVideo.video}
+                    src={activeVideo.src}
+                    onClose={() => setActiveVideo(null)}
+                />
             )}
         </>
     );

@@ -10,6 +10,8 @@ import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import { Confetti } from '@/app/components/Confetti';
 import SpaceLaunchAnimation from '@/app/components/SpaceLaunchAnimation';
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo } from '@/lib/videos';
 
 // ============================================================================
 // INLINE SVG ILLUSTRATIONS
@@ -109,6 +111,7 @@ export default function LifeCategoriesWorksheet() {
     const [showSpaceLaunch, setShowSpaceLaunch] = useState(false);
     const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
     const [isStepAnimating, setIsStepAnimating] = useState(false);
+    const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
     const goToStep = (next: number) => {
         const dir = next > currentStep ? 'forward' : 'backward';
@@ -438,24 +441,28 @@ export default function LifeCategoriesWorksheet() {
                             <div className="grid lg:grid-cols-2 gap-6 mb-8">
                                 {/* Video Card 1 */}
                                 <div
-                                    className="rounded-3xl overflow-hidden"
+                                    className="rounded-3xl overflow-hidden cursor-pointer group transition-all"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+                                    onClick={() => {
+                                        const v5 = getVideo('v5-lifeframe-roadmap');
+                                        if (v5?.blobUrl) setActiveVideo({ video: v5, src: v5.blobUrl });
+                                    }}
                                 >
-                                    <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 aspect-video flex items-center justify-center">
-                                        <div className="text-center">
-                                            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                                                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <div className="relative bg-gradient-to-br from-indigo-950 to-purple-950 aspect-video flex items-center justify-center">
+                                        <div className="text-center z-10">
+                                            <div className="w-16 h-16 bg-indigo-500/20 border border-indigo-400/40 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm transition-transform group-hover:scale-110">
+                                                <svg className="w-8 h-8 ml-0.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-white text-xl font-semibold mb-1">Video Coming Soon</p>
-                                            <p className="text-gray-300 text-sm">Life Categories Explained</p>
+                                            <p className="text-xs uppercase tracking-wider font-semibold text-indigo-300 mb-1">Watch Video</p>
+                                            <p className="text-white text-lg font-medium">The LifeFrame & Roadmap</p>
                                         </div>
                                         <div className="absolute top-3 left-3 bg-indigo-500/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
-                                            Video 1
+                                            Video 5
                                         </div>
                                         <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
-                                            4 min
+                                            2:50
                                         </div>
                                     </div>
                                     <div className="p-6">
@@ -470,24 +477,28 @@ export default function LifeCategoriesWorksheet() {
 
                                 {/* Video Card 2 */}
                                 <div
-                                    className="rounded-3xl overflow-hidden"
+                                    className="rounded-3xl overflow-hidden cursor-pointer group transition-all"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+                                    onClick={() => {
+                                        const v6 = getVideo('v6-your-story');
+                                        if (v6?.blobUrl) setActiveVideo({ video: v6, src: v6.blobUrl });
+                                    }}
                                 >
-                                    <div className="relative bg-gradient-to-br from-purple-900 to-pink-900 aspect-video flex items-center justify-center">
-                                        <div className="text-center">
-                                            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                                                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <div className="relative bg-gradient-to-br from-purple-950 to-pink-950 aspect-video flex items-center justify-center">
+                                        <div className="text-center z-10">
+                                            <div className="w-16 h-16 bg-purple-500/20 border border-purple-400/40 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm transition-transform group-hover:scale-110">
+                                                <svg className="w-8 h-8 ml-0.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-white text-xl font-semibold mb-1">Video Coming Soon</p>
-                                            <p className="text-purple-300 text-sm">Defining Your Purpose</p>
+                                            <p className="text-xs uppercase tracking-wider font-semibold text-purple-300 mb-1">Watch Video</p>
+                                            <p className="text-white text-lg font-medium">Your Story & Purpose</p>
                                         </div>
                                         <div className="absolute top-3 left-3 bg-purple-500/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
-                                            Video 2
+                                            Video 6
                                         </div>
                                         <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
-                                            3 min
+                                            4:33
                                         </div>
                                     </div>
                                     <div className="p-6">
@@ -1255,6 +1266,15 @@ export default function LifeCategoriesWorksheet() {
                     )}
                 </div>
             </div>
+
+            {/* Video Player Modal */}
+            {activeVideo && (
+                <VideoPlayer
+                    video={activeVideo.video}
+                    src={activeVideo.src}
+                    onClose={() => setActiveVideo(null)}
+                />
+            )}
         </>
     );
 }

@@ -15,6 +15,8 @@
  */
 
 import { useEffect, useState } from 'react';
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo } from '@/lib/videos';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,6 +57,7 @@ export default function FTUECategoryPicker({
   onAskTim,
 }: FTUECategoryPickerProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -93,9 +96,33 @@ export default function FTUECategoryPicker({
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
             Where do you want<br className="hidden sm:block" /> to start?
           </h1>
-          <p className="text-slate-400 text-sm md:text-lg max-w-xl mx-auto">
+          <p className="text-slate-400 text-sm md:text-lg max-w-xl mx-auto mb-5">
             Pick a life category to set your first goal.
           </p>
+
+          {/* Coaching Video Pill */}
+          <button
+            onClick={() => {
+              const v4 = getVideo('v4-goals');
+              if (v4?.blobUrl) setActiveVideo({ video: v4, src: v4.blobUrl });
+            }}
+            className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 shadow-lg group cursor-pointer"
+            style={{
+              background: 'rgba(139,92,246,0.12)',
+              border: '1px solid rgba(167,139,250,0.3)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            <span
+              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs transition-transform group-hover:scale-110"
+              style={{ background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' }}
+            >
+              ▶
+            </span>
+            <span className="text-xs sm:text-sm font-medium" style={{ color: 'rgba(216,180,254,0.95)' }}>
+              Watch Tim explain setting goals (3:50)
+            </span>
+          </button>
         </div>
 
         {/* ── Bubble grid ────────────────────────────────────────── */}
@@ -208,6 +235,15 @@ export default function FTUECategoryPicker({
           You can add goals across all categories — this just gets you started.
         </p>
       </div>
+
+      {/* Video Player Modal */}
+      {activeVideo && (
+        <VideoPlayer
+          video={activeVideo.video}
+          src={activeVideo.src}
+          onClose={() => setActiveVideo(null)}
+        />
+      )}
     </div>
   );
 }
