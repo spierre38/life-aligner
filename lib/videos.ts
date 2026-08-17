@@ -2,7 +2,7 @@
  * lib/videos.ts — Framework Video Catalog
  *
  * Static registry of all Tim Collins Framework videos.
- * Only videos with a non-null `storageKey` are playable.
+ * Only videos with a non-null `blobUrl` are playable.
  * The rest show as "Coming Soon" in the library.
  *
  * Unlock criteria types:
@@ -123,14 +123,14 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     category: 'lifeframe',
   },
 
-  // ── FUTURE VIDEOS (no storageKey yet) ─────────────────────────────────
+  // -- FUTURE VIDEOS (no blobUrl yet) -----------------------------------------------
   {
     id: 'v7-tools',
     order: 7, number: 7,
     title: 'How to Use the Tools',
     description: 'A walkthrough of the digital tools available in the app.',
     duration: '~3 min',
-    storageKey: null,
+    blobUrl: null,
     unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
     unlockHint: 'Complete your LifeFrame to unlock',
     category: 'roadmap',

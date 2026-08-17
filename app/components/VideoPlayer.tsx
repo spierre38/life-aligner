@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { FrameworkVideo } from '@/lib/videos';
@@ -6,7 +6,7 @@ import { WATCH_THRESHOLD, trackVideoEvent } from '@/lib/video-progress';
 
 interface VideoPlayerProps {
   video: FrameworkVideo;
-  /** Direct CDN URL â€” pass the blob URL from lib/videos.ts storageKey */
+  /** Direct CDN URL from lib/videos.ts blobUrl */
   src: string;
   onClose: () => void;
   onWatched?: (videoId: string) => void;
@@ -151,9 +151,3 @@ export default function VideoPlayer({ video, src, onClose, onWatched }: VideoPla
     </div>
   );
 }
-
-
-import { useState, useEffect, useRef, useCallback } from 'react';
-import type { FrameworkVideo } from '@/lib/videos';
-import { WATCH_THRESHOLD, trackVideoEvent } from '@/lib/video-progress';
-
