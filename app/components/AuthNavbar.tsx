@@ -305,8 +305,7 @@ export default function AuthNavbar() {
                                             { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap' },
                                             { href: lifeFrameUnlocked ? '/reflections' : nextWorksheetRoute, label: 'Life Chapters' },
                                             { href: '/todo', label: 'To-Do List' },
-
-                                            { href: '/community', label: 'Community' },
+                                            { href: '/resources', label: 'Resources' },
                                         ].map(item => (
                                             <Link
                                                 key={item.href + item.label}
@@ -405,6 +404,7 @@ export default function AuthNavbar() {
                     {[
                         { href: lifeFrameUnlocked ? '/workbook/lifeframe' : nextWorksheetRoute, label: 'View LifeFrame', icon: '🗂️' },
                         { href: lifeFrameUnlocked ? '/roadmap' : nextWorksheetRoute, label: 'My Roadmap', icon: '🗺️' },
+                        { href: '/resources', label: 'Resources & Videos', icon: '📚' },
                         { href: '/settings', label: 'Settings', icon: '⚙️' },
                     ].map(item => (
                         <Link

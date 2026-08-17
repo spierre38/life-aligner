@@ -137,7 +137,7 @@ export default function VideoPlayer({ video, src, onClose, onWatched }: VideoPla
               }}
             >
               <span className="text-xs font-semibold" style={{ color: 'rgba(34,197,94,0.9)' }}>
-                âœ“ Watched
+                ✓ Watched
               </span>
             </div>
           )}

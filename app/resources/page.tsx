@@ -16,7 +16,7 @@ import {
 import { evaluateLifeFrameCompletion, type LifeFrameCompletion } from '@/lib/lifeframe-completion';
 import { supabase } from '@/lib/supabase';
 
-// â”€â”€â”€ Category filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Category filter ──────────────────────────────────────────────────────────
 
 type CategoryFilter = 'all' | 'intro' | 'lifeframe' | 'roadmap' | 'bonus';
 
@@ -28,7 +28,7 @@ const CATEGORY_FILTERS: { value: CategoryFilter; label: string }[] = [
   { value: 'bonus', label: 'Bonus' },
 ];
 
-// â”€â”€â”€ Unlock criteria â†’ page link â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Unlock criteria -> page link ───────────────────────────────────────────
 
 function getUnlockLink(video: FrameworkVideo): string {
   const c = video.unlockCriteria;
@@ -46,7 +46,7 @@ function getUnlockLink(video: FrameworkVideo): string {
   }
 }
 
-// â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function ResourcesPage() {
   const [statuses, setStatuses] = useState<VideoStatus[]>([]);
@@ -110,7 +110,7 @@ export default function ResourcesPage() {
 
   useEffect(() => { loadStatuses(); }, [loadStatuses]);
 
-  // Handle video watched callback â€” update local state immediately
+  // Handle video watched callback - update local state immediately
   const handleVideoWatched = useCallback((videoId: string) => {
     setStatuses(prev => prev.map(s =>
       s.video.id === videoId ? { ...s, watched: true } : s
@@ -145,7 +145,7 @@ export default function ResourcesPage() {
         />
 
         <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 relative">
-          {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
             <p
               className="text-xs font-bold tracking-[0.25em] uppercase mb-3"
@@ -160,7 +160,7 @@ export default function ResourcesPage() {
               Tim Collins Framework
             </h1>
             <p className="text-base sm:text-lg max-w-lg mx-auto" style={{ color: 'var(--color-text-muted)' }}>
-              {stats.availableCount} videos available Â· {stats.watchedCount} watched
+              {stats.availableCount} videos available • {stats.watchedCount} watched
             </p>
 
             {/* Progress bar */}
@@ -186,13 +186,13 @@ export default function ResourcesPage() {
             )}
           </div>
 
-          {/* â”€â”€ Category Filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* Category Filter */}
           <div className="flex flex-wrap gap-2 justify-center mb-8">
             {CATEGORY_FILTERS.map(f => (
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className="px-4 py-2 rounded-full text-sm font-medium transition-all"
+                className="px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer"
                 style={{
                   background: filter === f.value ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.04)',
                   color: filter === f.value ? 'rgba(167,139,250,0.95)' : 'var(--color-text-muted)',
@@ -204,7 +204,7 @@ export default function ResourcesPage() {
             ))}
           </div>
 
-          {/* â”€â”€ Video Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* Video Grid */}
           {loading ? (
             <div className="text-center py-20">
               <div className="w-10 h-10 border-2 border-white/10 border-t-purple-400 rounded-full animate-spin mx-auto" />
@@ -231,7 +231,7 @@ export default function ResourcesPage() {
             </p>
           )}
 
-          {/* â”€â”€ Downloads Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* Downloads Section */}
           <section className="mt-16 mb-8">
             <h2
               className="text-xl font-semibold mb-6 flex items-center gap-3"
@@ -240,13 +240,13 @@ export default function ResourcesPage() {
               <span
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
                 style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}
-              >ðŸ“¥</span>
+              >📥</span>
               Downloads
             </h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                { title: 'The Tim Collins Framework', desc: 'Complete book (PDF)', icon: 'ðŸ“–', href: '/downloads/lifealigner-book.pdf', available: true },
-                { title: 'Printable Workbook', desc: 'Physical worksheets for offline use', icon: 'ðŸ“', href: '/downloads/lifealigner-workbook.pdf', available: true },
+                { title: 'The Tim Collins Framework', desc: 'Complete book (PDF)', icon: '📖', href: '/downloads/lifealigner-book.pdf', available: true },
+                { title: 'Printable Workbook', desc: 'Physical worksheets for offline use', icon: '📝', href: '/downloads/lifealigner-workbook.pdf', available: true },
               ].map(dl => (
                 <a
                   key={dl.title}
@@ -275,7 +275,7 @@ export default function ResourcesPage() {
             </div>
           </section>
 
-          {/* â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          {/* CTA */}
           <div
             className="rounded-2xl p-8 sm:p-12 text-center mt-8"
             style={{
@@ -292,32 +292,34 @@ export default function ResourcesPage() {
             <div className="flex flex-wrap gap-3 justify-center">
               <Link
                 href="/workbook/lifeframe"
-                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
+                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 inline-flex items-center gap-2"
                 style={{
                   background: 'rgba(139,92,246,0.15)',
                   color: 'rgba(167,139,250,0.95)',
                   border: '1px solid rgba(139,92,246,0.3)',
                 }}
               >
-                ðŸ“‹ View LifeFrame
+                <span>🗂️</span>
+                <span>View LifeFrame</span>
               </Link>
               <Link
                 href="/roadmap"
-                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5"
+                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 inline-flex items-center gap-2"
                 style={{
                   background: 'rgba(255,255,255,0.04)',
                   color: 'var(--color-text-muted)',
                   border: '1px solid var(--color-border)',
                 }}
               >
-                ðŸ—ºï¸ Open Roadmap
+                <span>🗺️</span>
+                <span>Open Roadmap</span>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* â”€â”€ Video Player Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Video Player Modal */}
       {activeVideo && (
         <VideoPlayer
           video={activeVideo.video}
@@ -330,7 +332,7 @@ export default function ResourcesPage() {
   );
 }
 
-// â”€â”€â”€ Video Card Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Video Card Component ───────────────────────────────────────────────────
 
 function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void }) {
   const { video, unlocked, watched, available } = status;
@@ -385,8 +387,8 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
             </svg>
           </div>
         ) : isLocked ? (
-          <div className="text-center px-6">
-            <div className="text-3xl mb-2">ðŸ”’</div>
+          <div className="text-center px-6 z-10">
+            <div className="text-3xl mb-2">🔒</div>
             <p className="text-xs font-medium" style={{ color: 'rgba(167,139,250,0.7)' }}>
               {video.unlockHint}
             </p>
@@ -399,12 +401,12 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
                 border: '1px solid rgba(139,92,246,0.2)',
               }}
             >
-              Go there â†’
+              Go there →
             </Link>
           </div>
         ) : (
-          <div className="text-center">
-            <div className="text-3xl mb-2">ðŸŽ¬</div>
+          <div className="text-center z-10">
+            <div className="text-3xl mb-2">🎬</div>
             <div
               className="text-xs font-semibold tracking-wider uppercase px-3 py-1 rounded-full"
               style={{
@@ -420,7 +422,7 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
 
         {/* Duration badge */}
         <div
-          className="absolute bottom-2 right-2 px-2 py-0.5 rounded text-[10px] font-semibold"
+          className="absolute bottom-2 right-2 px-2 py-0.5 rounded text-[10px] font-semibold z-10"
           style={{ background: 'rgba(0,0,0,0.7)', color: 'var(--color-text-dim)' }}
         >
           {video.duration}
@@ -429,20 +431,20 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
         {/* Watched badge */}
         {watched && (
           <div
-            className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-semibold"
+            className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-semibold z-10"
             style={{
               background: 'rgba(34,197,94,0.15)',
               color: 'rgba(34,197,94,0.9)',
               border: '1px solid rgba(34,197,94,0.25)',
             }}
           >
-            âœ“ Watched
+            ✓ Watched
           </div>
         )}
 
         {/* Video number */}
         <div
-          className="absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+          className="absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold z-10"
           style={{
             background: isPlayable ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)',
             color: isPlayable ? 'rgba(167,139,250,0.9)' : 'var(--color-text-dim)',
