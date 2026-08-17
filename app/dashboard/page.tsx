@@ -348,8 +348,8 @@ export default function DashboardPage() {
         } else if (section === 'interests') {
             const ex = s.counts.existing ?? 0;
             const exp = s.counts.exploring ?? 0;
-            const exMin = s.thresholds.existingMin ?? 5;
-            const expMin = s.thresholds.exploringMin ?? 5;
+            const exMin = s.thresholds.existingMin ?? 3;
+            const expMin = s.thresholds.exploringMin ?? 1;
 
             if (s.status === 'needs_more') {
                 const parts: string[] = [];

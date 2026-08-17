@@ -25,7 +25,7 @@
 
 export const COMPLETION_THRESHOLDS = {
     values: { min: 5, max: 10, requiresPriorities: true },
-    interests: { existingMin: 5, exploringMin: 5 },
+    interests: { existingMin: 3, exploringMin: 1 },
     life_categories: { min: 3, max: 8, requiresPurpose: true },
 } as const;
 
