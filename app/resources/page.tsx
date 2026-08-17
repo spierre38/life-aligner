@@ -351,23 +351,33 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
     >
       {/* Thumbnail area */}
       <div
-        className="relative aspect-video flex items-center justify-center cursor-pointer"
+        className="relative aspect-video flex items-center justify-center cursor-pointer overflow-hidden"
         style={{
-          background: isPlayable
-            ? 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(30,10,60,0.85) 100%)'
-            : 'linear-gradient(135deg, rgba(50,50,70,0.3) 0%, rgba(15,15,25,0.9) 100%)',
+          background: '#0a0a14',
           borderBottom: '1px solid var(--color-border)',
         }}
         onClick={isPlayable ? onPlay : undefined}
       >
+        {/* Real video preview if available */}
+        {video.blobUrl && (
+          <video
+            src={`${video.blobUrl}#t=0.5`}
+            preload="metadata"
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover opacity-45 group-hover:opacity-75 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
+
         {/* Play button or Lock */}
         {isPlayable ? (
           <div
-            className="w-14 h-14 rounded-full flex items-center justify-center transition-all group-hover:scale-110"
+            className="w-14 h-14 rounded-full flex items-center justify-center transition-all group-hover:scale-110 z-10"
             style={{
-              background: 'rgba(139,92,246,0.2)',
-              border: '2px solid rgba(167,139,250,0.4)',
-              backdropFilter: 'blur(6px)',
+              background: 'rgba(139,92,246,0.3)',
+              border: '2px solid rgba(167,139,250,0.5)',
+              backdropFilter: 'blur(8px)',
             }}
           >
             <svg className="w-6 h-6 ml-0.5" fill="white" viewBox="0 0 24 24">

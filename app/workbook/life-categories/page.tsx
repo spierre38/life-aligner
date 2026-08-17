@@ -188,9 +188,9 @@ export default function LifeCategoriesWorksheet() {
                     if (saved.purpose_elements) {
                         setPurposeElements(saved.purpose_elements);
                     }
-                    // Start at step 3 (builder) if they have data
+                    // Start at step 4 (builder) if they have data
                     if (saved.categories || saved.purpose_elements) {
-                        setCurrentStep(3);
+                        setCurrentStep(4);
                     }
                 }
             } catch (error) {
@@ -381,7 +381,7 @@ export default function LifeCategoriesWorksheet() {
                 <div className="fixed top-16 left-0 w-full h-[2px] z-40" style={{ background: 'var(--color-surface-2)' }}>
                     <div
                         className="h-full transition-all duration-500"
-                        style={{ width: `${(currentStep / 5) * 100}%`, background: 'var(--color-text)' }}
+                        style={{ width: `${(currentStep / 4) * 100}%`, background: 'var(--color-text)' }}
                     ></div>
                 </div>
 
@@ -399,215 +399,309 @@ export default function LifeCategoriesWorksheet() {
                                             <CategoriesPieIllustration />
                                         </div>
                                         <h1 className="text-4xl md:text-5xl font-light mb-6" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
-                                            Life Categories
+                                            Life Categories & Purpose
                                         </h1>
                                         <p className="text-lg md:text-xl leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>
-                                            Life Categories are the areas of your life that you want to focus on and set goals within. They provide structure to your Roadmap and help ensure you're making progress across all aspects of your life that matter to you.
+                                            Life Categories define the core focus areas of your life. Combined with your personal Purpose, they create the blueprint for your Roadmap.
                                         </p>
                                         <div
                                             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-8"
                                             style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
                                         >
                                             <span>📚</span>
-                                            <span>LifeFrame • Step 3 of 3 • 15-20 min</span>
+                                            <span>LifeFrame • Step 1 of 4 • 15-20 min</span>
                                         </div>
-                                        <button
-                                            onClick={() => goToStep(2)}
-                                            className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
-                                            style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
-                                        >
-                                            Let's Begin →
-                                        </button>
+                                        <div>
+                                            <button
+                                                onClick={() => goToStep(2)}
+                                                className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
+                                                style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
+                                            >
+                                                Let's Begin →
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Step 2: Video + Tim's Example Combined */}
+                    {/* Step 2: Video 5 — The LifeFrame & Roadmap */}
                     {currentStep === 2 && (
                         <div className={`min-h-[80vh] py-8 ${isStepAnimating ? (stepDirection === 'forward' ? 'step-exit-forward' : 'step-exit-backward') : (stepDirection === 'forward' ? 'step-enter-forward' : 'step-enter-backward')}`}>
-                            <button
-                                onClick={() => goToStep(1)}
-                                className="flex items-center gap-2 mb-6 transition hover:opacity-70"
-                                style={{ color: 'var(--color-text-muted)' }}
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                                Back
-                            </button>
-
-                            <div className="grid lg:grid-cols-2 gap-6 mb-8">
-                                {/* Video Card 1 */}
-                                <div
-                                    className="rounded-3xl overflow-hidden cursor-pointer group transition-all"
-                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
-                                    onClick={() => {
-                                        const v5 = getVideo('v5-lifeframe-roadmap');
-                                        if (v5?.blobUrl) setActiveVideo({ video: v5, src: v5.blobUrl });
-                                    }}
+                            <div className="max-w-4xl mx-auto">
+                                <button
+                                    onClick={() => goToStep(1)}
+                                    className="flex items-center gap-2 mb-6 transition hover:opacity-70"
+                                    style={{ color: 'var(--color-text-muted)' }}
                                 >
-                                    <div className="relative bg-gradient-to-br from-indigo-950 to-purple-950 aspect-video flex items-center justify-center">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Back to Overview
+                                </button>
+
+                                <div
+                                    className="rounded-3xl overflow-hidden mb-8"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
+                                    {/* Video 5 Area */}
+                                    <div
+                                        className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
+                                        style={{ background: '#0a0a14' }}
+                                        onClick={() => {
+                                            const v5 = getVideo('v5-lifeframe-roadmap');
+                                            if (v5?.blobUrl) setActiveVideo({ video: v5, src: v5.blobUrl });
+                                        }}
+                                    >
+                                        {/* Real Video preview frame */}
+                                        {getVideo('v5-lifeframe-roadmap')?.blobUrl && (
+                                            <video
+                                                src={`${getVideo('v5-lifeframe-roadmap')?.blobUrl}#t=0.5`}
+                                                preload="metadata"
+                                                muted
+                                                playsInline
+                                                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
+
                                         <div className="text-center z-10">
-                                            <div className="w-16 h-16 bg-indigo-500/20 border border-indigo-400/40 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm transition-transform group-hover:scale-110">
-                                                <svg className="w-8 h-8 ml-0.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                            <div
+                                                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
+                                                style={{ background: 'rgba(99,102,241,0.3)', backdropFilter: 'blur(10px)', border: '2px solid rgba(129,140,248,0.6)' }}
+                                            >
+                                                <svg className="w-9 h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-xs uppercase tracking-wider font-semibold text-indigo-300 mb-1">Watch Video</p>
-                                            <p className="text-white text-lg font-medium">The LifeFrame & Roadmap</p>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-indigo-300">Watch Video 5</p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>The LifeFrame & Roadmap</p>
                                         </div>
-                                        <div className="absolute top-3 left-3 bg-indigo-500/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+
+                                        <div className="absolute top-4 left-4 bg-indigo-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
                                             Video 5
                                         </div>
-                                        <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
+                                        <div
+                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
+                                            style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
+                                        >
                                             2:50
                                         </div>
                                     </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text)' }}>
-                                            Understanding Categories & Purpose
-                                        </h3>
-                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                                            Tim explains how to identify your life areas and define meaningful purpose elements.
-                                        </p>
-                                    </div>
-                                </div>
 
-                                {/* Video Card 2 */}
-                                <div
-                                    className="rounded-3xl overflow-hidden cursor-pointer group transition-all"
-                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
-                                    onClick={() => {
-                                        const v6 = getVideo('v6-your-story');
-                                        if (v6?.blobUrl) setActiveVideo({ video: v6, src: v6.blobUrl });
-                                    }}
-                                >
-                                    <div className="relative bg-gradient-to-br from-purple-950 to-pink-950 aspect-video flex items-center justify-center">
-                                        <div className="text-center z-10">
-                                            <div className="w-16 h-16 bg-purple-500/20 border border-purple-400/40 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm transition-transform group-hover:scale-110">
-                                                <svg className="w-8 h-8 ml-0.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M8 5v14l11-7z" />
-                                                </svg>
+                                    {/* Text Content */}
+                                    <div className="p-8 md:p-10">
+                                        <h2 className="text-3xl font-light mb-4" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+                                            Understanding Categories & Structure
+                                        </h2>
+                                        <p className="text-base md:text-lg mb-8 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                                            Life Categories give structure to your life. They provide buckets for your goals, ensure all important areas receive attention, and anchor your Roadmap into concrete daily habits.
+                                        </p>
+
+                                        {/* Tim's Real Example */}
+                                        <div
+                                            className="rounded-2xl p-6 mb-8"
+                                            style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
+                                        >
+                                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                                                <span>📋</span>
+                                                <span>Tim's Real-Life Categories</span>
+                                            </h3>
+
+                                            <div className="grid sm:grid-cols-3 gap-3 mb-4">
+                                                <div className="p-3.5 rounded-xl bg-black/20 border border-white/5">
+                                                    <h4 className="font-medium text-sm text-white mb-0.5">Health</h4>
+                                                    <p className="text-xs text-white/50">Physical • Mental</p>
+                                                </div>
+                                                <div className="p-3.5 rounded-xl bg-black/20 border border-white/5">
+                                                    <h4 className="font-medium text-sm text-white mb-0.5">Relationships</h4>
+                                                    <p className="text-xs text-white/50">Family • Friends • Community</p>
+                                                </div>
+                                                <div className="p-3.5 rounded-xl bg-black/20 border border-white/5">
+                                                    <h4 className="font-medium text-sm text-white mb-0.5">Career</h4>
+                                                    <p className="text-xs text-white/50">Growth • Leadership • Impact</p>
+                                                </div>
                                             </div>
-                                            <p className="text-xs uppercase tracking-wider font-semibold text-purple-300 mb-1">Watch Video</p>
-                                            <p className="text-white text-lg font-medium">Your Story & Purpose</p>
-                                        </div>
-                                        <div className="absolute top-3 left-3 bg-purple-500/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
-                                            Video 6
-                                        </div>
-                                        <div className="absolute bottom-3 right-3 bg-black/70 text-white px-2 py-1 rounded text-xs font-medium">
-                                            4:33
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text)' }}>
-                                            Defining Your Purpose
-                                        </h3>
-                                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                                            Tim explores how purpose is driven by long-term goals that are meaningful to you and beneficial to others.
-                                        </p>
-                                    </div>
-                                </div>
 
-                                {/* Tim's Example */}
-                                <div
-                                    className="rounded-3xl p-6"
-                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
-                                >
-                                    <h3 className="text-2xl font-light mb-4" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Tim's Example</h3>
-                                    <div className="space-y-3">
-                                        <div className="p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
-                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Health</h4>
-                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Physical • Mental</p>
-                                        </div>
-                                        <div className="p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
-                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Relationships</h4>
-                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Family • Friends • Partnership • Community</p>
-                                        </div>
-                                        <div className="p-4 rounded-xl" style={{ background: 'rgba(0,200,100,0.08)', border: '1px solid rgba(0,200,100,0.2)' }}>
-                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Purpose</h4>
-                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Help Others • Environment</p>
-                                        </div>
-                                        <div className="p-4 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
-                                            <h4 className="font-medium mb-1" style={{ color: 'var(--color-text)' }}>Career</h4>
-                                            <p className="text-xs" style={{ color: 'var(--color-text-dim)' }}>Business Growth • Leadership Development • Impacting Academic Growth</p>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 p-3 rounded-lg" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
-                                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                                            💡 <strong>Insight:</strong> Categories evolved over time—balance came gradually.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Purpose Explanation */}
-                            <div
-                                className="rounded-3xl p-8"
-                                style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,180,0,0.2)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
-                            >
-                                <div className="flex flex-col md:flex-row gap-6 items-start">
-                                    <div className="w-16 h-16 flex-shrink-0">
-                                        <PurposeStarIllustration />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-2xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>Understanding Purpose</h3>
-                                        <p className="mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                                            Purpose is driven by long-term goals that are <strong>meaningful to you</strong> and <strong>beneficial to others</strong>.
-                                        </p>
-                                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                <p className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Questions to ask:</p>
-                                                <ul className="space-y-1" style={{ color: 'var(--color-text-muted)' }}>
-                                                    <li>• What impact do I want to make?</li>
-                                                    <li>• How can I help others?</li>
-                                                    <li>• What do I want my life to look like in 5 years?</li>
-                                                    <li>• Where am I spending most of my time and energy?</li>
-                                                    <li>• Which areas of my life feel neglected?</li>
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Examples:</p>
-                                                <ul className="space-y-1" style={{ color: 'var(--color-text-muted)' }}>
-                                                    <li>• Help Others</li>
-                                                    <li>• Mentor Youth</li>
-                                                    <li>• Address Loneliness</li>
-                                                    <li>• Environmental Justice</li>
-                                                    <li>• Support Veterans</li>
-                                                    <li>• Financial Literacy Education</li>
-                                                </ul>
+                                            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200">
+                                                💡 <strong>Insight from Tim:</strong> Categories evolve over time — start with what matters most right now, and balance will come gradually.
                                             </div>
                                         </div>
+
+                                        <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                                            <button
+                                                onClick={() => goToStep(1)}
+                                                className="px-6 py-3 rounded-full text-sm font-medium transition hover:opacity-70"
+                                                style={{ color: 'var(--color-text-muted)' }}
+                                            >
+                                                ← Back
+                                            </button>
+                                            <button
+                                                onClick={() => goToStep(3)}
+                                                className="px-8 py-3.5 rounded-full font-semibold text-base transition-all hover:opacity-90 active:scale-[0.98]"
+                                                style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
+                                            >
+                                                Continue to Purpose →
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="mt-8 flex justify-center">
-                                <button
-                                    onClick={() => goToStep(3)}
-                                    className="px-10 py-4 rounded-full font-semibold text-lg transition-all hover:opacity-90 active:scale-[0.98]"
-                                    style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
-                                >
-                                    Start Building →
-                                </button>
                             </div>
                         </div>
                     )}
 
-                    {/* Step 3: Enhanced Builder */}
+                    {/* Step 3: Video 6 — Defining Your Purpose */}
                     {currentStep === 3 && (
+                        <div className={`min-h-[80vh] py-8 ${isStepAnimating ? (stepDirection === 'forward' ? 'step-exit-forward' : 'step-exit-backward') : (stepDirection === 'forward' ? 'step-enter-forward' : 'step-enter-backward')}`}>
+                            <div className="max-w-4xl mx-auto">
+                                <button
+                                    onClick={() => goToStep(2)}
+                                    className="flex items-center gap-2 mb-6 transition hover:opacity-70"
+                                    style={{ color: 'var(--color-text-muted)' }}
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Back to Categories
+                                </button>
+
+                                <div
+                                    className="rounded-3xl overflow-hidden mb-8"
+                                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
+                                >
+                                    {/* Video 6 Area */}
+                                    <div
+                                        className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
+                                        style={{ background: '#0a0a14' }}
+                                        onClick={() => {
+                                            const v6 = getVideo('v6-your-story');
+                                            if (v6?.blobUrl) setActiveVideo({ video: v6, src: v6.blobUrl });
+                                        }}
+                                    >
+                                        {/* Real Video preview frame */}
+                                        {getVideo('v6-your-story')?.blobUrl && (
+                                            <video
+                                                src={`${getVideo('v6-your-story')?.blobUrl}#t=0.5`}
+                                                preload="metadata"
+                                                muted
+                                                playsInline
+                                                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
+
+                                        <div className="text-center z-10">
+                                            <div
+                                                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
+                                                style={{ background: 'rgba(168,85,247,0.3)', backdropFilter: 'blur(10px)', border: '2px solid rgba(192,132,252,0.6)' }}
+                                            >
+                                                <svg className="w-9 h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                            </div>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-purple-300">Watch Video 6</p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Your Story & Purpose</p>
+                                        </div>
+
+                                        <div className="absolute top-4 left-4 bg-purple-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
+                                            Video 6
+                                        </div>
+                                        <div
+                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
+                                            style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
+                                        >
+                                            4:33
+                                        </div>
+                                    </div>
+
+                                    {/* Text Content */}
+                                    <div className="p-8 md:p-10">
+                                        <div className="flex items-start gap-4 mb-6">
+                                            <div className="w-12 h-12 flex-shrink-0 mt-1">
+                                                <PurposeStarIllustration />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-3xl font-light mb-2" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+                                                    Defining Your Purpose
+                                                </h2>
+                                                <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                                                    Purpose is driven by long-term goals that are <strong className="text-white">meaningful to you</strong> and <strong className="text-white">beneficial to others</strong>.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Questions & Examples */}
+                                        <div
+                                            className="rounded-2xl p-6 mb-8 grid md:grid-cols-2 gap-6"
+                                            style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
+                                        >
+                                            <div>
+                                                <p className="font-semibold mb-3 flex items-center gap-2 text-sm" style={{ color: 'var(--color-text)' }}>
+                                                    <span>💭</span>
+                                                    <span>Questions to Ask Yourself:</span>
+                                                </p>
+                                                <ul className="space-y-2 text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                                                    <li className="flex items-start gap-2"><span>•</span><span>What impact do I want to make in the world?</span></li>
+                                                    <li className="flex items-start gap-2"><span>•</span><span>How can my strengths help others?</span></li>
+                                                    <li className="flex items-start gap-2"><span>•</span><span>What do I want my legacy to look like in 5–10 years?</span></li>
+                                                    <li className="flex items-start gap-2"><span>•</span><span>Which area of contribution energizes me most?</span></li>
+                                                </ul>
+                                            </div>
+
+                                            <div>
+                                                <p className="font-semibold mb-3 flex items-center gap-2 text-sm" style={{ color: 'var(--color-text)' }}>
+                                                    <span>✨</span>
+                                                    <span>Real-World Purpose Examples:</span>
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {['Help Others', 'Mentor Youth', 'Support Veterans', 'Environmental Justice', 'Financial Literacy', 'Community Care'].map((ex, i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="px-3 py-1 rounded-full text-xs font-medium"
+                                                            style={{ background: 'rgba(245,158,11,0.12)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.25)' }}
+                                                        >
+                                                            {ex}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+                                            <button
+                                                onClick={() => goToStep(2)}
+                                                className="px-6 py-3 rounded-full text-sm font-medium transition hover:opacity-70"
+                                                style={{ color: 'var(--color-text-muted)' }}
+                                            >
+                                                ← Back
+                                            </button>
+                                            <button
+                                                onClick={() => goToStep(4)}
+                                                className="px-8 py-3.5 rounded-full font-semibold text-base transition-all hover:opacity-90 active:scale-[0.98]"
+                                                style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
+                                            >
+                                                Start Building Your LifeFrame →
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Step 4: Enhanced Builder */}
+                    {currentStep === 4 && (
                         <div className={`py-8 ${isStepAnimating ? (stepDirection === 'forward' ? 'step-exit-forward' : 'step-exit-backward') : (stepDirection === 'forward' ? 'step-enter-forward' : 'step-enter-backward')}`}>
                             <button
-                                onClick={() => goToStep(2)}
+                                onClick={() => goToStep(3)}
                                 className="flex items-center gap-2 mb-6 transition hover:opacity-70 group"
                                 style={{ color: 'var(--color-text-muted)' }}
                             >
                                 <svg className="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
-                                        <span className="font-medium">Back to Learning</span>
+                                <span className="font-medium">Back to Purpose Video</span>
                             </button>
 
                             {/* Header with Enhanced Progress */}

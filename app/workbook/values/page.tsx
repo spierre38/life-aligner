@@ -508,17 +508,29 @@ export default function ValuesWorksheet() {
                                 >
                                     {/* Video area */}
                                     <div
-                                        className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all"
-                                        style={{ background: 'linear-gradient(135deg, rgba(30,15,60,1) 0%, rgba(15,10,25,1) 100%)' }}
+                                        className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
+                                        style={{ background: '#0a0a14' }}
                                         onClick={() => {
                                             const v1 = getVideo('v1-welcome');
                                             if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
                                         }}
                                     >
+                                        {/* Video preview thumbnail */}
+                                        {getVideo('v1-welcome')?.blobUrl && (
+                                            <video
+                                                src={`${getVideo('v1-welcome')?.blobUrl}#t=0.5`}
+                                                preload="metadata"
+                                                muted
+                                                playsInline
+                                                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
+
                                         <div className="text-center z-10">
                                             <div
                                                 className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
-                                                style={{ background: 'rgba(139,92,246,0.25)', backdropFilter: 'blur(10px)', border: '2px solid rgba(167,139,250,0.5)' }}
+                                                style={{ background: 'rgba(139,92,246,0.3)', backdropFilter: 'blur(10px)', border: '2px solid rgba(167,139,250,0.6)' }}
                                             >
                                                 <svg className="w-9 h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
@@ -528,8 +540,8 @@ export default function ValuesWorksheet() {
                                             <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Welcome to the Tim Collins Framework</p>
                                         </div>
                                         <div
-                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium"
-                                            style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}
+                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
+                                            style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
                                             5:17
                                         </div>
