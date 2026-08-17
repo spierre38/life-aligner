@@ -24,11 +24,8 @@ const OnboardingModal = dynamic(
     () => import('@/app/components/OnboardingModal').then(m => ({ default: m.OnboardingModal })),
     { loading: () => null }
 );
-const VideoIntroStep = dynamic(() => import('@/app/components/VideoIntroStep'), {
-    loading: () => (
-        <div className="fixed inset-0 z-50" style={{ background: 'var(--mesh-canvas, #050505)' }} />
-    ),
-});
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo } from '@/lib/videos';
 
 // ─── State machine ──────────────────────────────────────────────────────────
 
@@ -195,9 +192,9 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
     const [showWelcome, setShowWelcome] = useState(false);
-    const [showVideoIntro, setShowVideoIntro] = useState(false);
     const [urgentTodos, setUrgentTodos] = useState<TodoItem[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
 
     useEffect(() => {
@@ -276,20 +273,8 @@ export default function DashboardPage() {
             <OnboardingJourney
                 onComplete={() => {
                     setShowWelcome(false);
-                    setShowVideoIntro(true);
                 }}
                 userName={user?.profile?.full_name}
-            />
-        );
-    }
-
-    if (showVideoIntro) {
-        return (
-            <VideoIntroStep
-                onComplete={() => {
-                    setShowVideoIntro(false);
-                    setShowOnboarding(true);
-                }}
             />
         );
     }
@@ -435,14 +420,33 @@ export default function DashboardPage() {
                                 <span className="text-white font-medium">{copy.hero.leadBold}</span>{' '}
                                 <span className="text-white/70">{copy.hero.rest}</span>
                             </p>
-                            <Link
-                                href={copy.hero.ctaHref}
-                                className="inline-flex items-center gap-2.5 bg-white text-black px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98]"
-                                style={{ letterSpacing: '-0.01em' }}
-                            >
-                                {copy.hero.ctaLabel}
-                                <span aria-hidden>→</span>
-                            </Link>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Link
+                                    href={copy.hero.ctaHref}
+                                    className="inline-flex items-center gap-2.5 bg-white text-black px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98]"
+                                    style={{ letterSpacing: '-0.01em' }}
+                                >
+                                    {copy.hero.ctaLabel}
+                                    <span aria-hidden>→</span>
+                                </Link>
+
+                                <button
+                                    onClick={() => {
+                                        const v1 = getVideo('v1-welcome');
+                                        if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
+                                    }}
+                                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
+                                    style={{
+                                        background: 'rgba(255,255,255,0.08)',
+                                        border: '1px solid rgba(255,255,255,0.18)',
+                                        color: 'white',
+                                        backdropFilter: 'blur(8px)',
+                                    }}
+                                >
+                                    <span className="text-purple-300">▶</span>
+                                    <span>Watch Welcome from Tim (5 min)</span>
+                                </button>
+                            </div>
                         </div>
                     </section>
 
@@ -654,6 +658,15 @@ export default function DashboardPage() {
 
                 </div>
             </div>
+
+            {/* Video Player Modal */}
+            {activeVideo && (
+                <VideoPlayer
+                    video={activeVideo.video}
+                    src={activeVideo.src}
+                    onClose={() => setActiveVideo(null)}
+                />
+            )}
         </>
     );
 }
