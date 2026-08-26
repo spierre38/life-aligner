@@ -10,6 +10,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Goal, Activity } from '@/lib/roadmap-types';
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo } from '@/lib/videos';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -111,6 +113,7 @@ export default function AddGoalModal({
   const [selectedValues, setSelectedValues]     = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [activityDrafts, setActivityDrafts]     = useState<ActivityDraft[]>([]);
+  const [activeVideo, setActiveVideo]           = useState<{ video: any; src: string } | null>(null);
   const [saving, setSaving]                     = useState(false);
 
   const titleRef = useRef<HTMLInputElement>(null);
@@ -282,6 +285,33 @@ export default function AddGoalModal({
 
         {/* ── Scrollable Form ──────────────────────────────────────────────── */}
         <form id="add-goal-form" onSubmit={handleSubmit} className="px-5 sm:px-7 py-5 space-y-6 overflow-y-auto flex-1">
+
+          {/* Coaching Tip Card */}
+          <button
+            type="button"
+            onClick={() => {
+              const v17 = getVideo('v17-goals-activities');
+              if (v17?.blobUrl) setActiveVideo({ video: v17, src: v17.blobUrl });
+            }}
+            className="w-full flex items-center justify-between p-3.5 rounded-2xl transition-all hover:scale-[1.01] group cursor-pointer text-left"
+            style={{
+              background: 'linear-gradient(135deg, rgba(168,85,247,0.12), rgba(99,102,241,0.08))',
+              border: '1px solid rgba(168,85,247,0.25)',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 text-xs group-hover:scale-110 transition-transform">
+                ▶
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-purple-200">Tips from Tim on Setting Goals</p>
+                <p className="text-[11px] text-white/50">Learn how to connect goals to daily habits (3:40)</p>
+              </div>
+            </div>
+            <span className="text-xs font-medium text-purple-300 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+              Watch <span aria-hidden>→</span>
+            </span>
+          </button>
 
           {/* 1. Goal title */}
           <div>
@@ -464,6 +494,15 @@ export default function AddGoalModal({
           <div style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }} />
         </form>
       </div>
+
+      {/* Video Player Modal */}
+      {activeVideo && (
+        <VideoPlayer
+          video={activeVideo.video}
+          src={activeVideo.src}
+          onClose={() => setActiveVideo(null)}
+        />
+      )}
     </div>
   );
 }

@@ -759,19 +759,41 @@ export default function InterestsWorksheet() {
 
                             {/* Header */}
                             <div className="mb-8">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div
-                                        className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                                        style={{ background: 'rgba(255,80,160,0.15)', border: '1px solid rgba(255,80,160,0.3)', color: 'rgba(255,80,160,0.9)' }}
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div
+                                            className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
+                                            style={{ background: 'rgba(255,80,160,0.15)', border: '1px solid rgba(255,80,160,0.3)', color: 'rgba(255,80,160,0.9)' }}
+                                        >
+                                            <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h1 className="text-3xl md:text-4xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Your Interests</h1>
+                                            <p style={{ color: 'var(--color-text-muted)' }}>Discover what brings you joy and what you want to explore</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Tim's 1-minute guide button */}
+                                    <button
+                                        onClick={() => {
+                                            const v12 = getVideo('v12-life-categories-1');
+                                            if (v12?.blobUrl) setActiveVideo({ video: v12, src: v12.blobUrl });
+                                        }}
+                                        className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold transition-all hover:scale-105 shadow-md group cursor-pointer self-start sm:self-auto"
+                                        style={{
+                                            background: 'rgba(236,72,153,0.12)',
+                                            border: '1px solid rgba(244,114,182,0.35)',
+                                            color: '#f472b6',
+                                            backdropFilter: 'blur(8px)',
+                                        }}
                                     >
-                                        <svg className="w-9 h-9" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h1 className="text-3xl md:text-4xl font-light" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>Your Interests</h1>
-                                        <p style={{ color: 'var(--color-text-muted)' }}>Discover what brings you joy and what you want to explore</p>
-                                    </div>
+                                        <span className="w-5 h-5 rounded-full bg-pink-500/30 flex items-center justify-center text-pink-300 text-[10px] group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                                            ▶
+                                        </span>
+                                        <span>Watch 1-min Guide from Tim</span>
+                                    </button>
                                 </div>
 
                                 {/* Enhanced Progress Tracker */}

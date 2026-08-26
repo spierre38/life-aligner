@@ -111,6 +111,8 @@ export default function LifeCategoriesWorksheet() {
     const [showSpaceLaunch, setShowSpaceLaunch] = useState(false);
     const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
     const [isStepAnimating, setIsStepAnimating] = useState(false);
+    const [selectedStep2VideoId, setSelectedStep2VideoId] = useState<'v5-lifeframe-roadmap' | 'v13-life-categories-2'>('v5-lifeframe-roadmap');
+    const [selectedStep3VideoId, setSelectedStep3VideoId] = useState<'v15-purpose' | 'v6-your-story' | 'v16-worksheet3'>('v15-purpose');
     const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
     const goToStep = (next: number) => {
@@ -447,19 +449,40 @@ export default function LifeCategoriesWorksheet() {
                                     className="rounded-3xl overflow-hidden mb-8"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
-                                    {/* Video 5 Area */}
+                                    {/* Video 5 / 13 Switcher Tabs */}
+                                    <div className="p-4 border-b flex items-center gap-2 overflow-x-auto" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
+                                        <button
+                                            onClick={() => setSelectedStep2VideoId('v5-lifeframe-roadmap')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep2VideoId === 'v5-lifeframe-roadmap' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedStep2VideoId === 'v5-lifeframe-roadmap' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                                            <span>Video 5: The LifeFrame & Roadmap (2:50)</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedStep2VideoId('v13-life-categories-2')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep2VideoId === 'v13-life-categories-2' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedStep2VideoId === 'v13-life-categories-2' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-purple-400" />
+                                            <span>Video 13: Case Studies & Categories (3:50)</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Video Area */}
                                     <div
                                         className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
                                         style={{ background: '#0a0a14' }}
                                         onClick={() => {
-                                            const v5 = getVideo('v5-lifeframe-roadmap');
-                                            if (v5?.blobUrl) setActiveVideo({ video: v5, src: v5.blobUrl });
+                                            const v = getVideo(selectedStep2VideoId);
+                                            if (v?.blobUrl) setActiveVideo({ video: v, src: v.blobUrl });
                                         }}
                                     >
                                         {/* Real Video preview frame */}
-                                        {getVideo('v5-lifeframe-roadmap')?.blobUrl && (
+                                        {getVideo(selectedStep2VideoId)?.blobUrl && (
                                             <video
-                                                src={`${getVideo('v5-lifeframe-roadmap')?.blobUrl}#t=0.5`}
+                                                key={selectedStep2VideoId}
+                                                src={`${getVideo(selectedStep2VideoId)?.blobUrl}#t=0.5`}
                                                 preload="metadata"
                                                 muted
                                                 playsInline
@@ -477,18 +500,22 @@ export default function LifeCategoriesWorksheet() {
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-indigo-300">Watch Video 5</p>
-                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>The LifeFrame & Roadmap</p>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-indigo-300">
+                                                {selectedStep2VideoId === 'v5-lifeframe-roadmap' ? 'Watch Video 5' : 'Watch Video 13'}
+                                            </p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>
+                                                {selectedStep2VideoId === 'v5-lifeframe-roadmap' ? 'The LifeFrame & Roadmap' : 'Structuring Your Life Categories'}
+                                            </p>
                                         </div>
 
                                         <div className="absolute top-4 left-4 bg-indigo-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
-                                            Video 5
+                                            {selectedStep2VideoId === 'v5-lifeframe-roadmap' ? 'Video 5' : 'Video 13'}
                                         </div>
                                         <div
                                             className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
                                             style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
-                                            2:50
+                                            {selectedStep2VideoId === 'v5-lifeframe-roadmap' ? '2:50' : '3:50'}
                                         </div>
                                     </div>
 
@@ -579,19 +606,48 @@ export default function LifeCategoriesWorksheet() {
                                     className="rounded-3xl overflow-hidden mb-8"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
-                                    {/* Video 6 Area */}
+                                    {/* Video 15 / 6 / 16 Switcher Tabs */}
+                                    <div className="p-4 border-b flex items-center gap-2 overflow-x-auto" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
+                                        <button
+                                            onClick={() => setSelectedStep3VideoId('v15-purpose')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep3VideoId === 'v15-purpose' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedStep3VideoId === 'v15-purpose' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-purple-400" />
+                                            <span>Video 15: Defining Your Purpose (3:08)</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedStep3VideoId('v6-your-story')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep3VideoId === 'v6-your-story' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedStep3VideoId === 'v6-your-story' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                                            <span>Video 6: Tim's Story (4:33)</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedStep3VideoId('v16-worksheet3')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep3VideoId === 'v16-worksheet3' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedStep3VideoId === 'v16-worksheet3' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-amber-400" />
+                                            <span>Video 16: Worksheet 3 Guide (0:50)</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Video Area */}
                                     <div
                                         className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
                                         style={{ background: '#0a0a14' }}
                                         onClick={() => {
-                                            const v6 = getVideo('v6-your-story');
-                                            if (v6?.blobUrl) setActiveVideo({ video: v6, src: v6.blobUrl });
+                                            const v = getVideo(selectedStep3VideoId);
+                                            if (v?.blobUrl) setActiveVideo({ video: v, src: v.blobUrl });
                                         }}
                                     >
                                         {/* Real Video preview frame */}
-                                        {getVideo('v6-your-story')?.blobUrl && (
+                                        {getVideo(selectedStep3VideoId)?.blobUrl && (
                                             <video
-                                                src={`${getVideo('v6-your-story')?.blobUrl}#t=0.5`}
+                                                key={selectedStep3VideoId}
+                                                src={`${getVideo(selectedStep3VideoId)?.blobUrl}#t=0.5`}
                                                 preload="metadata"
                                                 muted
                                                 playsInline
@@ -609,18 +665,22 @@ export default function LifeCategoriesWorksheet() {
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-purple-300">Watch Video 6</p>
-                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Your Story & Purpose</p>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1 text-purple-300">
+                                                {selectedStep3VideoId === 'v15-purpose' ? 'Watch Video 15' : selectedStep3VideoId === 'v6-your-story' ? 'Watch Video 6' : 'Watch Video 16'}
+                                            </p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>
+                                                {selectedStep3VideoId === 'v15-purpose' ? 'Finding & Defining Your Purpose' : selectedStep3VideoId === 'v6-your-story' ? 'Your Story & Purpose' : 'Life Categories & Purpose Guide'}
+                                            </p>
                                         </div>
 
                                         <div className="absolute top-4 left-4 bg-purple-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
-                                            Video 6
+                                            {selectedStep3VideoId === 'v15-purpose' ? 'Video 15' : selectedStep3VideoId === 'v6-your-story' ? 'Video 6' : 'Video 16'}
                                         </div>
                                         <div
                                             className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
                                             style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
-                                            4:33
+                                            {selectedStep3VideoId === 'v15-purpose' ? '3:08' : selectedStep3VideoId === 'v6-your-story' ? '4:33' : '0:50'}
                                         </div>
                                     </div>
 

@@ -20,6 +20,8 @@ import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import { uploadReflectionImage } from '@/lib/reflection-images';
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo } from '@/lib/videos';
 import type { Goal, Reflection, RoadmapData } from '@/lib/roadmap-types';
 
 // Mesh gradient rotation — each chapter gets a distinct aurora color
@@ -475,6 +477,7 @@ export default function ReflectionsPage() {
   const [activeSince, setActiveSince] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
+  const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -581,7 +584,7 @@ export default function ReflectionsPage() {
         <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
 
           {/* Page header */}
-          <div className="mb-12 md:mb-16">
+          <div className="mb-8 md:mb-12">
             <p className="text-xs font-medium uppercase tracking-widest mb-3" style={{ color: 'var(--color-text-dim)' }}>
               Your story, chapter by chapter
             </p>
@@ -595,6 +598,45 @@ export default function ReflectionsPage() {
               Every completed goal becomes a chapter in your story. Revisit your journey,
               read what you've learned, and see how far you've come.
             </p>
+          </div>
+
+          {/* Tim's Featured Coaching Reflection */}
+          <div
+            className="mb-10 p-5 sm:p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-all shadow-lg"
+            style={{
+              background: 'linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(99,102,241,0.08) 100%)',
+              border: '1px solid rgba(168,85,247,0.25)',
+            }}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 flex-shrink-0 mt-0.5">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-purple-300">Tim's Reflection Corner</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">4:17</span>
+                </div>
+                <h3 className="text-base font-semibold text-white mb-1">Behavior Change & Lessons on Regret</h3>
+                <p className="text-xs text-white/60 leading-relaxed max-w-xl">
+                  Tim shares key insights on personal transformation and avoiding the top regrets people express at the end of life.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const v19 = getVideo('v19-regrets-habits');
+                if (v19?.blobUrl) setActiveVideo({ video: v19, src: v19.blobUrl });
+              }}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white transition-all hover:scale-105 shadow-md flex-shrink-0 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}
+            >
+              <span>▶</span>
+              <span>Watch Video</span>
+            </button>
           </div>
 
           {/* Loading state */}
@@ -736,6 +778,15 @@ export default function ReflectionsPage() {
 
         </div>
       </div>
+
+      {/* Video Player Modal */}
+      {activeVideo && (
+        <VideoPlayer
+          video={activeVideo.video}
+          src={activeVideo.src}
+          onClose={() => setActiveVideo(null)}
+        />
+      )}
     </>
   );
 }
