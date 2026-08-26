@@ -92,6 +92,7 @@ export default function ValuesWorksheet() {
     const [editingPriority, setEditingPriority] = useState<{ name: string, value: string } | null>(null);
     const [showFewValuesConfirm, setShowFewValuesConfirm] = useState(false);
     const [showTooManyValuesConfirm, setShowTooManyValuesConfirm] = useState(false);
+    const [selectedVideoId, setSelectedVideoId] = useState<'v1-welcome' | 'v10-values-worksheet'>('v1-welcome');
     const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
     // Scroll to top when transitioning between steps
@@ -506,19 +507,40 @@ export default function ValuesWorksheet() {
                                     className="rounded-3xl overflow-hidden"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
+                                    {/* Video Switcher Tabs */}
+                                    <div className="p-4 border-b flex items-center gap-2 overflow-x-auto" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
+                                        <button
+                                            onClick={() => setSelectedVideoId('v1-welcome')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedVideoId === 'v1-welcome' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedVideoId === 'v1-welcome' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-purple-400" />
+                                            <span>Video 1: Welcome & Overview (5:17)</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedVideoId('v10-values-worksheet')}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedVideoId === 'v10-values-worksheet' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            style={selectedVideoId === 'v10-values-worksheet' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
+                                        >
+                                            <span className="w-2 h-2 rounded-full bg-indigo-400" />
+                                            <span>Video 10: Worksheet 1 Guide (1:00)</span>
+                                        </button>
+                                    </div>
+
                                     {/* Video area */}
                                     <div
                                         className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
                                         style={{ background: '#0a0a14' }}
                                         onClick={() => {
-                                            const v1 = getVideo('v1-welcome');
-                                            if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
+                                            const v = getVideo(selectedVideoId);
+                                            if (v?.blobUrl) setActiveVideo({ video: v, src: v.blobUrl });
                                         }}
                                     >
                                         {/* Video preview thumbnail */}
-                                        {getVideo('v1-welcome')?.blobUrl && (
+                                        {getVideo(selectedVideoId)?.blobUrl && (
                                             <video
-                                                src={`${getVideo('v1-welcome')?.blobUrl}#t=0.5`}
+                                                key={selectedVideoId}
+                                                src={`${getVideo(selectedVideoId)?.blobUrl}#t=0.5`}
                                                 preload="metadata"
                                                 muted
                                                 playsInline
@@ -536,24 +558,34 @@ export default function ValuesWorksheet() {
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(167,139,250,0.9)' }}>Watch Introduction</p>
-                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Welcome to the Tim Collins Framework</p>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(167,139,250,0.9)' }}>
+                                                {selectedVideoId === 'v1-welcome' ? 'Watch Introduction' : 'Watch Worksheet Instructions'}
+                                            </p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>
+                                                {selectedVideoId === 'v1-welcome' ? 'Welcome to the Tim Collins Framework' : 'Values — Worksheet 1 Guide'}
+                                            </p>
                                         </div>
+
+                                        <div className="absolute top-4 left-4 bg-purple-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
+                                            {selectedVideoId === 'v1-welcome' ? 'Video 1' : 'Video 10'}
+                                        </div>
+
                                         <div
                                             className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
                                             style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
-                                            5:17
+                                            {selectedVideoId === 'v1-welcome' ? '5:17' : '1:00'}
                                         </div>
                                     </div>
 
                                     <div className="p-8">
                                         <h2 className="text-3xl font-light mb-4" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
-                                            What Are Values?
+                                            {selectedVideoId === 'v1-welcome' ? 'What Are Values?' : 'How to Pick Your Values'}
                                         </h2>
                                         <p className="mb-6" style={{ color: 'var(--color-text-muted)' }}>
-                                            Learn how to identify the principles that will guide your decisions and bring you
-                                            deep satisfaction. Tim explains the difference between values, interests, and goals.
+                                            {selectedVideoId === 'v1-welcome'
+                                                ? 'Learn how to identify the principles that will guide your decisions and bring you deep satisfaction. Tim explains the difference between values, interests, and goals.'
+                                                : 'Tim walks through how to browse the curated value library, select the ones that resonate most, and rank your top priorities.'}
                                         </p>
 
                                         <div className="flex gap-4">

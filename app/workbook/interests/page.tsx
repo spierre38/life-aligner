@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import AuthNavbar from '@/app/components/AuthNavbar';
 import { Confetti } from '@/app/components/Confetti';
+import VideoPlayer from '@/app/components/VideoPlayer';
+import { getVideo, type FrameworkVideo } from '@/lib/videos';
 
 // ── Inline SVG Icons for workbook pages ───────────────────────────────────────
 const HeartIllustration = () => (
@@ -132,6 +134,7 @@ export default function InterestsWorksheet() {
     const [activeTab, setActiveTab] = useState<'existing' | 'exploring'>('existing');
     const [selectedExisting, setSelectedExisting] = useState<Set<string>>(new Set());
     const [selectedExploring, setSelectedExploring] = useState<Set<string>>(new Set());
+    const [activeVideo, setActiveVideo] = useState<{ video: FrameworkVideo; src: string } | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
@@ -404,21 +407,48 @@ export default function InterestsWorksheet() {
                                     className="rounded-3xl overflow-hidden"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
-                                    <div className="relative bg-gradient-to-br from-gray-900 to-black aspect-video flex items-center justify-center">
-                                        <div className="text-center">
-                                            <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                                                <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    {/* Video area */}
+                                    <div
+                                        className="relative aspect-video flex items-center justify-center cursor-pointer group transition-all overflow-hidden"
+                                        style={{ background: '#0a0a14' }}
+                                        onClick={() => {
+                                            const v11 = getVideo('v11-interests');
+                                            if (v11?.blobUrl) setActiveVideo({ video: v11, src: v11.blobUrl });
+                                        }}
+                                    >
+                                        {/* Video preview thumbnail */}
+                                        {getVideo('v11-interests')?.blobUrl && (
+                                            <video
+                                                src={`${getVideo('v11-interests')?.blobUrl}#t=0.5`}
+                                                preload="metadata"
+                                                muted
+                                                playsInline
+                                                className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-75 group-hover:scale-105 transition-all duration-500 pointer-events-none"
+                                            />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
+
+                                        <div className="text-center z-10">
+                                            <div
+                                                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
+                                                style={{ background: 'rgba(236,72,153,0.3)', backdropFilter: 'blur(10px)', border: '2px solid rgba(244,114,182,0.6)' }}
+                                            >
+                                                <svg className="w-9 h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
-                                            <p className="text-white text-2xl font-light mb-2" style={{ letterSpacing: '-0.02em' }}>Video Coming Soon</p>
-                                            <p style={{ color: 'rgba(255,255,255,0.5)' }} className="text-sm">Understanding Your Interests</p>
+                                            <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(244,114,182,0.9)' }}>Watch Video 11</p>
+                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Understanding Your Interests</p>
+                                        </div>
+
+                                        <div className="absolute top-4 left-4 bg-pink-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
+                                            Video 11
                                         </div>
                                         <div
-                                            className="absolute bottom-4 right-4 text-white px-3 py-1 rounded text-sm"
-                                            style={{ background: 'rgba(0,0,0,0.6)' }}
+                                            className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
+                                            style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
-                                            3 min
+                                            3:50
                                         </div>
                                     </div>
 
@@ -1343,6 +1373,15 @@ export default function InterestsWorksheet() {
                     )}
                 </div>
             </div>
+
+            {/* Video Player Modal */}
+            {activeVideo && (
+                <VideoPlayer
+                    video={activeVideo.video}
+                    src={activeVideo.src}
+                    onClose={() => setActiveVideo(null)}
+                />
+            )}
         </>
     );
 }
