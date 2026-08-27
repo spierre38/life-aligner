@@ -301,45 +301,65 @@ export default function ResourcesPage() {
             </div>
           </section>
 
-          {/* CTA */}
-          <div
-            className="rounded-2xl p-8 sm:p-12 text-center mt-8"
-            style={{
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(59,130,246,0.06) 100%)',
-              border: '1px solid rgba(139,92,246,0.15)',
-            }}
-          >
-            <h2 className="text-xl sm:text-2xl font-semibold mb-3" style={{ color: 'var(--color-text)' }}>
-              Ready to Continue?
-            </h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-              Get back to building your path to contentment
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Link
-                href="/workbook/lifeframe"
-                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 inline-flex items-center gap-2"
-                style={{
-                  background: 'rgba(139,92,246,0.15)',
-                  color: 'rgba(167,139,250,0.95)',
-                  border: '1px solid rgba(139,92,246,0.3)',
-                }}
+          {/* Bottom row: Get Help + Continue cards */}
+          <div className="grid sm:grid-cols-2 gap-4 mt-8 mb-8">
+            {/* Get Help card */}
+            <Link
+              href="/help"
+              className="rounded-2xl p-6 flex items-start gap-4 transition-all hover:-translate-y-0.5 group"
+              style={{
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(236,72,153,0.04) 100%)',
+                border: '1px solid rgba(168,85,247,0.18)',
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)' }}
               >
-                <span>View LifeFrame</span>
-                <span>→</span>
-              </Link>
-              <Link
-                href="/roadmap"
-                className="px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 inline-flex items-center gap-2"
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  color: 'var(--color-text-muted)',
-                  border: '1px solid var(--color-border)',
-                }}
-              >
-                <span>Open Roadmap</span>
-                <span>→</span>
-              </Link>
+                <svg className="w-5 h-5" style={{ color: 'rgba(168,85,247,0.9)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Get Help</h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>Browse FAQs, troubleshoot, or reach Tim&apos;s support team</p>
+              </div>
+              <svg className="w-4 h-4 mt-0.5 opacity-40 group-hover:opacity-70 transition-opacity" style={{ color: 'var(--color-text)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+
+            {/* Continue card */}
+            <div
+              className="rounded-2xl p-6 flex flex-col gap-3"
+              style={{
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(59,130,246,0.04) 100%)',
+                border: '1px solid rgba(139,92,246,0.12)',
+              }}
+            >
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Keep Building</h3>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/workbook/lifeframe"
+                  className="flex items-center gap-2 text-sm font-medium transition-all hover:translate-x-0.5"
+                  style={{ color: 'rgba(167,139,250,0.9)' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  View LifeFrame
+                </Link>
+                <Link
+                  href="/roadmap"
+                  className="flex items-center gap-2 text-sm font-medium transition-all hover:translate-x-0.5"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  Open Roadmap
+                </Link>
+              </div>
             </div>
           </div>
         </div>
