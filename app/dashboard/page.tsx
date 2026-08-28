@@ -651,7 +651,7 @@ export default function DashboardPage() {
                             <QuickLinkCard
                                 title="Get Help"
                                 description="Support and Guidance"
-                                href="/resources"
+                                href="/help"
                                 meshVar="var(--mesh-b1)"
                                 Icon={QuestionIcon}
                             />
