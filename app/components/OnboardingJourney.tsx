@@ -2,6 +2,7 @@
 
 import { useState, useEffect, JSX } from 'react';
 import { supabase } from '@/lib/supabase';
+import { playSound } from '@/lib/sounds';
 import Image from 'next/image';
 import Wordmark from '@/app/components/Wordmark';
 
@@ -345,6 +346,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     const fadeAndAdvance = (nextStep: Step) => {
         setFadeOut(true);
         setPlaneFlying(true);
+        playSound('advance');
         setTimeout(() => { setCurrentStep(nextStep); setFadeOut(false); }, 500);
         setTimeout(() => setPlaneFlying(false), 1700);
     };

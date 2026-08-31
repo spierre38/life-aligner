@@ -1,4 +1,5 @@
 'use client';
+import { playSound } from '@/lib/sounds';
 
 /**
  * CompletionModal.tsx — Goal Completion Celebration v2
@@ -74,6 +75,7 @@ export function CompletionModal({ goal, onSave, onDismiss }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    playSound('goalComplete');
     const t = setTimeout(() => setShowConfetti(false), 3500);
     const f = setTimeout(() => textareaRef.current?.focus(), 700);
     return () => { clearTimeout(t); clearTimeout(f); };

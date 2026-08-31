@@ -1,11 +1,13 @@
 // lib/toast.ts
-// Beautiful toast notifications
+// Beautiful toast notifications with optional sound effects
 
 import React from 'react';
 import toast from 'react-hot-toast';
+import { playSound } from './sounds';
 
 export const showToast = {
     success: (message: string) => {
+        playSound('success');
         toast.success(message, {
             duration: 3000,
             position: 'top-right',
@@ -22,6 +24,7 @@ export const showToast = {
     },
 
     error: (message: string) => {
+        playSound('error');
         toast.error(message, {
             duration: 4000,
             position: 'top-right',
@@ -141,7 +144,7 @@ export const showToast = {
                         React.createElement(
                             'button',
                             {
-                                onClick: () => { toast.dismiss(toastId); onConfirm(); },
+                                onClick: () => { toast.dismiss(toastId); playSound('delete'); onConfirm(); },
                                 style: {
                                     flex: 1,
                                     padding: '6px 0',

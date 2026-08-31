@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import { uploadAvatar, removeAvatar } from '@/lib/avatar';
 import AuthNavbar from '@/app/components/AuthNavbar';
+import { isSoundsEnabled, setSoundsEnabled, playSound } from '@/lib/sounds';
 
 const NotificationSettings = dynamic(() => import('@/app/components/NotificationSettings'), { ssr: false });
 
@@ -24,6 +25,11 @@ export default function SettingsPage() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({ fullName: '', email: '' });
+    const [soundsOn, setSoundsOn] = useState(true);
+
+    useEffect(() => {
+        setSoundsOn(isSoundsEnabled());
+    }, []);
 
     useEffect(() => {
         const load = async () => {
@@ -348,6 +354,44 @@ export default function SettingsPage() {
                     {/* ── Notifications ──────────────────────────────────── */}
                     <div style={{ marginBottom: 12 }}>
                         <NotificationSettings />
+                    </div>
+
+                    {/* ── Sound Effects ────────────────────────────────── */}
+                    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 16, padding: 24, marginBottom: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{ width: 34, height: 34, background: 'var(--color-surface-2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>Sound Effects</p>
+                                    <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-dim)' }}>Play sounds on task completion, celebrations, etc.</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    const next = !soundsOn;
+                                    setSoundsOn(next);
+                                    setSoundsEnabled(next);
+                                    if (next) playSound('tap');
+                                }}
+                                style={{
+                                    width: 48, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer',
+                                    background: soundsOn ? '#6366f1' : 'var(--color-surface-2)',
+                                    position: 'relative', transition: 'background 0.2s',
+                                }}
+                                aria-label={soundsOn ? 'Disable sounds' : 'Enable sounds'}
+                            >
+                                <span style={{
+                                    position: 'absolute', top: 3, left: soundsOn ? 23 : 3,
+                                    width: 22, height: 22, borderRadius: '50%',
+                                    background: '#fff', transition: 'left 0.2s',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                                }} />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Coming Soon */}

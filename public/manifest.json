@@ -26,7 +26,7 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "Life Inbox",
+      "name": "To-Do",
       "url": "/todo",
       "description": "View tasks due today and this week",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]

@@ -11,6 +11,7 @@ import {
     URGENCY_COLOR, URGENCY_LABEL, URGENCY_ORDER, bucketToDate, computeUrgency,
 } from '@/lib/todos';
 import { showToast } from '@/lib/toast';
+import { playSound } from '@/lib/sounds';
 import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 
 // ─── Life Category helpers ─────────────────────────────────────────────────────
@@ -499,6 +500,7 @@ export default function MobileInbox() {
     };
 
     const handleToggle = async (todo: TodoItem) => {
+        if (!todo.completed) playSound('complete');
         await toggleTodoCompletion(todo.id, todo.source);
         await loadTodos();
     };

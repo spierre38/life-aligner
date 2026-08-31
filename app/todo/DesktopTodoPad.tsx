@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getAllTodos, toggleTodoCompletion, toggleSubGoalCompletion, addManualTodo, addSubGoal, deleteManualTodo, updateTodoOrder, toggleTodoVisibility, editTodoText, editSubGoalText, deleteSubGoalFromTodo, reorderSubGoals, type TodoItem } from '@/lib/todos';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/lib/toast';
+import { playSound } from '@/lib/sounds';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Link from 'next/link';
 import AuthNavbar from '@/app/components/AuthNavbar';
@@ -199,6 +200,7 @@ export default function DesktopTodoPad() {
     };
 
     const handleToggle = async (todo: TodoItem) => {
+        if (!todo.completed) playSound('complete');
         const { error } = await toggleTodoCompletion(todo.id, todo.source);
         if (error) {
             showToast.error('Failed to update');
