@@ -18,6 +18,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Goal, Activity } from '@/lib/roadmap-types';
+import { showToast } from '@/lib/toast';
 
 // ─── Visual constants ─────────────────────────────────────────────────────────
 
@@ -372,7 +373,10 @@ function ActivityBubble({
             ✎ Edit
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${activity.title}"?`)) onDelete(activity.id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              showToast.confirm(`Delete "${activity.title}"?`, () => onDelete(activity.id));
+            }}
             className="bg-red-500/25 hover:bg-red-500/50 text-red-200 text-[11px] px-2.5 py-1.5 rounded-full transition shadow-lg backdrop-blur-sm"
             title="Delete"
           >
@@ -547,20 +551,23 @@ export default function GoalDetailView({
         <div className="flex items-center gap-2 px-4 sm:px-6 pb-2.5 overflow-x-auto no-scrollbar">
           <button
             onClick={() => onAddActivity(goal.id)}
-            className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            className="text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            style={{ background: 'rgba(16,185,129,0.2)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}
           >
             + Activity
           </button>
           <button
             onClick={() => onEditGoal(goal)}
-            className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            className="text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            style={{ background: 'var(--color-surface-2)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
           >
             Edit
           </button>
           <button
             id="complete-goal-btn"
             onClick={() => onCompleteGoal(goal)}
-            className="bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-full transition hover:bg-white/90 whitespace-nowrap flex-shrink-0"
+            className="text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            style={{ background: 'var(--color-text)', color: 'var(--color-bg)', border: 'none' }}
             title="Mark this goal complete and archive it as a Life Chapter"
           >
             ✔ Complete
@@ -568,11 +575,10 @@ export default function GoalDetailView({
           <button
             id="delete-goal-btn"
             onClick={() => {
-              if (window.confirm(`Delete goal "${goal.title}"? This cannot be undone.`)) {
-                onDeleteGoal(goal.id);
-              }
+              showToast.confirm(`Delete "${goal.title}"? This cannot be undone.`, () => onDeleteGoal(goal.id));
             }}
-            className="bg-red-500/20 hover:bg-red-500/35 text-red-300 text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            className="text-xs font-semibold px-3 py-1.5 rounded-full transition whitespace-nowrap flex-shrink-0"
+            style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}
             title="Permanently delete this goal"
           >
             ✕ Delete

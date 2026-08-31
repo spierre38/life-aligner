@@ -526,7 +526,7 @@ export default function DashboardPage() {
                                         className="block text-center text-xs mt-3 transition-opacity hover:opacity-70"
                                         style={{ color: 'var(--color-text-dim)' }}
                                     >
-                                        + {urgentTodos.length - 4} more in Life Inbox
+                                        + {urgentTodos.length - 4} more in To-Do
                                     </Link>
                                 )}
                             </div>

@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { showToast } from '@/lib/toast';
 import type { Goal, RoadmapData } from '@/lib/roadmap-types';
 import { computeLayout, computeCanvasHeight, BUBBLE_SIZE } from '@/lib/roadmap-layout';
 import GoalBubble from './GoalBubble';
@@ -388,7 +389,7 @@ function MobileGoalCard({ goal, activityCount, doneCount, onEdit, onDelete }: {
       <div className="absolute top-4 right-4 flex gap-2">
         <button onClick={() => onEdit(goal)}
           className="text-white/70 hover:text-white text-xs bg-white/10 px-2 py-1 rounded-lg transition">Edit</button>
-        <button onClick={() => { if (window.confirm(`Delete "${goal.title}"?`)) onDelete(goal.id); }}
+        <button onClick={() => { showToast.confirm(`Delete "${goal.title}"?`, () => onDelete(goal.id)); }}
           className="text-red-300 hover:text-red-200 text-xs bg-white/10 px-2 py-1 rounded-lg transition">Delete</button>
       </div>
     </div>

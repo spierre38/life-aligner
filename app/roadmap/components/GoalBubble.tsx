@@ -17,6 +17,7 @@
 import { useState, useRef } from 'react';
 import type { Goal } from '@/lib/roadmap-types';
 import { BUBBLE_SIZE } from '@/lib/roadmap-layout';
+import { showToast } from '@/lib/toast';
 
 // ─── Visual constants ─────────────────────────────────────────────────────────
 
@@ -409,9 +410,7 @@ export default function GoalBubble({
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowMenu(false);
-                    if (window.confirm(`Delete "${goal.title}"? This cannot be undone.`)) {
-                      onDelete(goal.id);
-                    }
+                    showToast.confirm(`Delete "${goal.title}"? This cannot be undone.`, () => onDelete(goal.id));
                   }}
                   className="w-full text-left px-4 py-2 text-sm transition-colors"
                   style={{ color: '#f87171' }}

@@ -252,7 +252,7 @@ export default function AuthNavbar() {
                         <Link
                             href="/todo"
                             id="inbox-bell-btn"
-                            aria-label={urgentCount > 0 ? `${urgentCount} urgent tasks` : 'Life Inbox'}
+                            aria-label={urgentCount > 0 ? `${urgentCount} urgent tasks` : 'To-Do'}
                             className="relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200"
                             style={{
                                 background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',

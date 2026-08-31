@@ -451,7 +451,7 @@ export default function AddGoalModal({
                     >
                       {draft.includeToday && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                     </button>
-                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Add to Life Inbox</span>
+                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Add to To-Do</span>
                   </div>
 
                   {/* Sub-activities */}
@@ -472,7 +472,7 @@ export default function AddGoalModal({
                       <button type="button" onClick={() => updateSubActivityDraft(draft.id, sa.id, { includeToday: !sa.includeToday })}
                         className="w-3.5 h-3.5 rounded border flex items-center justify-center transition-all flex-shrink-0"
                         style={{ background: sa.includeToday ? '#10b981' : 'transparent', borderColor: sa.includeToday ? '#10b981' : 'rgba(255,255,255,0.2)' }}
-                        title="Add to Life Inbox">
+                        title="Add to To-Do">
                         {sa.includeToday && <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                       </button>
                       <button type="button" onClick={() => removeSubActivityDraft(draft.id, sa.id)}

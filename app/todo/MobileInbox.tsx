@@ -100,7 +100,7 @@ function AddTaskModal({
                         Cancel
                     </button>
                     <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-                        Add to Life Inbox
+                        Add to To-Do
                     </h2>
                     <button
                         type="submit"
@@ -566,7 +566,7 @@ export default function MobileInbox() {
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-light mb-1" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
-                            Life Inbox
+                            To-Do
                         </h1>
                         <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>
                             {totalPending} pending · {completedToday} done today
