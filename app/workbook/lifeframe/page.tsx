@@ -422,13 +422,13 @@ export default function LifeFrameConstellation() {
                 </button>
                 <button
                     onClick={async () => {
-                        const url = window.location.href;
+                        const url = `${window.location.origin}/lifeframe/print`;
                         if (navigator.share) {
                             try { await navigator.share({ title: 'My LifeFrame', text: 'My values, interests, and purpose — Tim Collins Framework', url }); } catch { /* cancelled */ }
                         } else {
                             try {
                                 await navigator.clipboard.writeText(url);
-                                showToast.success('Link copied to clipboard!');
+                                showToast.success('Print link copied to clipboard!');
                             } catch {
                                 showToast.error('Could not copy link — try copying the URL from your address bar.');
                             }
