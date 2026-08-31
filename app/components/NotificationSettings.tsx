@@ -196,15 +196,19 @@ export default function NotificationSettings() {
             {/* Header + toggle */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <span className="text-2xl">🔔</span>
+                    <div style={{ width: 36, height: 36, background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', flexShrink: 0 }}>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                    </div>
                     <div>
                         <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-                            Daily Life Inbox Digest
+                            Daily Reminder Notifications
                         </h3>
                         <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                             {isSubscribed
                                 ? `Enabled · Notifies at ${formatHour(notifyHour)}`
-                                : 'Get a morning summary of your tasks'}
+                                : 'Push notifications for your daily task digest. Mobile browsers only.'}
                         </p>
                     </div>
                 </div>
@@ -216,14 +220,14 @@ export default function NotificationSettings() {
                     id="notif-toggle-btn"
                     className="relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0"
                     style={{
-                        background: isSubscribed ? '#6366f1' : 'rgba(255,255,255,0.12)',
+                        background: isSubscribed ? 'var(--color-text)' : 'rgba(255,255,255,0.12)',
                         opacity: loading ? 0.6 : 1,
                     }}
                     aria-label={isSubscribed ? 'Disable notifications' : 'Enable notifications'}
                 >
                     <span
                         className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-300"
-                        style={{ left: isSubscribed ? '26px' : '2px' }}
+                        style={{ left: isSubscribed ? '26px' : '2px', background: isSubscribed ? 'var(--color-bg)' : '#fff' }}
                     />
                 </button>
             </div>

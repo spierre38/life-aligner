@@ -420,18 +420,18 @@ export default function LifeFrameConstellation() {
                     <span className="hidden md:inline">Print</span>
                 </button>
                 <button
-                    onClick={() => {
+                    onClick={async () => {
+                        const url = window.location.href;
                         if (navigator.share) {
-                            navigator.share({
-                                title: 'My LifeFrame',
-                                text: 'Check out my LifeFrame - my values, interests, and purpose!',
-                                url: window.location.href
-                            }).catch(() => { });
+                            try { await navigator.share({ title: 'My LifeFrame', text: 'My values, interests, and purpose — Tim Collins Framework', url }); } catch { /* cancelled */ }
                         } else {
-                            navigator.clipboard.writeText(window.location.href);
-                            alert('Link copied to clipboard!');
+                            await navigator.clipboard.writeText(url);
+                            // Brief visual feedback on the button itself
+                            const btn = document.getElementById('share-lifeframe-btn');
+                            if (btn) { const orig = btn.textContent; btn.textContent = 'Link copied!'; setTimeout(() => { btn.textContent = orig || 'Share'; }, 2000); }
                         }
                     }}
+                    id="share-lifeframe-btn"
                     className="px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition flex items-center gap-2"
                     title="Share LifeFrame"
                 >

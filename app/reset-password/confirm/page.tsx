@@ -19,22 +19,17 @@ export default function ResetPasswordConfirmPage() {
     // Password strength indicator
     const strength = checkPasswordStrength(newPassword);
 
-    // Listen for Supabase PASSWORD_RECOVERY auth event.
-    // When the user clicks the reset link, Supabase redirects here with tokens in the URL hash.
-    // The client-side Supabase JS detects these tokens and fires a PASSWORD_RECOVERY event.
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'PASSWORD_RECOVERY') {
                 setValidToken(true);
                 setCheckingToken(false);
             } else if (event === 'SIGNED_IN' && session) {
-                // Fallback: session already established (e.g. via callback route)
                 setValidToken(true);
                 setCheckingToken(false);
             }
         });
 
-        // Also check for an existing session (in case the event already fired)
         const checkExisting = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
@@ -43,10 +38,8 @@ export default function ResetPasswordConfirmPage() {
             }
         };
 
-        // Give onAuthStateChange a moment to fire, then fall back to session check
         const timeout = setTimeout(() => {
             checkExisting().then(() => {
-                // If still checking after 3s total, mark as invalid
                 setTimeout(() => {
                     setCheckingToken(prev => {
                         if (prev) {
@@ -69,78 +62,86 @@ export default function ResetPasswordConfirmPage() {
         e.preventDefault();
         setError('');
 
-        // Validation
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match');
-            return;
-        }
-
-        if (newPassword.length < 8) {
-            setError('Password must be at least 8 characters long');
-            return;
-        }
-
-        if (strength.score < 2) {
-            setError('Please choose a stronger password');
-            return;
-        }
+        if (newPassword !== confirmPassword) { setError('Passwords do not match'); return; }
+        if (newPassword.length < 8) { setError('Password must be at least 8 characters long'); return; }
+        if (strength.score < 2) { setError('Please choose a stronger password'); return; }
 
         setLoading(true);
-
         try {
             const result = await updatePassword(newPassword);
-
             if (result.success) {
                 setSuccess(true);
-                // Redirect to login after 3 seconds
-                setTimeout(() => {
-                    router.push('/login');
-                }, 3000);
+                setTimeout(() => router.push('/login'), 3000);
             } else {
                 setError(result.error || 'Failed to update password');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    // Loading state while checking token
+    const cardStyle: React.CSSProperties = {
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 20,
+        padding: '40px 36px',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.06)',
+    };
+
+    const pageStyle: React.CSSProperties = {
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#050505',
+        padding: '24px 16px',
+    };
+
+    const inputStyle: React.CSSProperties = {
+        width: '100%',
+        boxSizing: 'border-box',
+        padding: '12px 48px 12px 14px',
+        border: '1px solid #e5e7eb',
+        borderRadius: 10,
+        fontSize: 14,
+        color: '#111',
+        background: '#f9fafb',
+        outline: 'none',
+        transition: 'border-color 0.15s',
+        fontFamily: 'system-ui, sans-serif',
+    };
+
     if (checkingToken) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-gray-600">Verifying reset link...</p>
+            <div style={pageStyle}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 40, height: 40, border: '2px solid rgba(255,255,255,0.15)', borderTopColor: '#fff', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 0.8s linear infinite' }} />
+                    <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, fontFamily: 'system-ui, sans-serif' }}>Verifying reset link…</p>
                 </div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
 
-    // Invalid token state
     if (!validToken) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 px-4">
-                <div className="max-w-md w-full">
-                    <div className="bg-white rounded-2xl shadow-xl p-8">
-                        {/* Error Icon */}
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={pageStyle}>
+                <div style={{ maxWidth: 420, width: '100%' }}>
+                    <div style={cardStyle}>
+                        <div style={{ width: 56, height: 56, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#ef4444' }}>
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-
-                        <h1 className="text-2xl font-bold text-gray-900 text-center mb-4">
-                            Invalid Reset Link
-                        </h1>
-                        <p className="text-gray-600 text-center mb-8">
+                        <h1 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 700, color: '#111', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>Invalid Reset Link</h1>
+                        <p style={{ margin: '0 0 28px', fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 1.6, fontFamily: 'system-ui, sans-serif' }}>
                             {error || 'This password reset link is invalid or has expired.'}
                         </p>
-
                         <button
                             onClick={() => router.push('/reset-password')}
-                            className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                            style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'system-ui, sans-serif' }}
                         >
                             Request New Reset Link
                         </button>
@@ -150,35 +151,28 @@ export default function ResetPasswordConfirmPage() {
         );
     }
 
-    // Success state
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 px-4">
-                <div className="max-w-md w-full">
-                    <div className="bg-white rounded-2xl shadow-xl p-8">
-                        {/* Success Icon */}
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={pageStyle}>
+                <div style={{ maxWidth: 420, width: '100%' }}>
+                    <div style={cardStyle}>
+                        <div style={{ width: 56, height: 56, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#16a34a' }}>
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-
-                        <h1 className="text-2xl font-bold text-gray-900 text-center mb-4">
-                            Password Reset Complete!
-                        </h1>
-                        <p className="text-gray-600 text-center mb-8">
-                            Your password has been successfully updated. You can now log in with your new password.
+                        <h1 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 700, color: '#111', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>Password Updated</h1>
+                        <p style={{ margin: '0 0 12px', fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 1.6, fontFamily: 'system-ui, sans-serif' }}>
+                            Your password has been updated. You can now sign in.
                         </p>
-
-                        <div className="text-center text-sm text-gray-500 mb-6">
-                            Redirecting to login page in 3 seconds...
-                        </div>
-
+                        <p style={{ margin: '0 0 28px', fontSize: 13, color: '#9ca3af', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
+                            Redirecting in 3 seconds…
+                        </p>
                         <button
                             onClick={() => router.push('/login')}
-                            className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                            style={{ width: '100%', padding: '12px', background: '#111', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'system-ui, sans-serif' }}
                         >
-                            Go to Login Now
+                            Go to Sign In
                         </button>
                     </div>
                 </div>
@@ -186,34 +180,38 @@ export default function ResetPasswordConfirmPage() {
         );
     }
 
-    // Main form
+    const strengthColors = ['#ef4444', '#ef4444', '#f97316', '#eab308', '#22c55e', '#16a34a'];
+    const strengthLabels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 px-4">
-            <div className="max-w-md w-full">
-                <div className="bg-white rounded-2xl shadow-xl p-8">
-                    {/* Lock Icon */}
-                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        <div style={pageStyle}>
+            <div style={{ maxWidth: 420, width: '100%' }}>
+                {/* Wordmark */}
+                <p style={{ margin: '0 0 24px', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', fontFamily: 'system-ui, sans-serif' }}>
+                    Tim Collins Framework
+                </p>
+
+                <div style={cardStyle}>
+                    <div style={{ width: 48, height: 48, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#374151' }}>
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
 
-                    {/* Header */}
-                    <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
+                    <h1 style={{ margin: '0 0 6px', fontSize: 22, fontWeight: 700, color: '#111', textAlign: 'center', fontFamily: 'system-ui, sans-serif', letterSpacing: '-0.02em' }}>
                         Set New Password
                     </h1>
-                    <p className="text-gray-600 text-center mb-8">
+                    <p style={{ margin: '0 0 28px', fontSize: 14, color: '#6b7280', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
                         Choose a strong password to secure your account.
                     </p>
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* New Password Input */}
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        {/* New Password */}
                         <div>
-                            <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8, fontFamily: 'system-ui, sans-serif' }}>
                                 New Password
                             </label>
-                            <div className="relative">
+                            <div style={{ position: 'relative' }}>
                                 <input
                                     id="newPassword"
                                     type={showPassword ? 'text' : 'password'}
@@ -222,21 +220,21 @@ export default function ResetPasswordConfirmPage() {
                                     placeholder="Enter new password"
                                     required
                                     disabled={loading}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed pr-12"
                                     autoComplete="new-password"
-                                    autoFocus
+                                    style={inputStyle}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex', alignItems: 'center' }}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
                                     {showPassword ? (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                         </svg>
                                     ) : (
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
@@ -244,51 +242,44 @@ export default function ResetPasswordConfirmPage() {
                                 </button>
                             </div>
 
-                            {/* Password Strength Indicator */}
+                            {/* Strength bar */}
                             {newPassword && (
-                                <div className="mt-2">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className={`text-sm font-semibold ${strength.color}`}>
-                                            {strength.feedback}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                            {strength.score}/5
-                                        </span>
+                                <div style={{ marginTop: 10 }}>
+                                    <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+                                        {[1,2,3,4,5].map(i => (
+                                            <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= strength.score ? strengthColors[strength.score] : '#e5e7eb', transition: 'background 0.2s' }} />
+                                        ))}
                                     </div>
-                                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-300 ${strength.score <= 1 ? 'bg-red-500' :
-                                                strength.score === 2 ? 'bg-orange-500' :
-                                                    strength.score === 3 ? 'bg-yellow-500' :
-                                                        strength.score === 4 ? 'bg-green-500' :
-                                                            'bg-green-600'
-                                                }`}
-                                            style={{ width: `${(strength.score / 5) * 100}%` }}
-                                        />
-                                    </div>
+                                    <p style={{ margin: 0, fontSize: 12, color: strengthColors[strength.score], fontFamily: 'system-ui, sans-serif' }}>
+                                        {strengthLabels[strength.score]} · {strength.feedback}
+                                    </p>
                                 </div>
                             )}
 
-                            {/* Password Requirements */}
-                            <ul className="mt-3 text-xs text-gray-600 space-y-1">
-                                <li className={newPassword.length >= 8 ? 'text-green-600' : ''}>
-                                    {newPassword.length >= 8 ? '✓' : '•'} At least 8 characters
-                                </li>
-                                <li className={/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'text-green-600' : ''}>
-                                    {/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? '✓' : '•'} Upper and lowercase letters
-                                </li>
-                                <li className={/\d/.test(newPassword) ? 'text-green-600' : ''}>
-                                    {/\d/.test(newPassword) ? '✓' : '•'} At least one number
-                                </li>
-                                <li className={/[^a-zA-Z0-9]/.test(newPassword) ? 'text-green-600' : ''}>
-                                    {/[^a-zA-Z0-9]/.test(newPassword) ? '✓' : '•'} Special character (recommended)
-                                </li>
+                            {/* Requirements */}
+                            <ul style={{ margin: '12px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                {[
+                                    { met: newPassword.length >= 8, label: 'At least 8 characters' },
+                                    { met: /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword), label: 'Upper and lowercase letters' },
+                                    { met: /\d/.test(newPassword), label: 'At least one number' },
+                                    { met: /[^a-zA-Z0-9]/.test(newPassword), label: 'Special character (recommended)' },
+                                ].map(({ met, label }) => (
+                                    <li key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: met ? '#16a34a' : '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                                            {met
+                                                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                : <circle cx="12" cy="12" r="2" fill="currentColor" />
+                                            }
+                                        </svg>
+                                        {label}
+                                    </li>
+                                ))}
                             </ul>
                         </div>
 
-                        {/* Confirm Password Input */}
+                        {/* Confirm Password */}
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
+                            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8, fontFamily: 'system-ui, sans-serif' }}>
                                 Confirm New Password
                             </label>
                             <input
@@ -299,61 +290,48 @@ export default function ResetPasswordConfirmPage() {
                                 placeholder="Re-enter new password"
                                 required
                                 disabled={loading}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 autoComplete="new-password"
+                                style={inputStyle}
                             />
                             {confirmPassword && newPassword !== confirmPassword && (
-                                <p className="mt-2 text-sm text-red-600">
-                                    Passwords do not match
-                                </p>
+                                <p style={{ margin: '6px 0 0', fontSize: 12, color: '#ef4444', fontFamily: 'system-ui, sans-serif' }}>Passwords do not match</p>
                             )}
                             {confirmPassword && newPassword === confirmPassword && (
-                                <p className="mt-2 text-sm text-green-600">
-                                    ✓ Passwords match
-                                </p>
+                                <p style={{ margin: '6px 0 0', fontSize: 12, color: '#16a34a', fontFamily: 'system-ui, sans-serif' }}>Passwords match</p>
                             )}
                         </div>
 
-                        {/* Error Message */}
+                        {/* Error */}
                         {error && (
-                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-                                <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div style={{ padding: '12px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                <svg width="16" height="16" fill="none" stroke="#ef4444" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <p className="text-sm text-red-800">{error}</p>
+                                <p style={{ margin: 0, fontSize: 13, color: '#dc2626', fontFamily: 'system-ui, sans-serif' }}>{error}</p>
                             </div>
                         )}
 
-                        {/* Submit Button */}
+                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword || strength.score < 2}
-                            className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            style={{ width: '100%', padding: '13px', background: '#111', color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: (loading || !newPassword || !confirmPassword || newPassword !== confirmPassword || strength.score < 2) ? 0.5 : 1, transition: 'opacity 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'system-ui, sans-serif' }}
                         >
                             {loading ? (
                                 <>
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    Updating Password...
+                                    <div style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                    Updating Password…
                                 </>
-                            ) : (
-                                <>
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Reset Password
-                                </>
-                            )}
+                            ) : 'Set New Password'}
                         </button>
                     </form>
-
-                    {/* Security Note */}
-                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-xs text-gray-600 text-center">
-                            🔒 Your password will be encrypted and securely stored.
-                        </p>
-                    </div>
                 </div>
+
+                <p style={{ marginTop: 20, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.25)', fontFamily: 'system-ui, sans-serif' }}>
+                    Your password is encrypted and stored securely.
+                </p>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 }

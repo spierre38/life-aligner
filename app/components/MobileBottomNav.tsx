@@ -68,6 +68,10 @@ const HIDDEN_PREFIXES = [
     '/onboarding',
     '/login',
     '/signup',
+    '/reset-password',
+    '/lifeframe/print',
+    '/roadmap/print',
+    '/shared/',
     '/',
 ];
 

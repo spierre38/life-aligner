@@ -102,16 +102,16 @@ const COPY: Record<DashState, StateCopy> = {
     complete: {
         hero: {
             leadBold: 'Your LifeFrame is complete!',
-            rest: " Now let's build your personalized Roadmap.",
-            ctaLabel: 'Build Roadmap',
-            ctaHref: '/roadmap',
+            rest: " Review your foundation, then head to your Roadmap.",
+            ctaLabel: 'View Your LifeFrame',
+            ctaHref: '/workbook/lifeframe',
         },
         guide: {
             eyebrow: 'Your foundation is now set!',
-            headingLine1: 'You are now ready',
-            headingLine2: 'to build your Roadmap',
-            ctaLabel: 'Build Roadmap',
-            ctaHref: '/roadmap',
+            headingLine1: 'View your LifeFrame',
+            headingLine2: 'then build your Roadmap',
+            ctaLabel: 'View Your LifeFrame',
+            ctaHref: '/workbook/lifeframe',
         },
         badge: { values: 'Complete', interests: 'Complete', life_categories: 'Complete' },
     },
@@ -437,26 +437,42 @@ export default function DashboardPage() {
                                     <span aria-hidden>→</span>
                                 </Link>
 
-                                <button
-                                    onClick={() => {
-                                        const v1 = getVideo('v1-welcome');
-                                        if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
-                                    }}
-                                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
-                                    style={{
-                                        background: 'rgba(255,255,255,0.08)',
-                                        border: '1px solid rgba(255,255,255,0.18)',
-                                        color: 'white',
-                                        backdropFilter: 'blur(8px)',
-                                    }}
-                                    aria-label="Watch Welcome Video from Tim"
-                                >
-                                    <svg className="w-3.5 h-3.5 text-purple-300" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                                    <span>{watchedVideoIds.has('v1-welcome') ? 'Rewatch Welcome (5 min)' : 'Watch Welcome from Tim (5 min)'}</span>
-                                    {watchedVideoIds.has('v1-welcome') && (
-                                        <span className="text-emerald-400 font-bold text-xs">✓</span>
-                                    )}
-                                </button>
+                                {/* Secondary CTA: Go to Roadmap (only when LifeFrame is complete) */}
+                                {state === 'complete' && (
+                                    <Link
+                                        href="/roadmap"
+                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98]"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.08)',
+                                            border: '1px solid rgba(255,255,255,0.18)',
+                                            color: 'white',
+                                            backdropFilter: 'blur(8px)',
+                                        }}
+                                    >
+                                        Go to Roadmap →
+                                    </Link>
+                                )}
+
+                                {/* Welcome video — first-time only */}
+                                {!watchedVideoIds.has('v1-welcome') && (
+                                    <button
+                                        onClick={() => {
+                                            const v1 = getVideo('v1-welcome');
+                                            if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
+                                        }}
+                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
+                                        style={{
+                                            background: 'rgba(255,255,255,0.08)',
+                                            border: '1px solid rgba(255,255,255,0.18)',
+                                            color: 'white',
+                                            backdropFilter: 'blur(8px)',
+                                        }}
+                                        aria-label="Watch Welcome Video from Tim"
+                                    >
+                                        <svg className="w-3.5 h-3.5 text-purple-300" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                        <span>Watch Welcome from Tim (5 min)</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </section>

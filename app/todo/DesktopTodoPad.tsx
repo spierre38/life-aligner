@@ -509,12 +509,12 @@ export default function DesktopTodoPad() {
                             </div>
 
                             <button
-                                onClick={exportToCSV}
+                                onClick={() => window.open('/lifeframe/print', '_blank')}
                                 className={`px-4 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
                                 style={{ fontFamily: 'Courier New, monospace' }}
-                                title="Export to CSV"
+                                title="Export / Print as PDF"
                             >
-                                📥 CSV
+                                Export PDF
                             </button>
 
                             {todos.filter(t => t.completed).length > 0 && (
