@@ -329,6 +329,12 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     const [demographics, setDemographics] = useState<any>({});
     const [planeFlying, setPlaneFlying] = useState(false);
 
+    // Hide MobileBottomNav while onboarding is active
+    useEffect(() => {
+        document.body.dataset.modalOpen = 'true';
+        return () => { delete document.body.dataset.modalOpen; };
+    }, []);
+
     useEffect(() => {
         if (currentStep === 'welcome') {
             const t = setTimeout(() => fadeAndAdvance('thank-tim'), 2800);
@@ -469,7 +475,7 @@ export default function OnboardingJourney({ onComplete, userName, startStep = 'w
     if (currentStep === 'map') {
         return (
             <LightStage planeFlying={planeFlying}>
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 pt-20 overflow-y-auto">
+                <div className="absolute inset-0 flex flex-col items-center justify-start p-6 pt-20 pb-28 overflow-y-auto">
                     <div className="w-full max-w-2xl obj-page-flip">
                         <div className="text-center mb-8">
                             <p className="text-xs font-bold tracking-[0.3em] uppercase text-gray-400 mb-2">Your Path Forward</p>

@@ -19,6 +19,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Goal, Activity } from '@/lib/roadmap-types';
 import { showToast } from '@/lib/toast';
+import { useTheme } from '@/app/components/ThemeProvider';
 
 // ─── Visual constants ─────────────────────────────────────────────────────────
 
@@ -272,7 +273,7 @@ function BranchLine({
   return (
     <line
       x1={x1} y1={y1} x2={x2} y2={y2}
-      stroke="rgba(255,255,255,0.12)"
+      stroke="var(--color-border)"
       strokeWidth="2"
       strokeDasharray="6 4"
       className="transition-all duration-300"
@@ -448,7 +449,8 @@ export default function GoalDetailView({
   onCompleteGoal,
   onDeleteGoal,
   onAddReflection,
-}: GoalDetailViewProps) {
+} : GoalDetailViewProps) {
+  const { isDark } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
@@ -527,16 +529,21 @@ export default function GoalDetailView({
         .detail-float { animation: detail-float 4s ease-in-out infinite; }
       `}</style>
 
-      {/* ── Top bar ──────────────────────────────── */}
+      {/* ── Top bar ──────────────────────────────────────── */}
       <div
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/5"
-        style={{ background: 'rgba(5,5,5,0.82)', paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
+        style={{
+          background: isDark ? 'rgba(5,5,5,0.82)' : 'rgba(255,255,255,0.88)',
+          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'}`,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
       >
         {/* Row 1: Back + Goal title */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-2.5">
           <button
             onClick={onClose}
-            className="flex items-center gap-1.5 text-white/70 hover:text-white transition text-sm font-medium"
+            className="flex items-center gap-1.5 transition text-sm font-medium"
+            style={{ color: isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -544,7 +551,7 @@ export default function GoalDetailView({
             <span className="hidden sm:inline">Back to Goals</span>
             <span className="sm:hidden">Back</span>
           </button>
-          <span className="text-xs font-medium text-white/40 truncate max-w-[50%] text-right">{goal.title}</span>
+          <span className="text-xs font-medium truncate max-w-[50%] text-right" style={{ color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{goal.title}</span>
         </div>
 
         {/* Row 2: Action buttons — scrollable on mobile */}
@@ -677,14 +684,15 @@ export default function GoalDetailView({
               <path d={ROOT_BLOB} fill="url(#root-sheen)" opacity="0.12" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-5">
-              <p className="text-white text-base font-bold text-center leading-tight drop-shadow-sm"
-                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+              <p className="text-base font-bold text-center leading-tight drop-shadow-sm"
+                style={{ color: 'var(--color-text)', textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.4)' : 'none' }}>
                 {goal.title}
               </p>
               {goal.connectedCategories.length > 0 && (
                 <div className="flex gap-1 mt-2 flex-wrap justify-center">
                   {goal.connectedCategories.slice(0, 2).map(cat => (
-                    <span key={cat} className="bg-white/20 text-white text-[9px] font-medium px-2 py-0.5 rounded-full">
+                    <span key={cat} className="text-[9px] font-medium px-2 py-0.5 rounded-full"
+                      style={{ background: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)', color: 'var(--color-text)' }}>
                       {cat}
                     </span>
                   ))}
@@ -763,7 +771,11 @@ export default function GoalDetailView({
                   {hasSubs && (
                     <button
                       onClick={() => toggleExpand(activity.id)}
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition text-white text-[10px]"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center transition text-[10px]"
+                      style={{
+                        background: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
+                        color: 'var(--color-text)',
+                      }}
                       aria-label={isExpanded ? 'Collapse' : 'Expand'}
                     >
                       {isExpanded ? '−' : `+${activity.subActivities.length}`}
@@ -811,7 +823,7 @@ export default function GoalDetailView({
               className="absolute text-center"
               style={{ left: centerX - 100, top: centerY + ROOT_SIZE / 2 + 30, width: 200 }}
             >
-              <p className="text-white/40 text-sm mb-3">No activities yet</p>
+              <p className="text-sm mb-3" style={{ color: 'var(--color-text-dim)' }}>No activities yet</p>
               <button
                 onClick={() => onAddActivity(goal.id)}
                 className="bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 text-sm font-semibold px-4 py-2 rounded-full transition"
@@ -823,7 +835,9 @@ export default function GoalDetailView({
         </div>
 
         {/* ── Right panel: AI coach + Reflect tabs ──────────── */}
-        <div className="hidden lg:flex flex-col w-96 shrink-0 border-l border-white/8 overflow-y-auto" style={{ maxHeight: '100vh', paddingTop: '64px' }}>
+        <div className="hidden lg:flex flex-col w-96 shrink-0 overflow-y-auto"
+          style={{ maxHeight: '100vh', paddingTop: '64px', borderLeft: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}
+        >
           {/* Tab switcher */}
           <div className="flex gap-1 px-4 pt-4 pb-2">
             {(['ai', 'reflect'] as const).map(tab => (
@@ -832,8 +846,12 @@ export default function GoalDetailView({
                 onClick={() => setRightTab(tab)}
                 className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
                 style={{
-                  background: rightTab === tab ? 'rgba(255,255,255,0.12)' : 'transparent',
-                  color: rightTab === tab ? '#fff' : 'rgba(255,255,255,0.4)',
+                  background: rightTab === tab
+                    ? isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'
+                    : 'transparent',
+                  color: rightTab === tab
+                    ? 'var(--color-text)'
+                    : 'var(--color-text-dim)',
                 }}
               >
                 {tab === 'ai' ? '✨ AI Coach' : '📝 Reflect'}
@@ -848,9 +866,9 @@ export default function GoalDetailView({
               {/* New entry form */}
               <div
                 className="rounded-2xl p-4"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
               >
-                <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">New Entry</p>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text-dim)' }}>New Entry</p>
                 {/* Mood selector */}
                 <div className="flex gap-2 mb-3">
                   {(['great', 'okay', 'hard'] as const).map(m => (
@@ -878,10 +896,13 @@ export default function GoalDetailView({
                   onChange={e => setReflectionText(e.target.value)}
                   placeholder="How's this goal going? What's on your mind..."
                   rows={4}
-                  className="w-full rounded-xl p-3 text-white placeholder-white/25 resize-none text-xs leading-relaxed focus:outline-none transition-all"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', letterSpacing: '-0.01em' }}
-                  onFocus={e => (e.target as HTMLTextAreaElement).style.border = '1px solid rgba(255,255,255,0.2)'}
-                  onBlur={e => (e.target as HTMLTextAreaElement).style.border = '1px solid rgba(255,255,255,0.08)'}
+                  className="w-full rounded-xl p-3 resize-none text-xs leading-relaxed focus:outline-none transition-all"
+                  style={{
+                    background: 'var(--color-surface-2)',
+                    border: '1px solid var(--color-border)',
+                    color: 'var(--color-text)',
+                    letterSpacing: '-0.01em',
+                  }}
                 />
 
                 {/* Image attachment zone */}
@@ -907,8 +928,8 @@ export default function GoalDetailView({
                   )}
                   {pendingImages.length < 3 && (
                     <label
-                      className="flex items-center gap-2 text-[10px] font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:bg-white/10"
-                      style={{ color: 'rgba(255,255,255,0.4)', border: '1px dashed rgba(255,255,255,0.12)' }}
+                      className="flex items-center gap-2 text-[10px] font-medium px-3 py-1.5 rounded-lg cursor-pointer transition-all"
+                      style={{ color: 'var(--color-text-dim)', border: `1px dashed var(--color-border)` }}
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -944,7 +965,7 @@ export default function GoalDetailView({
                     setSavingReflection(false);
                   }}
                   className="w-full mt-2 py-2.5 rounded-xl text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-30"
-                  style={{ background: '#fff', color: '#000' }}
+                  style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}
                 >
                   {savingReflection ? 'Saving…' : 'Save Entry'}
                 </button>
@@ -952,32 +973,32 @@ export default function GoalDetailView({
 
               {/* Past entries */}
               <div>
-                <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Past Entries ({goal.reflections?.length ?? 0})</p>
+                <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-dim)' }}>Past Entries ({goal.reflections?.length ?? 0})</p>
                 {(!goal.reflections || goal.reflections.length === 0) ? (
-                  <p className="text-xs text-white/25 italic">No entries yet. Write your first reflection above.</p>
+                  <p className="text-xs italic" style={{ color: 'var(--color-text-dim)' }}>No entries yet. Write your first reflection above.</p>
                 ) : (
                   <div className="space-y-3">
                     {[...goal.reflections].reverse().map(r => (
                       <div
                         key={r.id}
                         className="p-3 rounded-xl text-xs"
-                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                        style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
                       >
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-white/30">{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          <span style={{ color: 'var(--color-text-dim)' }}>{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                           {r.mood && (
                             <span
                               className="px-2 py-0.5 rounded-full"
                               style={{
-                                background: r.mood === 'great' ? 'rgba(0,200,100,0.15)' : r.mood === 'hard' ? 'rgba(255,80,80,0.15)' : 'rgba(255,255,255,0.08)',
-                                color: r.mood === 'great' ? '#34d399' : r.mood === 'hard' ? '#f87171' : 'rgba(255,255,255,0.5)',
+                                background: r.mood === 'great' ? 'rgba(0,200,100,0.15)' : r.mood === 'hard' ? 'rgba(255,80,80,0.15)' : 'var(--color-surface-2)',
+                                color: r.mood === 'great' ? '#34d399' : r.mood === 'hard' ? '#f87171' : 'var(--color-text-muted)',
                               }}
                             >
                               {r.mood === 'great' ? '✦ Great' : r.mood === 'hard' ? '⊘ Hard' : '~ Okay'}
                             </span>
                           )}
                         </div>
-                        <p className="leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>{r.text}</p>
+                        <p className="leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>{r.text}</p>
                         {/* Images attached to this entry */}
                         {r.images && r.images.length > 0 && (
                           <div className="flex gap-1.5 mt-2">

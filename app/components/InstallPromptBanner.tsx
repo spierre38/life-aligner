@@ -73,7 +73,7 @@ export default function InstallPromptBanner() {
         <>
             {/* Install Banner */}
             <div
-                className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 safe-bottom"
+                className="fixed bottom-20 left-0 right-0 z-50 px-4 pb-4 pt-2 safe-bottom"
                 style={{ animation: 'slideUp 0.3s ease-out' }}
             >
                 <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">

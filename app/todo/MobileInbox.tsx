@@ -33,7 +33,7 @@ const BUCKETS: { value: DeadlineBucket; label: string; color: string }[] = [
     { value: 'today',     label: 'Today',     color: '#f97316' },
     { value: 'tomorrow',  label: 'Tomorrow',  color: '#eab308' },
     { value: 'this_week', label: 'This Week', color: '#6366f1' },
-    { value: 'someday',   label: 'Someday',   color: '#94a3b8' },
+    { value: 'someday',   label: 'Later',     color: '#94a3b8' },
 ];
 
 // ─── Add Task Modal ────────────────────────────────────────────────────────────
@@ -389,6 +389,14 @@ function TaskRow({
                                     <UrgencyChip urgency={todo.urgency} />
                                 </button>
                             )}
+                            {todo.due_date && !todo.completed && (
+                                <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-dim)' }}>
+                                    {new Date(todo.due_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                            )}
+                            {!todo.due_date && !todo.completed && todo.urgency === 'someday' && (
+                                <span className="text-[10px] italic" style={{ color: 'var(--color-text-dim)' }}>No due date</span>
+                            )}
                             {todo.goal_title && (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-dim)' }}>
                                     ↗ {todo.goal_title}
@@ -610,7 +618,7 @@ export default function MobileInbox() {
                         <div className="text-center py-20">
                             <div className="text-5xl mb-4">✨</div>
                             <p className="text-base font-medium mb-1" style={{ color: 'var(--color-text)' }}>
-                                {activeFilter === 'all' ? 'Inbox zero!' : `Nothing ${activeFilter === 'today' ? 'due today' : activeFilter === 'tomorrow' ? 'due tomorrow' : activeFilter === 'this_week' ? 'this week' : 'in someday'}`}
+                                {activeFilter === 'all' ? 'Inbox zero!' : `Nothing ${activeFilter === 'today' ? 'due today' : activeFilter === 'tomorrow' ? 'due tomorrow' : activeFilter === 'this_week' ? 'this week' : 'with no due date'}`}
                             </p>
                             <p className="text-sm" style={{ color: 'var(--color-text-dim)' }}>Tap + to add something</p>
                         </div>

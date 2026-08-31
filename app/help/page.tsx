@@ -178,8 +178,8 @@ const FAQ_SECTIONS = [
         a: 'Yes. Your LifeFrame, goals, and activities are private to you. We do not share or sell your personal data. Your information is encrypted and stored securely.',
       },
       {
-        q: 'Can I use the app on my phone?',
-        a: 'Yes! The app is fully mobile-optimized. For the best experience on mobile, we recommend adding it to your home screen — tap the share icon in your browser and select "Add to Home Screen." This gives you a native app-like experience.',
+        q: 'How do I add the app to my home screen?',
+        a: 'For the best experience, add this app to your home screen — it removes the browser bar and feels like a native app.\n\n📱 iPhone / iPad (Safari):\n1. Tap the Share button (⬆️) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" — the Tim Collins Framework icon will appear on your home screen\n\n🤖 Android (Chrome):\n1. Tap the three-dot menu (⋮) in the top-right\n2. Tap "Add to Home screen" or "Install app"\n3. Confirm — the app shortcut will be added\n\nOnce installed, it opens in full-screen mode with faster loading and offline support.',
       },
       {
         q: 'How do I change my password?',
