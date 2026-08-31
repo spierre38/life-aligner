@@ -103,6 +103,7 @@ export default function AuthNavbar() {
     const pathname = usePathname();
     const { isDark } = useTheme();
     const [user, setUser] = useState<any>(null);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [showMobileUserMenu, setShowMobileUserMenu] = useState(false);
@@ -118,13 +119,16 @@ export default function AuthNavbar() {
             setUser(currentUser);
 
             if (currentUser) {
-                const { data: worksheets } = await supabase
-                    .from('workbook_entries')
-                    .select('category, content')
-                    .eq('user_id', currentUser.id);
+                // Fetch avatar and workbook data in parallel
+                const [worksheetsResult, profileResult] = await Promise.all([
+                    supabase.from('workbook_entries').select('category, content').eq('user_id', currentUser.id),
+                    supabase.from('profiles').select('avatar_url').eq('id', currentUser.id).single(),
+                ]);
 
                 if (!mounted) return;
-                setCompletion(evaluateLifeFrameCompletion(worksheets ?? []));
+                setCompletion(evaluateLifeFrameCompletion(worksheetsResult.data ?? []));
+                if (profileResult.data?.avatar_url) setAvatarUrl(profileResult.data.avatar_url);
+                else setAvatarUrl(null);
             }
         };
 
@@ -136,12 +140,26 @@ export default function AuthNavbar() {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (!mounted) return;
             setUser(session?.user ?? null);
-            if (!session?.user) setCompletion(null);
+            if (!session?.user) { setCompletion(null); setAvatarUrl(null); }
+            else load();
         });
+
+        // Re-fetch avatar when profiles table changes (e.g. after saving in Settings)
+        const profileChannel = supabase
+            .channel('navbar-profile-watch')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, () => {
+                supabase.auth.getUser().then(({ data: { user: u } }) => {
+                    if (!u || !mounted) return;
+                    supabase.from('profiles').select('avatar_url').eq('id', u.id).single()
+                        .then(({ data }) => { if (mounted) setAvatarUrl(data?.avatar_url ?? null); });
+                });
+            })
+            .subscribe();
 
         return () => {
             mounted = false;
             subscription.unsubscribe();
+            supabase.removeChannel(profileChannel);
         };
     }, []);
 
@@ -273,13 +291,18 @@ export default function AuthNavbar() {
                                 </span>
                                 {/* Avatar */}
                                 <div
-                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden flex-shrink-0"
                                     style={{
-                                        background: 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)',
+                                        background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)',
                                     }}
                                 >
-                                    {user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
-                                        user?.email?.[0]?.toUpperCase() || 'U'}
+                                    {avatarUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
+                                        user?.email?.[0]?.toUpperCase() || 'U'
+                                    )}
                                 </div>
                                 <svg
                                     className={`w-3.5 h-3.5 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''} ${isDark ? 'text-white/40' : 'text-neutral-400'}`}
@@ -357,15 +380,20 @@ export default function AuthNavbar() {
                         {/* Mobile avatar — opens bottom sheet */}
                         <button
                             id="mobile-user-menu-btn"
-                            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 transition-all active:scale-90"
+                            className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 transition-all active:scale-90 overflow-hidden"
                             style={{
-                                background: 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)',
+                                background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)',
                             }}
                             onClick={() => setShowMobileUserMenu(true)}
                             aria-label="Account menu"
                         >
-                            {user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
-                                user?.email?.[0]?.toUpperCase() || 'U'}
+                            {avatarUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                user?.user_metadata?.full_name?.[0]?.toUpperCase() ||
+                                user?.email?.[0]?.toUpperCase() || 'U'
+                            )}
                         </button>
 
                         {/* Mobile hamburger — hidden: bottom nav handles mobile */}
@@ -399,10 +427,15 @@ export default function AuthNavbar() {
                     {/* User info */}
                     <div className="flex items-center gap-3 px-1 mb-5">
                         <div
-                            className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-                            style={{ background: 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)' }}
+                            className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0 overflow-hidden"
+                            style={{ background: avatarUrl ? 'transparent' : 'linear-gradient(135deg, rgba(255,45,153,0.9) 0%, rgba(0,212,255,0.9) 100%)' }}
                         >
-                            {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                            {avatarUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'
+                            )}
                         </div>
                         <div className="min-w-0">
                             <p className="text-sm font-semibold text-white truncate">{user?.user_metadata?.full_name || 'User'}</p>
