@@ -569,26 +569,26 @@ export default function LifeCategoriesWorksheet() {
                                             </h3>
 
                                             <div className="grid sm:grid-cols-3 gap-3 mb-4">
-                                                <div className="p-3.5 rounded-xl bg-black/20 border border-white/5">
-                                                    <h4 className="font-medium text-sm text-white mb-0.5">Health</h4>
-                                                    <p className="text-xs text-white/50">Physical • Mental</p>
+                                                <div className="p-3.5 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                    <h4 className="font-medium text-sm mb-0.5" style={{ color: 'var(--color-text)' }}>Health</h4>
+                                                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Physical • Mental</p>
                                                 </div>
-                                                <div className="p-3.5 rounded-xl bg-black/20 border border-white/5">
-                                                    <h4 className="font-medium text-sm text-white mb-0.5">Relationships</h4>
-                                                    <p className="text-xs text-white/50">Family • Friends • Community</p>
+                                                <div className="p-3.5 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                    <h4 className="font-medium text-sm mb-0.5" style={{ color: 'var(--color-text)' }}>Relationships</h4>
+                                                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Family • Friends • Community</p>
                                                 </div>
-                                                <div className="p-3.5 rounded-xl bg-black/20 border border-white/5">
-                                                    <h4 className="font-medium text-sm text-white mb-0.5">Career</h4>
-                                                    <p className="text-xs text-white/50">Growth • Leadership • Impact</p>
+                                                <div className="p-3.5 rounded-xl" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                                                    <h4 className="font-medium text-sm mb-0.5" style={{ color: 'var(--color-text)' }}>Career</h4>
+                                                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Growth • Leadership • Impact</p>
                                                 </div>
                                             </div>
 
-                                            <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200 flex items-start gap-2">
-                                                <svg className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="p-3 rounded-xl text-xs flex items-start gap-2" style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.2)', color: 'var(--color-text-muted)' }}>
+                                                <svg className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#a855f7' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 <div>
-                                                    <strong>Insight from Tim:</strong> Categories evolve over time — start with what matters most right now, and balance will come gradually.
+                                                    <strong style={{ color: 'var(--color-text)' }}>Insight from Tim:</strong> Categories evolve over time — start with what matters most right now, and balance will come gradually.
                                                 </div>
                                             </div>
                                         </div>
@@ -744,7 +744,7 @@ export default function LifeCategoriesWorksheet() {
                                                     Defining Your Purpose
                                                 </h2>
                                                 <p className="text-base md:text-lg leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-                                                    Purpose is driven by long-term goals that are <strong className="text-white">meaningful to you</strong> and <strong className="text-white">beneficial to others</strong>.
+                                                    Purpose is driven by long-term goals that are <strong style={{ color: 'var(--color-text)' }}>meaningful to you</strong> and <strong style={{ color: 'var(--color-text)' }}>beneficial to others</strong>.
                                                 </p>
                                             </div>
                                         </div>
