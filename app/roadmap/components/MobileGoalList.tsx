@@ -15,14 +15,15 @@ import type { Goal, Activity, RoadmapData } from '@/lib/roadmap-types';
 
 // ─── Category color mapping ────────────────────────────────────────────────────
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-    Health: '💪', Relationships: '❤️', Career: '💼', Financial: '💰',
-    Community: '🤝', Purpose: '🌟', 'Personal Growth': '🌱',
-    Spirituality: '🕊️', Recreation: '🎯', Environment: '🌿',
-};
-
-function catEmoji(cat: string) {
-    return CATEGORY_EMOJIS[cat] ?? '📌';
+function CategoryDot({ cat }: { cat: string }) {
+    const hue = stringToHue(cat);
+    return (
+        <span
+            className="inline-flex items-center justify-center w-2 h-2 rounded-full flex-shrink-0"
+            style={{ background: `hsl(${hue}, 65%, 55%)` }}
+            aria-hidden
+        />
+    );
 }
 
 function stringToHue(s: string): number {
@@ -161,7 +162,8 @@ function GoalCard({
                                         border: `1px solid hsl(${stringToHue(cat)}, 50%, 30%)`,
                                     }}
                                 >
-                                    {catEmoji(cat)} {cat}
+                                    <CategoryDot cat={cat} />
+                                    <span>{cat}</span>
                                 </span>
                             ))}
                         </div>

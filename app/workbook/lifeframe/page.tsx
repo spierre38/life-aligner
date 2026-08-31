@@ -468,8 +468,10 @@ export default function LifeFrameConstellation() {
             >
                 <div className="text-center intro-wave">
                     <div className="w-32 h-32 mx-auto mb-8">
-                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center animate-scale-in">
-                            <span className="text-6xl">✨</span>
+                        <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center animate-scale-in text-white">
+                            <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                            </svg>
                         </div>
                     </div>
                     <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 scroll-pop">
@@ -571,9 +573,12 @@ export default function LifeFrameConstellation() {
                     <div className="text-center mt-8 scroll-pop">
                         <button
                             onClick={() => router.push('/workbook/values')}
-                            className="text-purple-300 hover:text-white transition"
+                            className="inline-flex items-center gap-1.5 text-purple-300 hover:text-white transition text-sm font-medium"
                         >
-                            ✏️ Edit Values
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            <span>Edit Values</span>
                         </button>
                     </div>
                 </div>
@@ -665,9 +670,12 @@ export default function LifeFrameConstellation() {
                     <div className="text-center mt-8 scroll-pop">
                         <button
                             onClick={() => router.push('/workbook/interests')}
-                            className="text-pink-300 hover:text-white transition"
+                            className="inline-flex items-center gap-1.5 text-pink-300 hover:text-white transition text-sm font-medium"
                         >
-                            ✏️ Edit Interests
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            <span>Edit Interests</span>
                         </button>
                     </div>
                 </div>
@@ -755,9 +763,12 @@ export default function LifeFrameConstellation() {
                     <div className="text-center mt-8 scroll-pop">
                         <button
                             onClick={() => router.push('/workbook/life-categories')}
-                            className="text-indigo-300 hover:text-white transition"
+                            className="inline-flex items-center gap-1.5 text-indigo-300 hover:text-white transition text-sm font-medium"
                         >
-                            ✏️ Edit Categories
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                            </svg>
+                            <span>Edit Categories</span>
                         </button>
                     </div>
                 </div>
@@ -838,7 +849,12 @@ export default function LifeFrameConstellation() {
                             className="absolute top-0 left-0 right-0 h-[1px]"
                             style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
                         />
-                        <p className="text-2xl text-white mb-2 font-bold">Your LifeFrame is complete 🌟</p>
+                        <p className="text-2xl text-white mb-2 font-bold flex items-center justify-center gap-2">
+                            <span>Your LifeFrame is complete</span>
+                            <svg className="w-6 h-6 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </p>
                         <p className="text-sm text-purple-200/60 mb-6">
                             {lifeFrameData?.values.length || 0} values • {(lifeFrameData?.interests.existing.length || 0) + (lifeFrameData?.interests.exploring.length || 0)} interests • {lifeFrameData?.lifeCategories.categories.length || 0} categories • {lifeFrameData?.lifeCategories.purpose_elements.length || 0} purpose elements
                         </p>

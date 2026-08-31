@@ -5,6 +5,7 @@ import { useToast } from '@/app/components/Toast';
 import { logActivity } from '@/lib/accountability';
 import VideoPlayer from '@/app/components/VideoPlayer';
 import { getVideo } from '@/lib/videos';
+import { parseVideoProgress } from '@/lib/video-progress';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -92,7 +93,8 @@ export default function ValuesWorksheet() {
     const [editingPriority, setEditingPriority] = useState<{ name: string, value: string } | null>(null);
     const [showFewValuesConfirm, setShowFewValuesConfirm] = useState(false);
     const [showTooManyValuesConfirm, setShowTooManyValuesConfirm] = useState(false);
-    const [selectedVideoId, setSelectedVideoId] = useState<'v1-welcome' | 'v10-values-worksheet'>('v1-welcome');
+    const [selectedVideoId, setSelectedVideoId] = useState<string>('v1-welcome');
+    const [watchedVideoIds, setWatchedVideoIds] = useState<Set<string>>(new Set());
     const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
     // Scroll to top when transitioning between steps
@@ -116,6 +118,12 @@ export default function ValuesWorksheet() {
                     return;
                 }
                 setUserId(userWithProfile.user.id);
+
+                // Load watched video status
+                if (userWithProfile.profile?.video_progress) {
+                    const prog = parseVideoProgress(userWithProfile.profile.video_progress);
+                    setWatchedVideoIds(new Set(prog.watched));
+                }
 
                 // Check if they already have saved values
                 const { data, error } = await supabase
@@ -508,23 +516,31 @@ export default function ValuesWorksheet() {
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
                                     {/* Video Switcher Tabs */}
-                                    <div className="p-4 border-b flex items-center gap-2 overflow-x-auto" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
-                                        <button
-                                            onClick={() => setSelectedVideoId('v1-welcome')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedVideoId === 'v1-welcome' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
-                                            style={selectedVideoId === 'v1-welcome' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
-                                        >
-                                            <span className="w-2 h-2 rounded-full bg-purple-400" />
-                                            <span>Video 1: Welcome & Overview (5:17)</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setSelectedVideoId('v10-values-worksheet')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedVideoId === 'v10-values-worksheet' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
-                                            style={selectedVideoId === 'v10-values-worksheet' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
-                                        >
-                                            <span className="w-2 h-2 rounded-full bg-indigo-400" />
-                                            <span>Video 10: Worksheet 1 Guide (1:00)</span>
-                                        </button>
+                                    <div className="p-3.5 border-b flex items-center gap-2 overflow-x-auto scrollbar-hide" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
+                                        {[
+                                            { id: 'v1-welcome', num: '1', label: '1: Welcome', dur: '5:17', color: 'bg-purple-400', title: 'What Are Values?', desc: 'Learn how to identify the principles that will guide your decisions and bring you deep satisfaction. Tim explains the difference between values, interests, and goals.' },
+                                            { id: 'v8-values-interests-categories', num: '8', label: '8: Character', dur: '3:00', color: 'bg-indigo-400', title: 'What Type of Person Do You Want to Be?', desc: 'Tim breaks down how defining your values shapes your daily character: doing good, seeking truth, and living authentically.' },
+                                            { id: 'v9-character', num: '9', label: '9: Standards', dur: '3:17', color: 'bg-pink-400', title: 'Core Character & Standards', desc: 'Living with positivity, honoring your word, and practicing generosity on the journey to sustained contentment.' },
+                                            { id: 'v7-tools', num: '7', label: '7: Tools', dur: '1:15', color: 'bg-blue-400', title: 'How to Use the Tools', desc: 'A quick tour of how Values, Interests, and Life Categories link together in your life framework.' },
+                                            { id: 'v10-values-worksheet', num: '10', label: '10: Guide', dur: '1:00', color: 'bg-amber-400', title: 'Values Worksheet Guide', desc: 'Tim walks through how to browse the curated value library, select the ones that resonate most, and rank your top priorities.' },
+                                        ].map(vTab => {
+                                            const isSelected = selectedVideoId === vTab.id;
+                                            const isWatched = watchedVideoIds.has(vTab.id);
+                                            return (
+                                                <button
+                                                    key={vTab.id}
+                                                    onClick={() => setSelectedVideoId(vTab.id)}
+                                                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${isSelected ? 'shadow-md scale-[1.02]' : 'opacity-70 hover:opacity-100'}`}
+                                                    style={isSelected ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)', background: 'var(--color-surface)' }}
+                                                >
+                                                    <span className={`w-2 h-2 rounded-full ${vTab.color}`} />
+                                                    <span>{vTab.label}</span>
+                                                    {isWatched && (
+                                                        <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Video area */}
@@ -549,56 +565,72 @@ export default function ValuesWorksheet() {
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
 
-                                        <div className="text-center z-10">
+                                        {/* Watched badge */}
+                                        {watchedVideoIds.has(selectedVideoId) && (
                                             <div
-                                                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
+                                                className="absolute top-4 right-4 px-2.5 py-1 rounded text-xs font-semibold z-10 flex items-center gap-1 shadow-md"
+                                                style={{
+                                                    background: 'rgba(34,197,94,0.25)',
+                                                    color: 'rgba(34,197,94,0.95)',
+                                                    border: '1px solid rgba(34,197,94,0.4)',
+                                                    backdropFilter: 'blur(8px)',
+                                                }}
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                </svg>
+                                                <span>Watched</span>
+                                            </div>
+                                        )}
+
+                                        <div className="text-center z-10 px-4">
+                                            <div
+                                                className="w-18 h-18 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
                                                 style={{ background: 'rgba(139,92,246,0.3)', backdropFilter: 'blur(10px)', border: '2px solid rgba(167,139,250,0.6)' }}
                                             >
-                                                <svg className="w-9 h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-8 h-8 sm:w-9 sm:h-9 ml-1 text-white" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z" />
                                                 </svg>
                                             </div>
                                             <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(167,139,250,0.9)' }}>
-                                                {selectedVideoId === 'v1-welcome' ? 'Watch Introduction' : 'Watch Worksheet Instructions'}
+                                                {getVideo(selectedVideoId)?.title ?? 'Watch Video'}
                                             </p>
-                                            <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>
-                                                {selectedVideoId === 'v1-welcome' ? 'Welcome to the Tim Collins Framework' : 'Values — Worksheet 1 Guide'}
+                                            <p className="text-lg sm:text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>
+                                                {getVideo(selectedVideoId)?.description ?? 'Values Coaching'}
                                             </p>
                                         </div>
 
                                         <div className="absolute top-4 left-4 bg-purple-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
-                                            {selectedVideoId === 'v1-welcome' ? 'Video 1' : 'Video 10'}
+                                            Video {getVideo(selectedVideoId)?.number ?? '1'}
                                         </div>
 
                                         <div
                                             className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
                                             style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
-                                            {selectedVideoId === 'v1-welcome' ? '5:17' : '1:00'}
+                                            {getVideo(selectedVideoId)?.duration ?? '3:00'}
                                         </div>
                                     </div>
 
                                     <div className="p-8">
-                                        <h2 className="text-3xl font-light mb-4" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
-                                            {selectedVideoId === 'v1-welcome' ? 'What Are Values?' : 'How to Pick Your Values'}
+                                        <h2 className="text-2xl sm:text-3xl font-light mb-3" style={{ color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+                                            {getVideo(selectedVideoId)?.title}
                                         </h2>
-                                        <p className="mb-6" style={{ color: 'var(--color-text-muted)' }}>
-                                            {selectedVideoId === 'v1-welcome'
-                                                ? 'Learn how to identify the principles that will guide your decisions and bring you deep satisfaction. Tim explains the difference between values, interests, and goals.'
-                                                : 'Tim walks through how to browse the curated value library, select the ones that resonate most, and rank your top priorities.'}
+                                        <p className="mb-6 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                                            {getVideo(selectedVideoId)?.description}
                                         </p>
 
                                         <div className="flex gap-4">
                                             <button
                                                 onClick={() => goToStep(1)}
-                                                className="px-8 py-4 rounded-full font-semibold transition hover:opacity-70"
+                                                className="px-8 py-4 rounded-full font-semibold transition hover:opacity-70 cursor-pointer"
                                                 style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-surface-2)' }}
                                             >
                                                 ← Back
                                             </button>
                                             <button
                                                 onClick={() => goToStep(3)}
-                                                className="flex-1 px-8 py-4 rounded-full font-semibold transition hover:opacity-90"
+                                                className="flex-1 px-8 py-4 rounded-full font-semibold transition hover:opacity-90 cursor-pointer"
                                                 style={{ background: 'var(--color-text)', color: 'var(--color-bg)', letterSpacing: '-0.01em' }}
                                             >
                                                 Continue →
@@ -1238,6 +1270,7 @@ export default function ValuesWorksheet() {
                     video={activeVideo.video}
                     src={activeVideo.src}
                     onClose={() => setActiveVideo(null)}
+                    onWatched={(vid) => setWatchedVideoIds(prev => new Set(prev).add(vid))}
                 />
             )}
         </>

@@ -45,7 +45,6 @@ export default function LifeFramePrintView() {
                     year: 'numeric'
                 }));
 
-                // Fetch all workbook entries
                 const { data: entries, error } = await supabase
                     .from('workbook_entries')
                     .select('category, content')
@@ -54,7 +53,6 @@ export default function LifeFramePrintView() {
 
                 if (error) throw error;
 
-                // Organize data
                 const organized: LifeFrameData = {};
                 entries?.forEach(entry => {
                     if (entry.category === 'values') {
@@ -77,10 +75,8 @@ export default function LifeFramePrintView() {
         loadData();
     }, [router]);
 
-    // Auto-trigger print dialog after page loads (optional - can remove if you prefer manual)
     useEffect(() => {
         if (!loading) {
-            // Small delay to ensure page is fully rendered
             const timer = setTimeout(() => {
                 window.print();
             }, 500);
@@ -90,251 +86,230 @@ export default function LifeFramePrintView() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading your LifeFrame...</p>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 48, height: 48, border: '3px solid #000', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 0.8s linear infinite' }} />
+                    <p style={{ color: '#555', fontSize: 15, fontFamily: 'system-ui, sans-serif' }}>Loading your LifeFrame…</p>
                 </div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
 
+    const EmptySection = ({ label }: { label: string }) => (
+        <div style={{ border: '1.5px dashed #d1d5db', borderRadius: 8, padding: '24px 20px', textAlign: 'center' }}>
+            <p style={{ color: '#9ca3af', fontSize: 14, margin: 0 }}>Complete the {label} worksheet to populate this section.</p>
+        </div>
+    );
+
     return (
         <>
-            {/* Print Button - Hidden when printing */}
-            <div className="no-print sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
+            {/* ── Screen-only toolbar ─────────────────────────────────── */}
+            <div className="no-print" style={{
+                position: 'sticky', top: 0, zIndex: 10,
+                background: '#fff', borderBottom: '1px solid #e5e7eb',
+                padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            }}>
                 <button
                     onClick={() => router.push('/dashboard')}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: 14, fontWeight: 600 }}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                     Back to Dashboard
                 </button>
                 <button
                     onClick={() => window.print()}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
                     Print / Save as PDF
                 </button>
             </div>
 
-            {/* Printable Content */}
-            <div className="max-w-4xl mx-auto p-8 print:p-0 bg-white">
-                {/* Header */}
-                <div className="mb-12 text-center print:mb-8">
-                    <div className="text-sm text-gray-500 mb-2">Tim Collins Framework</div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2 print:text-3xl">YOUR LIFEFRAME</h1>
-                    <div className="text-lg text-gray-700">{userName}</div>
-                    <div className="text-sm text-gray-500">{currentDate}</div>
-                </div>
+            {/* ── Printable document ──────────────────────────────────── */}
+            <div style={{ background: '#fff', minHeight: '100vh' }}>
+                <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 40px' }} className="print-content">
 
-                <div className="border-t-2 border-gray-300 mb-8"></div>
+                    {/* Aurora accent strip */}
+                    <div style={{ height: 4, borderRadius: 2, marginBottom: 40, background: 'linear-gradient(90deg, rgba(255,45,153,0.9) 0%, rgba(120,40,255,0.8) 40%, rgba(0,212,255,0.7) 100%)' }} />
 
-                {/* Values Section */}
-                <section className="mb-12 page-break-inside-avoid print:mb-10">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 print:text-xl">YOUR VALUES</h2>
-                        {lifeFrameData.values && (
-                            <div className="flex items-center gap-2 text-green-600 no-print">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-sm font-medium">Completed</span>
-                            </div>
-                        )}
+                    {/* Header */}
+                    <div style={{ marginBottom: 40 }}>
+                        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                            Tim Collins Framework
+                        </p>
+                        <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 800, color: '#000', letterSpacing: '-0.03em', fontFamily: 'Georgia, serif' }}>
+                            Your LifeFrame
+                        </h1>
+                        <p style={{ margin: 0, fontSize: 16, color: '#374151', fontFamily: 'system-ui, sans-serif' }}>
+                            {userName} &nbsp;·&nbsp; <span style={{ color: '#9ca3af' }}>{currentDate}</span>
+                        </p>
                     </div>
 
-                    {lifeFrameData.values ? (
-                        <div className="space-y-3">
-                            {lifeFrameData.values.selected_values
-                                ?.sort((a, b) => a.priority - b.priority)
-                                .map((value, index) => (
-                                    <div key={index} className="flex items-start gap-3 pl-4">
-                                        <span className="font-bold text-indigo-600 flex-shrink-0">{value.priority}.</span>
-                                        <span className="text-gray-800">{value.name}</span>
+                    <div style={{ borderTop: '2px solid #000', marginBottom: 48 }} />
+
+                    {/* ── VALUES ─────────────────────────────────────────── */}
+                    <section style={{ marginBottom: 48, pageBreakInside: 'avoid' }}>
+                        <h2 style={{ margin: '0 0 24px', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#000', fontFamily: 'system-ui, sans-serif' }}>
+                            Your Values
+                        </h2>
+
+                        {lifeFrameData.values ? (
+                            <div>
+                                {lifeFrameData.values.selected_values
+                                    ?.sort((a, b) => a.priority - b.priority)
+                                    .map((value, index) => (
+                                        <div key={index} style={{
+                                            display: 'flex', alignItems: 'baseline', gap: 20,
+                                            padding: '16px 0',
+                                            borderBottom: index < (lifeFrameData.values!.selected_values.length - 1) ? '1px solid #f3f4f6' : 'none'
+                                        }}>
+                                            <span style={{ fontSize: 28, fontWeight: 800, color: '#e5e7eb', fontFamily: 'Georgia, serif', minWidth: 32, lineHeight: 1 }}>
+                                                {value.priority}
+                                            </span>
+                                            <span style={{ fontSize: 18, fontWeight: 600, color: '#111', fontFamily: 'system-ui, sans-serif' }}>
+                                                {value.name}
+                                            </span>
+                                        </div>
+                                    ))}
+                            </div>
+                        ) : (
+                            <EmptySection label="Values" />
+                        )}
+                    </section>
+
+                    <div style={{ borderTop: '1px solid #f3f4f6', marginBottom: 48 }} />
+
+                    {/* ── INTERESTS ──────────────────────────────────────── */}
+                    <section style={{ marginBottom: 48, pageBreakInside: 'avoid' }}>
+                        <h2 style={{ margin: '0 0 24px', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#000', fontFamily: 'system-ui, sans-serif' }}>
+                            Your Interests
+                        </h2>
+
+                        {lifeFrameData.interests ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+                                {/* Existing */}
+                                <div>
+                                    <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', fontFamily: 'system-ui, sans-serif' }}>
+                                        Current
+                                    </p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                        {lifeFrameData.interests.existing?.length > 0
+                                            ? lifeFrameData.interests.existing.map((item, i) => (
+                                                <span key={i} style={{ padding: '6px 14px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 100, fontSize: 13, color: '#111', fontFamily: 'system-ui, sans-serif' }}>
+                                                    {item}
+                                                </span>
+                                            ))
+                                            : <span style={{ fontSize: 13, color: '#9ca3af' }}>None added</span>
+                                        }
                                     </div>
-                                ))}
-                        </div>
-                    ) : (
-                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                            <p className="text-gray-500 italic">Not yet completed</p>
-                            <p className="text-sm text-gray-400 mt-2">Complete the Values worksheet to see your values here</p>
-                        </div>
-                    )}
-                </section>
+                                </div>
 
-                <div className="border-t border-gray-200 mb-8"></div>
-
-                {/* Interests Section */}
-                <section className="mb-12 page-break-inside-avoid print:mb-10">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 print:text-xl">YOUR INTERESTS</h2>
-                        {lifeFrameData.interests && (
-                            <div className="flex items-center gap-2 text-green-600 no-print">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-sm font-medium">Completed</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {lifeFrameData.interests ? (
-                        <div className="space-y-6">
-                            {/* Existing Interests */}
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <span className="text-xl">✓</span>
-                                    Existing Interests
-                                </h3>
-                                <div className="pl-4">
-                                    <p className="text-gray-700">
-                                        {lifeFrameData.interests.existing?.join(', ') || 'None selected'}
+                                {/* Exploring */}
+                                <div>
+                                    <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', fontFamily: 'system-ui, sans-serif' }}>
+                                        Exploring
                                     </p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                        {lifeFrameData.interests.exploring?.length > 0
+                                            ? lifeFrameData.interests.exploring.map((item, i) => (
+                                                <span key={i} style={{ padding: '6px 14px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 100, fontSize: 13, color: '#111', fontFamily: 'system-ui, sans-serif' }}>
+                                                    {item}
+                                                </span>
+                                            ))
+                                            : <span style={{ fontSize: 13, color: '#9ca3af' }}>None added</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Exploring Interests */}
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <span className="text-xl">⭐</span>
-                                    Interests to Explore
-                                </h3>
-                                <div className="pl-4">
-                                    <p className="text-gray-700">
-                                        {lifeFrameData.interests.exploring?.join(', ') || 'None selected'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                            <p className="text-gray-500 italic">Not yet completed</p>
-                            <p className="text-sm text-gray-400 mt-2">Complete the Interests worksheet to see your interests here</p>
-                        </div>
-                    )}
-                </section>
-
-                <div className="border-t border-gray-200 mb-8"></div>
-
-                {/* Life Categories Section */}
-                <section className="mb-12 page-break-inside-avoid print:mb-10">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900 print:text-xl">YOUR LIFE CATEGORIES</h2>
-                        {lifeFrameData.life_categories && (
-                            <div className="flex items-center gap-2 text-green-600 no-print">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-sm font-medium">Completed</span>
-                            </div>
+                        ) : (
+                            <EmptySection label="Interests" />
                         )}
-                    </div>
+                    </section>
 
-                    {lifeFrameData.life_categories ? (
-                        <div className="space-y-4">
-                            {lifeFrameData.life_categories.categories?.map((category, index) => (
-                                <div key={index} className="pl-4">
-                                    <div className="flex items-start gap-2">
-                                        <span className="text-indigo-600 font-bold mt-1">•</span>
-                                        <div>
-                                            <span className="font-semibold text-gray-900">{category.name}</span>
+                    <div style={{ borderTop: '1px solid #f3f4f6', marginBottom: 48 }} />
+
+                    {/* ── LIFE CATEGORIES ────────────────────────────────── */}
+                    <section style={{ marginBottom: 48, pageBreakInside: 'avoid' }}>
+                        <h2 style={{ margin: '0 0 24px', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#000', fontFamily: 'system-ui, sans-serif' }}>
+                            Your Life Categories
+                        </h2>
+
+                        {lifeFrameData.life_categories ? (
+                            <>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                                    {lifeFrameData.life_categories.categories?.map((category, index) => (
+                                        <div key={index} style={{ border: '1.5px solid #e5e7eb', borderRadius: 10, padding: '16px 18px' }}>
+                                            <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#111', fontFamily: 'system-ui, sans-serif' }}>
+                                                {category.name}
+                                            </p>
                                             {category.sub_categories && category.sub_categories.length > 0 && (
-                                                <div className="mt-2 ml-4 space-y-1">
-                                                    {category.sub_categories.map((sub, subIndex) => (
-                                                        <div key={subIndex} className="flex items-start gap-2 text-gray-700">
-                                                            <span className="text-gray-400">-</span>
-                                                            <span>{sub}</span>
-                                                        </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                    {category.sub_categories.map((sub, si) => (
+                                                        <span key={si} style={{ fontSize: 12, color: '#6b7280', fontFamily: 'system-ui, sans-serif' }}>
+                                                            — {sub}
+                                                        </span>
                                                     ))}
                                                 </div>
                                             )}
                                         </div>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
 
-                            {/* Purpose Elements */}
-                            {lifeFrameData.life_categories.purpose_elements &&
-                                lifeFrameData.life_categories.purpose_elements.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-gray-200">
-                                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Purpose</h3>
-                                        <div className="space-y-2">
-                                            {lifeFrameData.life_categories.purpose_elements.map((element, index) => (
-                                                <div key={index} className="flex items-start gap-2 pl-4">
-                                                    <span className="text-indigo-600 font-bold mt-1">•</span>
-                                                    <div className="text-gray-700">
-                                                        <div className="font-semibold">{typeof element === 'string' ? element : element.name}</div>
+                                {/* Purpose Elements */}
+                                {lifeFrameData.life_categories.purpose_elements &&
+                                    lifeFrameData.life_categories.purpose_elements.length > 0 && (
+                                        <div style={{ marginTop: 32, padding: '20px 24px', background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10 }}>
+                                            <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', fontFamily: 'system-ui, sans-serif' }}>
+                                                Your Purpose
+                                            </p>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                {lifeFrameData.life_categories.purpose_elements.map((element, index) => (
+                                                    <div key={index}>
+                                                        <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: '#111', fontFamily: 'system-ui, sans-serif' }}>
+                                                            {typeof element === 'string' ? element : element.name}
+                                                        </p>
                                                         {typeof element === 'object' && element.description && (
-                                                            <div className="text-sm text-gray-600 mt-1">{element.description}</div>
+                                                            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6b7280', fontFamily: 'system-ui, sans-serif' }}>
+                                                                {element.description}
+                                                            </p>
                                                         )}
                                                     </div>
-                                                </div>
-                                            ))}
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                        </div>
-                    ) : (
-                        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                            <p className="text-gray-500 italic">Not yet completed</p>
-                            <p className="text-sm text-gray-400 mt-2">Complete the Life Categories worksheet to see your categories here</p>
-                        </div>
-                    )}
-                </section>
+                                    )}
+                            </>
+                        ) : (
+                            <EmptySection label="Life Categories" />
+                        )}
+                    </section>
 
-                {/* Footer */}
-                <div className="border-t-2 border-gray-300 pt-6 mt-12 text-center text-sm text-gray-500 print:mt-8">
-                    <p>Tim Collins Framework • Your path to contentment</p>
-                    <p className="mt-1">Visit lifealigner.com to update your LifeFrame</p>
+                    {/* Footer */}
+                    <div style={{ borderTop: '2px solid #000', paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <p style={{ margin: 0, fontSize: 12, color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                            Tim Collins Framework &nbsp;·&nbsp; Your path to contentment
+                        </p>
+                        <p style={{ margin: 0, fontSize: 12, color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                            timcollinsframework.com
+                        </p>
+                    </div>
+
                 </div>
             </div>
 
-            {/* Print-specific styles */}
-            <style jsx global>{`
-        @media print {
-          /* Hide elements */
-          .no-print {
-            display: none !important;
-          }
-
-          /* Remove margins for print */
-          @page {
-            margin: 0.5in;
-          }
-
-          /* Ensure clean page breaks */
-          .page-break-inside-avoid {
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-
-          /* Full width for print */
-          body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-          }
-
-          /* Adjust font sizes for print */
-          h1 {
-            font-size: 28pt !important;
-          }
-          h2 {
-            font-size: 18pt !important;
-          }
-          h3 {
-            font-size: 14pt !important;
-          }
-          p, li, span {
-            font-size: 11pt !important;
-          }
-        }
-      `}</style>
+            <style>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    @page { margin: 0.6in; size: letter; }
+                    .print-content { padding: 0 !important; }
+                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                }
+            `}</style>
         </>
     );
 }

@@ -35,7 +35,6 @@ export default function SettingsPage() {
                     fullName: userWithProfile.profile?.full_name || userWithProfile.user.user_metadata?.full_name || '',
                     email: userWithProfile.user.email || '',
                 });
-                // Load avatar from profile
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('avatar_url')
@@ -57,7 +56,6 @@ export default function SettingsPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validate
         if (!file.type.startsWith('image/')) {
             setMessage({ type: 'error', text: 'Please select an image file.' });
             return;
@@ -67,10 +65,8 @@ export default function SettingsPage() {
             return;
         }
 
-        // Show local preview immediately
         const localUrl = URL.createObjectURL(file);
         setPreviewUrl(localUrl);
-
         setUploadingAvatar(true);
         setMessage(null);
 
@@ -85,7 +81,6 @@ export default function SettingsPage() {
             setMessage({ type: 'success', text: 'Profile photo updated!' });
         }
         setUploadingAvatar(false);
-        // Reset file input so the same file can be re-selected
         e.target.value = '';
     };
 
@@ -134,8 +129,9 @@ export default function SettingsPage() {
     if (loading) return (
         <>
             <AuthNavbar />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-16 flex items-center justify-center">
-                <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+            <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 64 }}>
+                <div style={{ width: 40, height: 40, border: '2px solid var(--color-border)', borderTopColor: 'var(--color-text)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         </>
     );
@@ -143,66 +139,88 @@ export default function SettingsPage() {
     return (
         <>
             <AuthNavbar />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50 pt-16">
-                <div className="max-w-2xl mx-auto px-4 py-10">
+            <div style={{ minHeight: '100vh', background: 'var(--color-bg)', paddingTop: 64 }}>
+                <div style={{ maxWidth: 560, margin: '0 auto', padding: '40px 20px' }}>
 
                     {/* Header */}
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-                        <p className="text-gray-500 mt-1 text-sm">Manage your profile and preferences</p>
+                    <div style={{ marginBottom: 32 }}>
+                        <h1 style={{ margin: '0 0 6px', fontSize: 26, fontWeight: 800, color: 'var(--color-text)', letterSpacing: '-0.03em' }}>
+                            Account Settings
+                        </h1>
+                        <p style={{ margin: 0, fontSize: 14, color: 'var(--color-text-muted)' }}>
+                            Manage your profile and preferences
+                        </p>
                     </div>
 
                     {/* Message */}
                     {message && (
-                        <div className={`mb-5 px-4 py-3 rounded-xl flex items-center gap-2.5 text-sm font-semibold ${
-                            message.type === 'success'
-                                ? 'bg-green-50 border border-green-200 text-green-700'
-                                : 'bg-red-50 border border-red-200 text-red-700'
-                        }`}>
-                            {message.type === 'success' ? '✓' : '⚠'} {message.text}
+                        <div style={{
+                            marginBottom: 20,
+                            padding: '12px 16px',
+                            borderRadius: 10,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            fontSize: 14,
+                            fontWeight: 600,
+                            ...(message.type === 'success'
+                                ? { background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', color: '#16a34a' }
+                                : { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#dc2626' })
+                        }}>
+                            {message.type === 'success' ? (
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : (
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                </svg>
+                            )}
+                            {message.text}
                         </div>
                     )}
 
                     {/* ── Profile Photo ───────────────────────────────────── */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-                        <h2 className="text-base font-bold text-gray-900 mb-5">Profile Photo</h2>
+                    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 16, padding: 24, marginBottom: 12 }}>
+                        <h2 style={{ margin: '0 0 20px', fontSize: 14, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+                            Profile Photo
+                        </h2>
 
-                        <div className="flex items-center gap-6">
-                            {/* Avatar display */}
-                            <div className="relative flex-shrink-0">
-                                <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white shadow-lg">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                            {/* Avatar */}
+                            <div style={{ position: 'relative', flexShrink: 0 }}>
+                                <div style={{ width: 80, height: 80, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--color-border)' }}>
                                     {displayAvatar ? (
                                         <Image
                                             src={displayAvatar}
                                             alt="Profile photo"
-                                            width={96}
-                                            height={96}
-                                            className={`w-full h-full object-cover ${uploadingAvatar ? 'opacity-50' : ''}`}
+                                            width={80}
+                                            height={80}
+                                            style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: uploadingAvatar ? 0.5 : 1 }}
                                         />
                                     ) : (
-                                        <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold">
+                                        <div style={{ width: '100%', height: '100%', background: 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 700, color: 'var(--color-text)' }}>
                                             {initials}
                                         </div>
                                     )}
                                 </div>
                                 {uploadingAvatar && (
-                                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30">
-                                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'rgba(0,0,0,0.4)' }}>
+                                        <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                                     </div>
                                 )}
                             </div>
 
                             {/* Actions */}
-                            <div className="flex-1">
-                                <p className="text-sm text-gray-600 mb-3">
-                                    JPG, PNG, or GIF · Max 10MB<br/>
-                                    <span className="text-gray-400">Automatically cropped to a square and compressed</span>
+                            <div style={{ flex: 1 }}>
+                                <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                                    JPG, PNG or GIF · Max 10MB
                                 </p>
-                                <div className="flex gap-2 flex-wrap">
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={uploadingAvatar}
-                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                                        style={{ padding: '9px 18px', background: 'var(--color-text)', color: 'var(--color-bg)', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: uploadingAvatar ? 0.5 : 1 }}
                                     >
                                         {avatarUrl ? 'Change Photo' : 'Upload Photo'}
                                     </button>
@@ -210,7 +228,7 @@ export default function SettingsPage() {
                                         <button
                                             onClick={handleRemoveAvatar}
                                             disabled={uploadingAvatar}
-                                            className="px-4 py-2 bg-white border border-gray-200 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                                            style={{ padding: '9px 18px', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: uploadingAvatar ? 0.5 : 1 }}
                                         >
                                             Remove
                                         </button>
@@ -220,7 +238,7 @@ export default function SettingsPage() {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*"
-                                    className="hidden"
+                                    style={{ display: 'none' }}
                                     onChange={handleFileChange}
                                 />
                             </div>
@@ -228,78 +246,120 @@ export default function SettingsPage() {
                     </div>
 
                     {/* ── Profile Info ────────────────────────────────────── */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-                        <h2 className="text-base font-bold text-gray-900 mb-5">Profile Information</h2>
-                        <div className="space-y-4">
+                    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 16, padding: 24, marginBottom: 12 }}>
+                        <h2 style={{ margin: '0 0 20px', fontSize: 14, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+                            Profile Information
+                        </h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
+                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 8 }}>
+                                    Full Name
+                                </label>
                                 <input
                                     type="text"
                                     value={formData.fullName}
                                     onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none text-gray-900 transition"
+                                    style={{
+                                        width: '100%', boxSizing: 'border-box', padding: '11px 14px',
+                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                        borderRadius: 10, fontSize: 14, color: 'var(--color-text)', outline: 'none',
+                                        transition: 'border-color 0.15s'
+                                    }}
                                     placeholder="Your full name"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+                                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: 8 }}>
+                                    Email
+                                </label>
                                 <input
                                     type="email"
                                     value={formData.email}
                                     disabled
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                                    style={{
+                                        width: '100%', boxSizing: 'border-box', padding: '11px 14px',
+                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                        borderRadius: 10, fontSize: 14, color: 'var(--color-text-dim)',
+                                        cursor: 'not-allowed', opacity: 0.6
+                                    }}
                                 />
-                                <p className="text-xs text-gray-400 mt-1.5">Email cannot be changed — contact support if needed.</p>
+                                <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-text-dim)' }}>
+                                    Email cannot be changed — contact support if needed.
+                                </p>
                             </div>
                             <button
                                 onClick={handleUpdateProfile}
                                 disabled={saving}
-                                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold hover:opacity-90 transition disabled:opacity-50"
+                                style={{
+                                    width: '100%', padding: '12px', background: 'var(--color-text)', color: 'var(--color-bg)',
+                                    border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                                    cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.5 : 1, transition: 'opacity 0.15s'
+                                }}
                             >
-                                {saving ? 'Saving...' : 'Save Changes'}
+                                {saving ? 'Saving…' : 'Save Changes'}
                             </button>
                         </div>
                     </div>
 
                     {/* ── Account Actions ─────────────────────────────────── */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-4">
-                        <h2 className="text-base font-bold text-gray-900 mb-4">Account</h2>
-                        <div className="space-y-2">
+                    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 16, padding: 24, marginBottom: 12 }}>
+                        <h2 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
+                            Account
+                        </h2>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {/* Dashboard */}
                             <button
                                 onClick={() => router.push('/dashboard')}
-                                className="w-full flex items-center justify-between px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition text-left"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: 10, cursor: 'pointer', textAlign: 'left' }}
                             >
-                                <div className="flex items-center gap-3">
-                                    <span className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">📊</span>
-                                    <span className="text-sm font-semibold text-gray-900">Dashboard</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ width: 34, height: 34, background: 'var(--color-surface-2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                        </svg>
+                                    </div>
+                                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)' }}>Dashboard</span>
                                 </div>
-                                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--color-text-dim)' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
                             </button>
+
+                            {/* Sign Out */}
                             <button
                                 onClick={handleSignOut}
-                                className="w-full flex items-center justify-between px-4 py-3 border border-red-100 rounded-xl hover:bg-red-50 transition text-left"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'transparent', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, cursor: 'pointer', textAlign: 'left' }}
                             >
-                                <div className="flex items-center gap-3">
-                                    <span className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">🚪</span>
-                                    <span className="text-sm font-semibold text-red-600">Sign Out</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <div style={{ width: 34, height: 34, background: 'rgba(239,68,68,0.08)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                    </div>
+                                    <span style={{ fontSize: 14, fontWeight: 600, color: '#ef4444' }}>Sign Out</span>
                                 </div>
-                                <svg className="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'rgba(239,68,68,0.4)' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
                             </button>
                         </div>
                     </div>
 
                     {/* ── Notifications ──────────────────────────────────── */}
-                    <div className="mb-4">
+                    <div style={{ marginBottom: 12 }}>
                         <NotificationSettings />
                     </div>
 
                     {/* Coming Soon */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                        <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2">Coming Soon</p>
-                        <ul className="space-y-1 text-sm text-amber-800">
+                    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 16, padding: 20 }}>
+                        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)' }}>
+                            Coming Soon
+                        </p>
+                        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
                             {['Password change', 'Data export & backup', 'Account deletion'].map(f => (
-                                <li key={f} className="flex items-center gap-2">
-                                    <span className="text-amber-400">•</span> {f}
+                                <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--color-text-muted)' }}>
+                                    <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--color-text-dim)', flexShrink: 0 }} />
+                                    {f}
                                 </li>
                             ))}
                         </ul>

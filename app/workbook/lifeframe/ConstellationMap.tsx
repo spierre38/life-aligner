@@ -145,7 +145,7 @@ export default function LifeFrameConstellationMap({ activeSection }: Constellati
                         {activeSection === 'values' && '25% Complete'}
                         {activeSection === 'interests' && '50% Complete'}
                         {activeSection === 'categories' && '75% Complete'}
-                        {activeSection === 'purpose' && '100% Complete! 🎉'}
+                        {activeSection === 'purpose' && '100% Complete'}
                     </div>
                 </div>
             </div>

@@ -15,14 +15,16 @@ import { usePullToRefresh } from '@/lib/hooks/usePullToRefresh';
 
 // ─── Life Category helpers ─────────────────────────────────────────────────────
 
-const CATEGORY_EMOJIS: Record<string, string> = {
-    Health: '💪', Relationships: '❤️', Career: '💼', Financial: '💰',
-    Community: '🤝', Purpose: '🌟', 'Personal Growth': '🌱',
-    Spirituality: '🕊️', Recreation: '🎯', Environment: '🌿',
-};
-
-function categoryEmoji(cat: string): string {
-    return CATEGORY_EMOJIS[cat] ?? '📌';
+function CategoryDot({ cat }: { cat: string }) {
+    // Deterministic hue from category name
+    const hue = cat.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+    return (
+        <span
+            className="inline-flex items-center justify-center w-4 h-4 rounded-full flex-shrink-0"
+            style={{ background: `hsl(${hue}, 65%, 55%)`, opacity: 0.85 }}
+            aria-hidden
+        />
+    );
 }
 
 // ─── Deadline bucket selector ──────────────────────────────────────────────────
@@ -188,7 +190,7 @@ function AddTaskModal({
                                                 color: category === cat ? '#818cf8' : 'var(--color-text-muted)',
                                             }}
                                         >
-                                            {categoryEmoji(cat)} {cat}
+                                            <span className="flex items-center gap-1.5"><CategoryDot cat={cat} />{cat}</span>
                                         </button>
                                     ))}
                                     <button
@@ -627,7 +629,7 @@ export default function MobileInbox() {
                         return (
                             <div key={cat} className="mb-6">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-lg">{categoryEmoji(cat)}</span>
+                                    <CategoryDot cat={cat} />
                                     <h2 className="text-sm font-semibold tracking-wide uppercase" style={{ color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
                                         {cat}
                                     </h2>

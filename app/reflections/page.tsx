@@ -230,16 +230,17 @@ function ChapterCard({ goal, index, userId, onUpdateChapter }: ChapterCardProps)
           </div>
         )}
 
-        {/* Edit button — appears on hover */}
+        {/* Edit button — appears on hover on desktop, always visible on mobile */}
         <button
           onClick={() => setEditing(e => !e)}
-          className="absolute bottom-5 right-5 z-10 opacity-0 group-hover:opacity-100 transition-all duration-200 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5"
-          style={{ background: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)' }}
+          className="absolute bottom-4 right-4 z-20 opacity-90 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:scale-105 active:scale-95 cursor-pointer"
+          style={{ background: 'rgba(0,0,0,0.65)', color: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}
+          aria-label={editing ? 'Close chapter editor' : 'Edit chapter'}
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          Edit chapter
+          {editing ? 'Close' : 'Edit Chapter'}
         </button>
 
         {/* Goal title overlay */}
@@ -628,13 +629,13 @@ export default function ReflectionsPage() {
 
             <button
               onClick={() => {
-                const v19 = getVideo('v19-regrets-habits');
+                const v19 = getVideo('v19-chart-your-course');
                 if (v19?.blobUrl) setActiveVideo({ video: v19, src: v19.blobUrl });
               }}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white transition-all hover:scale-105 shadow-md flex-shrink-0 cursor-pointer"
               style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}
             >
-              <span>▶</span>
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
               <span>Watch Video</span>
             </button>
           </div>
@@ -722,7 +723,14 @@ export default function ReflectionsPage() {
                   className="mb-8 px-5 py-3 rounded-xl flex items-center gap-3"
                   style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
                 >
-                  <span className="text-lg">🏆</span>
+                  <svg className="w-5 h-5 flex-shrink-0 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.45.99-.99 1.01A5 5 0 0 1 4 13.06" />
+                    <path d="M14 14.66V17c0 .55.45.99.99 1.01A5 5 0 0 0 20 13.06" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                  </svg>
                   <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     Longest chapter: <strong style={{ color: 'var(--color-text)' }}>{longestChapter.title}</strong> — {longestChapter.days < 7 ? `${longestChapter.days} days` : longestChapter.days < 30 ? `${Math.round(longestChapter.days / 7)} weeks` : longestChapter.days < 365 ? `${Math.round(longestChapter.days / 30)} months` : `${(longestChapter.days / 365).toFixed(1)} years`}
                   </span>

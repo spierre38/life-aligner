@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getUrgentTodoCount } from '@/lib/todos';
+import { useTheme } from '@/app/components/ThemeProvider';
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
@@ -72,6 +73,7 @@ const HIDDEN_PREFIXES = [
 
 export default function MobileBottomNav() {
     const pathname = usePathname();
+    const { isDark } = useTheme();
     const [urgentCount, setUrgentCount] = useState(0);
     const [modalOpen, setModalOpen] = useState(false);
 
@@ -102,12 +104,12 @@ export default function MobileBottomNav() {
             <div className="md:hidden h-20" aria-hidden="true" />
 
             <nav
-                className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+                className="md:hidden fixed bottom-0 left-0 right-0 z-50 transition-colors duration-200"
                 aria-label="Mobile navigation"
                 style={{
-                    background: 'rgba(8,8,8,0.95)',
+                    background: isDark ? 'rgba(8,8,8,0.95)' : 'rgba(255,255,255,0.95)',
                     backdropFilter: 'blur(20px)',
-                    borderTop: '1px solid rgba(255,255,255,0.08)',
+                    borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
                     paddingBottom: 'env(safe-area-inset-bottom)',
                 }}
             >
@@ -117,12 +119,15 @@ export default function MobileBottomNav() {
                             ? pathname === '/dashboard'
                             : pathname?.startsWith(item.href) ?? false;
 
+                        const activeColor = isDark ? '#ffffff' : '#111111';
+                        const inactiveColor = isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.45)';
+
                         return (
                             <Link
                                 key={item.href}
                                 href={item.href}
                                 className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-150 active:scale-90"
-                                style={{ color: isActive ? '#ffffff' : 'rgba(255,255,255,0.38)' }}
+                                style={{ color: isActive ? activeColor : inactiveColor }}
                                 aria-label={item.label}
                                 aria-current={isActive ? 'page' : undefined}
                             >
@@ -144,7 +149,7 @@ export default function MobileBottomNav() {
                                 <span
                                     className="text-[10px] font-medium leading-none transition-all duration-150"
                                     style={{
-                                        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.38)',
+                                        color: isActive ? activeColor : inactiveColor,
                                         fontFamily: 'var(--font-primary)',
                                         letterSpacing: '0.02em',
                                     }}
@@ -156,7 +161,7 @@ export default function MobileBottomNav() {
                                 {isActive && (
                                     <span
                                         className="absolute top-2 w-1 h-1 rounded-full"
-                                        style={{ background: 'rgba(255,255,255,0.5)' }}
+                                        style={{ background: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }}
                                     />
                                 )}
                             </Link>

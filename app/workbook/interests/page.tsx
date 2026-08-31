@@ -10,6 +10,7 @@ import AuthNavbar from '@/app/components/AuthNavbar';
 import { Confetti } from '@/app/components/Confetti';
 import VideoPlayer from '@/app/components/VideoPlayer';
 import { getVideo, type FrameworkVideo } from '@/lib/videos';
+import { parseVideoProgress } from '@/lib/video-progress';
 
 // ── Inline SVG Icons for workbook pages ───────────────────────────────────────
 const HeartIllustration = () => (
@@ -135,6 +136,7 @@ export default function InterestsWorksheet() {
     const [selectedExisting, setSelectedExisting] = useState<Set<string>>(new Set());
     const [selectedExploring, setSelectedExploring] = useState<Set<string>>(new Set());
     const [activeVideo, setActiveVideo] = useState<{ video: FrameworkVideo; src: string } | null>(null);
+    const [watchedVideoIds, setWatchedVideoIds] = useState<Set<string>>(new Set());
     const [showSuccess, setShowSuccess] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
@@ -197,6 +199,12 @@ export default function InterestsWorksheet() {
                     return;
                 }
                 setUserId(userWithProfile.user.id);
+
+                // Load watched video status
+                if (userWithProfile.profile?.video_progress) {
+                    const prog = parseVideoProgress(userWithProfile.profile.video_progress);
+                    setWatchedVideoIds(new Set(prog.watched));
+                }
 
                 // Check if Values is completed (prerequisite)
                 const { data: valuesData, error: valuesError } = await supabase
@@ -440,6 +448,24 @@ export default function InterestsWorksheet() {
                                             <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(244,114,182,0.9)' }}>Watch Video 11</p>
                                             <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>Understanding Your Interests</p>
                                         </div>
+
+                                        {/* Watched badge */}
+                                        {watchedVideoIds.has('v11-interests') && (
+                                            <div
+                                                className="absolute top-4 right-4 px-2.5 py-1 rounded text-xs font-semibold z-10 flex items-center gap-1 shadow-md"
+                                                style={{
+                                                    background: 'rgba(34,197,94,0.25)',
+                                                    color: 'rgba(34,197,94,0.95)',
+                                                    border: '1px solid rgba(34,197,94,0.4)',
+                                                    backdropFilter: 'blur(8px)',
+                                                }}
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                </svg>
+                                                <span>Watched</span>
+                                            </div>
+                                        )}
 
                                         <div className="absolute top-4 left-4 bg-pink-600/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm z-10">
                                             Video 11
@@ -783,16 +809,16 @@ export default function InterestsWorksheet() {
                                         }}
                                         className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full text-xs font-semibold transition-all hover:scale-105 shadow-md group cursor-pointer self-start sm:self-auto"
                                         style={{
-                                            background: 'rgba(236,72,153,0.12)',
-                                            border: '1px solid rgba(244,114,182,0.35)',
-                                            color: '#f472b6',
+                                            background: watchedVideoIds.has('v12-life-categories-1') ? 'rgba(34,197,94,0.12)' : 'rgba(236,72,153,0.12)',
+                                            border: `1px solid ${watchedVideoIds.has('v12-life-categories-1') ? 'rgba(34,197,94,0.35)' : 'rgba(244,114,182,0.35)'}`,
+                                            color: watchedVideoIds.has('v12-life-categories-1') ? '#4ade80' : '#f472b6',
                                             backdropFilter: 'blur(8px)',
                                         }}
                                     >
-                                        <span className="w-5 h-5 rounded-full bg-pink-500/30 flex items-center justify-center text-pink-300 text-[10px] group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                                            ▶
+                                        <span className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${watchedVideoIds.has('v12-life-categories-1') ? 'bg-emerald-500/30 text-emerald-300 group-hover:bg-emerald-500 group-hover:text-white' : 'bg-pink-500/30 text-pink-300 group-hover:bg-pink-500 group-hover:text-white'}`}>
+                                            <svg className="w-2.5 h-2.5 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                                         </span>
-                                        <span>Watch 1-min Guide from Tim</span>
+                                        <span>{watchedVideoIds.has('v12-life-categories-1') ? 'Watched: 1-min Guide' : 'Watch 1-min Guide from Tim'}</span>
                                     </button>
                                 </div>
 
@@ -1402,6 +1428,7 @@ export default function InterestsWorksheet() {
                     video={activeVideo.video}
                     src={activeVideo.src}
                     onClose={() => setActiveVideo(null)}
+                    onWatched={(vid) => setWatchedVideoIds(prev => new Set(prev).add(vid))}
                 />
             )}
         </>

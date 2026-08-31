@@ -12,6 +12,7 @@ import { Confetti } from '@/app/components/Confetti';
 import SpaceLaunchAnimation from '@/app/components/SpaceLaunchAnimation';
 import VideoPlayer from '@/app/components/VideoPlayer';
 import { getVideo } from '@/lib/videos';
+import { parseVideoProgress } from '@/lib/video-progress';
 
 // ============================================================================
 // INLINE SVG ILLUSTRATIONS
@@ -113,6 +114,7 @@ export default function LifeCategoriesWorksheet() {
     const [isStepAnimating, setIsStepAnimating] = useState(false);
     const [selectedStep2VideoId, setSelectedStep2VideoId] = useState<'v5-lifeframe-roadmap' | 'v13-life-categories-2'>('v5-lifeframe-roadmap');
     const [selectedStep3VideoId, setSelectedStep3VideoId] = useState<'v15-purpose' | 'v6-your-story' | 'v16-worksheet3'>('v15-purpose');
+    const [watchedVideoIds, setWatchedVideoIds] = useState<Set<string>>(new Set());
     const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
 
     const goToStep = (next: number) => {
@@ -155,6 +157,12 @@ export default function LifeCategoriesWorksheet() {
                 }
 
                 setUserId(userWithProfile.user.id);
+
+                // Load watched video status
+                if (userWithProfile.profile?.video_progress) {
+                    const prog = parseVideoProgress(userWithProfile.profile.video_progress);
+                    setWatchedVideoIds(new Set(prog.watched));
+                }
 
                 // Check if Interests is completed (prerequisite)
                 const { data: interestsData, error: interestsError } = await supabase
@@ -449,23 +457,25 @@ export default function LifeCategoriesWorksheet() {
                                     className="rounded-3xl overflow-hidden mb-8"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
-                                    {/* Video 5 / 13 Switcher Tabs */}
+                                    {/* Video Switcher Tabs */}
                                     <div className="p-4 border-b flex items-center gap-2 overflow-x-auto" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
                                         <button
                                             onClick={() => setSelectedStep2VideoId('v5-lifeframe-roadmap')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep2VideoId === 'v5-lifeframe-roadmap' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${selectedStep2VideoId === 'v5-lifeframe-roadmap' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
                                             style={selectedStep2VideoId === 'v5-lifeframe-roadmap' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-indigo-400" />
                                             <span>Video 5: The LifeFrame & Roadmap (2:50)</span>
+                                            {watchedVideoIds.has('v5-lifeframe-roadmap') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                         <button
                                             onClick={() => setSelectedStep2VideoId('v13-life-categories-2')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep2VideoId === 'v13-life-categories-2' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${selectedStep2VideoId === 'v13-life-categories-2' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
                                             style={selectedStep2VideoId === 'v13-life-categories-2' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-purple-400" />
                                             <span>Video 13: Case Studies & Categories (3:50)</span>
+                                            {watchedVideoIds.has('v13-life-categories-2') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                     </div>
 
@@ -490,6 +500,24 @@ export default function LifeCategoriesWorksheet() {
                                             />
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
+
+                                        {/* Watched badge */}
+                                        {watchedVideoIds.has(selectedStep2VideoId) && (
+                                            <div
+                                                className="absolute top-4 right-4 px-2.5 py-1 rounded text-xs font-semibold z-10 flex items-center gap-1 shadow-md"
+                                                style={{
+                                                    background: 'rgba(34,197,94,0.25)',
+                                                    color: 'rgba(34,197,94,0.95)',
+                                                    border: '1px solid rgba(34,197,94,0.4)',
+                                                    backdropFilter: 'blur(8px)',
+                                                }}
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                </svg>
+                                                <span>Watched</span>
+                                            </div>
+                                        )}
 
                                         <div className="text-center z-10">
                                             <div
@@ -606,31 +634,34 @@ export default function LifeCategoriesWorksheet() {
                                     className="rounded-3xl overflow-hidden mb-8"
                                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
                                 >
-                                    {/* Video 15 / 6 / 16 Switcher Tabs */}
+                                    {/* Video Switcher Tabs */}
                                     <div className="p-4 border-b flex items-center gap-2 overflow-x-auto" style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
                                         <button
                                             onClick={() => setSelectedStep3VideoId('v15-purpose')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep3VideoId === 'v15-purpose' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${selectedStep3VideoId === 'v15-purpose' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
                                             style={selectedStep3VideoId === 'v15-purpose' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-purple-400" />
-                                            <span>Video 15: Defining Your Purpose (3:08)</span>
+                                            <span>Video 15: Purpose & Meaning (3:40)</span>
+                                            {watchedVideoIds.has('v15-purpose') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                         <button
                                             onClick={() => setSelectedStep3VideoId('v6-your-story')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep3VideoId === 'v6-your-story' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${selectedStep3VideoId === 'v6-your-story' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
                                             style={selectedStep3VideoId === 'v6-your-story' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-indigo-400" />
                                             <span>Video 6: Tim's Story (4:33)</span>
+                                            {watchedVideoIds.has('v6-your-story') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                         <button
                                             onClick={() => setSelectedStep3VideoId('v16-worksheet3')}
-                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 ${selectedStep3VideoId === 'v16-worksheet3' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
+                                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${selectedStep3VideoId === 'v16-worksheet3' ? 'shadow-md' : 'opacity-60 hover:opacity-100'}`}
                                             style={selectedStep3VideoId === 'v16-worksheet3' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-amber-400" />
                                             <span>Video 16: Worksheet 3 Guide (0:50)</span>
+                                            {watchedVideoIds.has('v16-worksheet3') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                     </div>
 
@@ -656,6 +687,24 @@ export default function LifeCategoriesWorksheet() {
                                         )}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20 pointer-events-none" />
 
+                                        {/* Watched badge */}
+                                        {watchedVideoIds.has(selectedStep3VideoId) && (
+                                            <div
+                                                className="absolute top-4 right-4 px-2.5 py-1 rounded text-xs font-semibold z-10 flex items-center gap-1 shadow-md"
+                                                style={{
+                                                    background: 'rgba(34,197,94,0.25)',
+                                                    color: 'rgba(34,197,94,0.95)',
+                                                    border: '1px solid rgba(34,197,94,0.4)',
+                                                    backdropFilter: 'blur(8px)',
+                                                }}
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                </svg>
+                                                <span>Watched</span>
+                                            </div>
+                                        )}
+
                                         <div className="text-center z-10">
                                             <div
                                                 className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110 shadow-2xl"
@@ -669,7 +718,7 @@ export default function LifeCategoriesWorksheet() {
                                                 {selectedStep3VideoId === 'v15-purpose' ? 'Watch Video 15' : selectedStep3VideoId === 'v6-your-story' ? 'Watch Video 6' : 'Watch Video 16'}
                                             </p>
                                             <p className="text-xl font-light text-white" style={{ letterSpacing: '-0.02em' }}>
-                                                {selectedStep3VideoId === 'v15-purpose' ? 'Finding & Defining Your Purpose' : selectedStep3VideoId === 'v6-your-story' ? 'Your Story & Purpose' : 'Life Categories & Purpose Guide'}
+                                                {selectedStep3VideoId === 'v15-purpose' ? 'Finding Your Purpose' : selectedStep3VideoId === 'v6-your-story' ? "Your Story — Tim's Journey" : 'Life Categories — Worksheet 3 Guide'}
                                             </p>
                                         </div>
 
@@ -680,7 +729,7 @@ export default function LifeCategoriesWorksheet() {
                                             className="absolute bottom-4 right-4 px-3 py-1 rounded text-xs font-medium z-10"
                                             style={{ background: 'rgba(0,0,0,0.75)', color: 'rgba(255,255,255,0.9)', border: '1px solid rgba(255,255,255,0.15)' }}
                                         >
-                                            {selectedStep3VideoId === 'v15-purpose' ? '3:08' : selectedStep3VideoId === 'v6-your-story' ? '4:33' : '0:50'}
+                                            {selectedStep3VideoId === 'v15-purpose' ? '3:40' : selectedStep3VideoId === 'v6-your-story' ? '4:33' : '0:50'}
                                         </div>
                                     </div>
 
@@ -1440,6 +1489,7 @@ export default function LifeCategoriesWorksheet() {
                     video={activeVideo.video}
                     src={activeVideo.src}
                     onClose={() => setActiveVideo(null)}
+                    onWatched={(vid) => setWatchedVideoIds(prev => new Set(prev).add(vid))}
                 />
             )}
         </>

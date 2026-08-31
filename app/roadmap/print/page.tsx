@@ -38,7 +38,6 @@ export default function RoadmapPrintView() {
                     year: 'numeric'
                 }));
 
-                // Check if LifeFrame is complete (prerequisite for Roadmap)
                 const { data: entries, error: entriesError } = await supabase
                     .from('workbook_entries')
                     .select('category')
@@ -59,7 +58,6 @@ export default function RoadmapPrintView() {
 
                 setLifeFrameComplete(true);
 
-                // Fetch Roadmap data
                 const { data: roadmapEntries, error: roadmapError } = await supabase
                     .from('workbook_entries')
                     .select('content')
@@ -72,11 +70,7 @@ export default function RoadmapPrintView() {
                 }
 
                 if (roadmapEntries?.content) {
-                    // Roadmap data is stored as { items: [...] } where each item has a category property
-                    // Transform to group by category for print view
                     const items = roadmapEntries.content.items || [];
-
-                    // Group items by category
                     const groupedByCategory: { [key: string]: RoadmapEntry } = {};
 
                     items.forEach((item: any) => {
@@ -86,7 +80,6 @@ export default function RoadmapPrintView() {
                                 goals: []
                             };
                         }
-
                         groupedByCategory[item.category].goals.push({
                             goal: item.title,
                             type: item.type,
@@ -107,7 +100,6 @@ export default function RoadmapPrintView() {
         loadData();
     }, [router]);
 
-    // Auto-trigger print dialog after page loads (optional)
     useEffect(() => {
         if (!loading && lifeFrameComplete && roadmapData.length > 0) {
             const timer = setTimeout(() => {
@@ -119,209 +111,174 @@ export default function RoadmapPrintView() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading your Roadmap...</p>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{ width: 48, height: 48, border: '3px solid #000', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 0.8s linear infinite' }} />
+                    <p style={{ color: '#555', fontSize: 15, fontFamily: 'system-ui, sans-serif' }}>Loading your Roadmap…</p>
                 </div>
+                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
         );
     }
 
-    // Show message if LifeFrame not complete
+    const StateCard = ({ icon, title, message, action }: { icon: React.ReactNode; title: string; message: string; action?: React.ReactNode }) => (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', padding: 24 }}>
+            <div style={{ maxWidth: 440, textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
+                <div style={{ width: 64, height: 64, background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: '#6b7280' }}>
+                    {icon}
+                </div>
+                <h2 style={{ margin: '0 0 12px', fontSize: 22, fontWeight: 700, color: '#111' }}>{title}</h2>
+                <p style={{ margin: '0 0 28px', fontSize: 15, color: '#6b7280', lineHeight: 1.6 }}>{message}</p>
+                {action}
+            </div>
+        </div>
+    );
+
     if (!lifeFrameComplete) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-8">
-                <div className="max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">LifeFrame Required</h2>
-                    <p className="text-gray-700 mb-6">
-                        You need to complete your LifeFrame (Values, Interests, and Life Categories) before you can view or print your Roadmap.
-                    </p>
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
-                    >
-                        Go to Dashboard
-                    </button>
-                </div>
-            </div>
+            <StateCard
+                icon={<svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>}
+                title="LifeFrame Required"
+                message="Complete your Values, Interests, and Life Categories workbooks before printing your Roadmap."
+                action={<button onClick={() => router.push('/dashboard')} style={{ padding: '12px 28px', background: '#000', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Go to Dashboard</button>}
+            />
         );
     }
 
-    // Show message if Roadmap is empty
     if (roadmapData.length === 0) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-8">
-                <div className="max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Roadmap Empty</h2>
-                    <p className="text-gray-700 mb-6">
-                        You haven't created any goals yet. Complete the Roadmap worksheet to add goals and activities.
-                    </p>
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold"
-                    >
-                        Go to Dashboard
-                    </button>
-                </div>
-            </div>
+            <StateCard
+                icon={<svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+                title="Roadmap Empty"
+                message="You haven't added any goals yet. Build your Roadmap first, then return here to print it."
+                action={<button onClick={() => router.push('/dashboard')} style={{ padding: '12px 28px', background: '#000', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Go to Dashboard</button>}
+            />
         );
     }
 
     return (
         <>
-            {/* Print Button - Hidden when printing */}
-            <div className="no-print sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-10">
+            {/* ── Screen-only toolbar ─────────────────────────────────── */}
+            <div className="no-print" style={{
+                position: 'sticky', top: 0, zIndex: 10,
+                background: '#fff', borderBottom: '1px solid #e5e7eb',
+                padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            }}>
                 <button
                     onClick={() => router.push('/dashboard')}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: 14, fontWeight: 600 }}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                     Back to Dashboard
                 </button>
                 <button
                     onClick={() => window.print()}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#000', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
                     Print / Save as PDF
                 </button>
             </div>
 
-            {/* Printable Content */}
-            <div className="max-w-4xl mx-auto p-8 print:p-0 bg-white">
-                {/* Header */}
-                <div className="mb-12 text-center print:mb-8">
-                    <div className="text-sm text-gray-500 mb-2">Tim Collins Framework</div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2 print:text-3xl">YOUR ROADMAP</h1>
-                    <div className="text-lg text-gray-700">{userName}</div>
-                    <div className="text-sm text-gray-500">{currentDate}</div>
-                </div>
+            {/* ── Printable document ──────────────────────────────────── */}
+            <div style={{ background: '#fff', minHeight: '100vh' }}>
+                <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 40px' }} className="print-content">
 
-                <div className="border-t-2 border-gray-300 mb-8"></div>
+                    {/* Aurora accent strip */}
+                    <div style={{ height: 4, borderRadius: 2, marginBottom: 40, background: 'linear-gradient(90deg, rgba(255,45,153,0.9) 0%, rgba(120,40,255,0.8) 40%, rgba(0,212,255,0.7) 100%)' }} />
 
-                {/* Roadmap Sections */}
-                <div className="space-y-10">
-                    {roadmapData.map((entry, entryIndex) => (
-                        <section key={entryIndex} className="page-break-inside-avoid print:mb-8">
-                            {/* Life Category Header */}
-                            <div className="mb-6">
-                                <h2 className="text-2xl font-bold text-indigo-600 uppercase tracking-wide print:text-xl">
-                                    {entry.life_category}
-                                </h2>
-                                <div className="h-1 w-20 bg-indigo-600 mt-2"></div>
-                            </div>
+                    {/* Header */}
+                    <div style={{ marginBottom: 40 }}>
+                        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                            Tim Collins Framework
+                        </p>
+                        <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 800, color: '#000', letterSpacing: '-0.03em', fontFamily: 'Georgia, serif' }}>
+                            Your Roadmap
+                        </h1>
+                        <p style={{ margin: 0, fontSize: 16, color: '#374151', fontFamily: 'system-ui, sans-serif' }}>
+                            {userName} &nbsp;·&nbsp; <span style={{ color: '#9ca3af' }}>{currentDate}</span>
+                        </p>
+                    </div>
 
-                            {/* Goals */}
-                            <div className="space-y-6">
-                                {entry.goals.map((goalItem, goalIndex) => (
-                                    <div key={goalIndex} className="pl-4">
-                                        {/* Goal/Behavior Change */}
-                                        <div className="mb-4">
-                                            <div className="flex items-start gap-3">
-                                                <div className="flex-shrink-0 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center mt-1">
-                                                    <span className="text-white text-xs font-bold">
-                                                        {goalItem.type === 'goal' ? 'G' : 'B'}
-                                                    </span>
-                                                </div>
+                    <div style={{ borderTop: '2px solid #000', marginBottom: 48 }} />
+
+                    {/* ── Roadmap Sections ──────────────────────────────── */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+                        {roadmapData.map((entry, entryIndex) => (
+                            <section key={entryIndex} style={{ pageBreakInside: 'avoid' }}>
+                                {/* Category header */}
+                                <div style={{ marginBottom: 24 }}>
+                                    <h2 style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#000', fontFamily: 'system-ui, sans-serif' }}>
+                                        {entry.life_category}
+                                    </h2>
+                                    <div style={{ height: 2, width: 40, background: '#000' }} />
+                                </div>
+
+                                {/* Goals */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                                    {entry.goals.map((goalItem, goalIndex) => (
+                                        <div key={goalIndex} style={{ paddingLeft: 20, borderLeft: '2px solid #f3f4f6' }}>
+                                            {/* Type label */}
+                                            <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                                                {goalItem.type === 'goal' ? 'Goal' : 'Behavior Change'}
+                                            </p>
+                                            {/* Goal text */}
+                                            <p style={{ margin: '0 0 14px', fontSize: 17, fontWeight: 700, color: '#111', fontFamily: 'system-ui, sans-serif', lineHeight: 1.4 }}>
+                                                {goalItem.goal}
+                                            </p>
+
+                                            {/* Activities */}
+                                            {goalItem.activities && goalItem.activities.length > 0 && (
                                                 <div>
-                                                    <span className="text-xs font-semibold text-indigo-600 uppercase">
-                                                        {goalItem.type === 'goal' ? 'Goal' : 'Behavior Change'}
-                                                    </span>
-                                                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                                                        {goalItem.goal}
+                                                    <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', fontFamily: 'system-ui, sans-serif' }}>
+                                                        Action Steps
                                                     </p>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                        {goalItem.activities.map((activity, actIndex) => (
+                                                            <div key={actIndex} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                                                                <span style={{ fontSize: 13, color: '#9ca3af', flexShrink: 0, lineHeight: '22px', fontFamily: 'system-ui, sans-serif' }}>—</span>
+                                                                <span style={{ fontSize: 14, color: '#374151', fontFamily: 'system-ui, sans-serif', lineHeight: 1.6 }}>{activity}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
+                                    ))}
+                                </div>
 
-                                        {/* Activities */}
-                                        {goalItem.activities && goalItem.activities.length > 0 && (
-                                            <div className="ml-9 space-y-2">
-                                                <p className="text-sm font-semibold text-gray-700">Activities:</p>
-                                                <ul className="space-y-2">
-                                                    {goalItem.activities.map((activity, actIndex) => (
-                                                        <li key={actIndex} className="flex items-start gap-3">
-                                                            <span className="text-indigo-400 mt-1">•</span>
-                                                            <span className="text-gray-700">{activity}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                                {entryIndex < roadmapData.length - 1 && (
+                                    <div style={{ borderTop: '1px solid #f3f4f6', marginTop: 40 }} />
+                                )}
+                            </section>
+                        ))}
+                    </div>
 
-                            {/* Divider between categories */}
-                            {entryIndex < roadmapData.length - 1 && (
-                                <div className="border-t border-gray-200 mt-8"></div>
-                            )}
-                        </section>
-                    ))}
-                </div>
+                    {/* Footer */}
+                    <div style={{ borderTop: '2px solid #000', marginTop: 56, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <p style={{ margin: 0, fontSize: 12, color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                            Tim Collins Framework &nbsp;·&nbsp; Your path to contentment
+                        </p>
+                        <p style={{ margin: 0, fontSize: 12, color: '#9ca3af', fontFamily: 'system-ui, sans-serif' }}>
+                            timcollinsframework.com
+                        </p>
+                    </div>
 
-                {/* Footer */}
-                <div className="border-t-2 border-gray-300 pt-6 mt-12 text-center text-sm text-gray-500 print:mt-8">
-                    <p>Tim Collins Framework • Your path to contentment</p>
-                    <p className="mt-1">Visit lifealigner.com to update your Roadmap</p>
                 </div>
             </div>
 
-            {/* Print-specific styles */}
-            <style jsx global>{`
-        @media print {
-          /* Hide elements */
-          .no-print {
-            display: none !important;
-          }
-
-          /* Remove margins for print */
-          @page {
-            margin: 0.5in;
-          }
-
-          /* Ensure clean page breaks */
-          .page-break-inside-avoid {
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-
-          /* Full width for print */
-          body {
-            print-color-adjust: exact;
-            -webkit-print-color-adjust: exact;
-          }
-
-          /* Adjust font sizes for print */
-          h1 {
-            font-size: 28pt !important;
-          }
-          h2 {
-            font-size: 18pt !important;
-          }
-          h3 {
-            font-size: 14pt !important;
-          }
-          p, li, span {
-            font-size: 11pt !important;
-          }
-        }
-      `}</style>
+            <style>{`
+                @media print {
+                    .no-print { display: none !important; }
+                    @page { margin: 0.6in; size: letter; }
+                    .print-content { padding: 0 !important; }
+                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                }
+            `}</style>
         </>
     );
 }

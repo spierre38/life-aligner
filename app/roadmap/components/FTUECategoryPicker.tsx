@@ -188,46 +188,6 @@ export default function FTUECategoryPicker({
               </div>
             );
           })}
-
-          {/* ── "Ask Tim" AI entry bubble ─────────────────────────── */}
-          {onAskTim && (
-            <div
-              role="listitem"
-              className={`${reducedMotion ? '' : 'bubble-float-slow'} ${reducedMotion ? '' : 'ask-tim-glow'}`}
-              style={{ animationDelay: `${(categories.length * 0.45).toFixed(2)}s` }}
-            >
-              <button
-                onClick={onAskTim}
-                aria-label="Ask Tim for a personalized suggestion"
-                className="group relative focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400 focus-visible:ring-offset-4 focus-visible:ring-offset-slate-950 rounded-full"
-              >
-                <svg
-                  viewBox="0 0 100 100"
-                  className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 transition-transform duration-300 group-hover:scale-110 group-active:scale-95"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient id="grad-tim" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#F59E0B" />
-                      <stop offset="100%" stopColor="#D97706" />
-                    </linearGradient>
-                  </defs>
-                  <path d={BLOB_PATHS[3]} fill="rgba(0,0,0,0.2)" transform="translate(3, 5) scale(0.97)"
-                    className="opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
-                  <path d={BLOB_PATHS[3]} fill="url(#grad-tim)" className="transition-all duration-300" />
-                  <path d={BLOB_PATHS[3]} fill="url(#sheen)" opacity="0.15"
-                    className="transition-opacity duration-300 group-hover:opacity-25" />
-                </svg>
-                <span className="absolute inset-0 flex flex-col items-center justify-center text-white drop-shadow-sm">
-                  {/* Sparkle icon */}
-                  <svg className="w-6 h-6 mb-1 opacity-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-                  </svg>
-                  <span className="text-sm md:text-base font-bold">Ask Tim</span>
-                </span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* ── Footer hint ─────────────────────────────────────────── */}

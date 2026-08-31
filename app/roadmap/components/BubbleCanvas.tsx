@@ -295,7 +295,13 @@ function ByCategoryView({
 
         {categoryGoals.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-4xl mb-4">🎯</p>
+            <div className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+              <svg className="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="2" />
+              </svg>
+            </div>
             <p className="text-sm font-medium mb-6" style={{ color: 'var(--color-text-muted)' }}>
               No goals yet in {selectedCategory}.
             </p>
@@ -643,20 +649,20 @@ export default function BubbleCanvas({
             >
               <button
                 onClick={() => setViewMode('canvas')}
-                className="px-3 py-2 text-xs font-semibold transition-all"
+                className="px-3.5 py-2 text-xs font-semibold transition-all cursor-pointer"
                 style={viewMode === 'canvas'
-                  ? { background: 'rgba(255,255,255,0.12)', color: 'var(--color-text)' }
-                  : { color: 'var(--color-text-dim)' }
+                  ? { background: 'var(--color-surface-2)', color: 'var(--color-text)' }
+                  : { color: 'var(--color-text-muted)' }
                 }
               >
                 Canvas
               </button>
               <button
                 onClick={() => setViewMode('byCategory')}
-                className="px-3 py-2 text-xs font-semibold transition-all"
+                className="px-3.5 py-2 text-xs font-semibold transition-all cursor-pointer"
                 style={viewMode === 'byCategory'
-                  ? { background: 'rgba(168,85,247,0.2)', color: '#c4b5fd' }
-                  : { color: 'var(--color-text-dim)' }
+                  ? { background: 'var(--color-surface-2)', color: 'var(--color-text)' }
+                  : { color: 'var(--color-text-muted)' }
                 }
               >
                 By Category
@@ -665,7 +671,12 @@ export default function BubbleCanvas({
             <button
               onClick={onReviewAll}
               aria-label="Review all activities and goals"
-              className="bg-slate-800/80 backdrop-blur-sm border border-white/10 hover:bg-slate-800 text-white font-semibold text-sm px-4 py-2.5 rounded-full transition shadow-lg shadow-black/40 flex items-center gap-2"
+              className="backdrop-blur-sm font-semibold text-sm px-4 py-2.5 rounded-full transition shadow-lg flex items-center gap-2 cursor-pointer hover:opacity-90 active:scale-95"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text)',
+              }}
             >
               Review All
             </button>

@@ -26,6 +26,7 @@ const OnboardingModal = dynamic(
 );
 import VideoPlayer from '@/app/components/VideoPlayer';
 import { getVideo } from '@/lib/videos';
+import { parseVideoProgress } from '@/lib/video-progress';
 
 // ─── State machine ──────────────────────────────────────────────────────────
 
@@ -194,6 +195,7 @@ export default function DashboardPage() {
     const [showWelcome, setShowWelcome] = useState(false);
     const [urgentTodos, setUrgentTodos] = useState<TodoItem[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [watchedVideoIds, setWatchedVideoIds] = useState<Set<string>>(new Set());
     const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
 
@@ -216,6 +218,11 @@ export default function DashboardPage() {
                 }
 
                 setUser(userWithProfile);
+
+                if (userWithProfile.profile?.video_progress) {
+                    const prog = parseVideoProgress(userWithProfile.profile.video_progress);
+                    setWatchedVideoIds(new Set(prog.watched));
+                }
 
                 if (!userWithProfile.profile?.welcome_seen) {
                     setShowWelcome(true);
@@ -430,24 +437,26 @@ export default function DashboardPage() {
                                     <span aria-hidden>→</span>
                                 </Link>
 
-                                {state === 'new' && (
-                                    <button
-                                        onClick={() => {
-                                            const v1 = getVideo('v1-welcome');
-                                            if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
-                                        }}
-                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
-                                        style={{
-                                            background: 'rgba(255,255,255,0.08)',
-                                            border: '1px solid rgba(255,255,255,0.18)',
-                                            color: 'white',
-                                            backdropFilter: 'blur(8px)',
-                                        }}
-                                    >
-                                        <span className="text-purple-300">▶</span>
-                                        <span>Watch Welcome from Tim (5 min)</span>
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => {
+                                        const v1 = getVideo('v1-welcome');
+                                        if (v1?.blobUrl) setActiveVideo({ video: v1, src: v1.blobUrl });
+                                    }}
+                                    className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98] cursor-pointer"
+                                    style={{
+                                        background: 'rgba(255,255,255,0.08)',
+                                        border: '1px solid rgba(255,255,255,0.18)',
+                                        color: 'white',
+                                        backdropFilter: 'blur(8px)',
+                                    }}
+                                    aria-label="Watch Welcome Video from Tim"
+                                >
+                                    <svg className="w-3.5 h-3.5 text-purple-300" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                                    <span>{watchedVideoIds.has('v1-welcome') ? 'Rewatch Welcome (5 min)' : 'Watch Welcome from Tim (5 min)'}</span>
+                                    {watchedVideoIds.has('v1-welcome') && (
+                                        <span className="text-emerald-400 font-bold text-xs">✓</span>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -465,7 +474,10 @@ export default function DashboardPage() {
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-base">🔔</span>
+                                        <svg className="w-4 h-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                        </svg>
                                         <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)', letterSpacing: '-0.01em' }}>
                                             Today's Focus
                                         </h2>
@@ -633,20 +645,13 @@ export default function DashboardPage() {
                             </h2>
                         </div>
 
-                        <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+                        <div className="grid md:grid-cols-2 gap-4 md:gap-5">
                             <QuickLinkCard
                                 title="Resources"
                                 description="Videos, Guides and Downloads"
                                 href="/resources"
                                 meshVar="var(--mesh-e1)"
                                 Icon={BookIcon}
-                            />
-                            <QuickLinkCard
-                                title="Community"
-                                description="Connect with Others"
-                                href="/community"
-                                meshVar="var(--mesh-d1)"
-                                Icon={PeopleIcon}
                             />
                             <QuickLinkCard
                                 title="Get Help"
@@ -667,6 +672,7 @@ export default function DashboardPage() {
                     video={activeVideo.video}
                     src={activeVideo.src}
                     onClose={() => setActiveVideo(null)}
+                    onWatched={(vid) => setWatchedVideoIds(prev => new Set(prev).add(vid))}
                 />
             )}
         </>
