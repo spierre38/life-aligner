@@ -102,16 +102,16 @@ const COPY: Record<DashState, StateCopy> = {
     complete: {
         hero: {
             leadBold: 'Your LifeFrame is complete!',
-            rest: " Review your foundation, then head to your Roadmap.",
-            ctaLabel: 'View Your LifeFrame',
-            ctaHref: '/workbook/lifeframe',
+            rest: " Time to build your personalized Roadmap.",
+            ctaLabel: 'Go to Roadmap',
+            ctaHref: '/roadmap',
         },
         guide: {
             eyebrow: 'Your foundation is now set!',
-            headingLine1: 'View your LifeFrame',
-            headingLine2: 'then build your Roadmap',
-            ctaLabel: 'View Your LifeFrame',
-            ctaHref: '/workbook/lifeframe',
+            headingLine1: 'You are now ready',
+            headingLine2: 'to build your Roadmap',
+            ctaLabel: 'Go to Roadmap',
+            ctaHref: '/roadmap',
         },
         badge: { values: 'Complete', interests: 'Complete', life_categories: 'Complete' },
     },
@@ -437,21 +437,7 @@ export default function DashboardPage() {
                                     <span aria-hidden>→</span>
                                 </Link>
 
-                                {/* Secondary CTA: Go to Roadmap (only when LifeFrame is complete) */}
-                                {state === 'complete' && (
-                                    <Link
-                                        href="/roadmap"
-                                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:bg-white/10 active:scale-[0.98]"
-                                        style={{
-                                            background: 'rgba(255,255,255,0.08)',
-                                            border: '1px solid rgba(255,255,255,0.18)',
-                                            color: 'white',
-                                            backdropFilter: 'blur(8px)',
-                                        }}
-                                    >
-                                        Go to Roadmap →
-                                    </Link>
-                                )}
+                                {/* Secondary CTA: only for non-complete states to guide to Roadmap after LifeFrame */}
 
                                 {/* Welcome video — first-time only */}
                                 {!watchedVideoIds.has('v1-welcome') && (
