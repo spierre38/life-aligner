@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { getUserWithProfile } from '@/lib/auth';
 import { trackLifeFrameComplete } from '@/lib/analytics';
+import { showToast } from '@/lib/toast';
 import ConstellationMap from './ConstellationMap';
 
 type SelectedValue = {
@@ -425,10 +426,12 @@ export default function LifeFrameConstellation() {
                         if (navigator.share) {
                             try { await navigator.share({ title: 'My LifeFrame', text: 'My values, interests, and purpose — Tim Collins Framework', url }); } catch { /* cancelled */ }
                         } else {
-                            await navigator.clipboard.writeText(url);
-                            // Brief visual feedback on the button itself
-                            const btn = document.getElementById('share-lifeframe-btn');
-                            if (btn) { const orig = btn.textContent; btn.textContent = 'Link copied!'; setTimeout(() => { btn.textContent = orig || 'Share'; }, 2000); }
+                            try {
+                                await navigator.clipboard.writeText(url);
+                                showToast.success('Link copied to clipboard!');
+                            } catch {
+                                showToast.error('Could not copy link — try copying the URL from your address bar.');
+                            }
                         }
                     }}
                     id="share-lifeframe-btn"
