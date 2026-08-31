@@ -94,39 +94,40 @@
 
 /* ── Light mode overrides ────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --color-bg:         #F2F2F2;
+  --color-bg:         #F0F0F0;
   --color-surface:    #FFFFFF;
-  --color-surface-2:  #F7F7F7;
-  --color-border:     rgba(0,0,0,0.08);
-  --color-text:       #111111;
-  --color-text-muted: rgba(0,0,0,0.55);
-  --color-text-dim:   rgba(0,0,0,0.35);
+  --color-surface-2:  #EBEBEB;
+  --color-border:     rgba(0,0,0,0.10);
+  --color-text:       #0A0A0A;
+  --color-text-muted: rgba(0,0,0,0.60);
+  --color-text-dim:   rgba(0,0,0,0.40);
 
   /* Softer mesh gradients for light mode */
   --mesh-a1:
-    radial-gradient(ellipse 80% 60% at 30% 65%, rgba(180,30,120,0.35) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 55% at 78% 28%, rgba(0,140,200,0.30) 0%, transparent 60%),
-    #e8e0ff;
+    radial-gradient(ellipse 80% 60% at 30% 65%, rgba(180,30,120,0.30) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 55% at 78% 28%, rgba(0,140,200,0.25) 0%, transparent 60%),
+    #DDD8F0;
 
   --mesh-b1:
-    radial-gradient(ellipse 75% 55% at 35% 65%, rgba(100,30,200,0.35) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 50% at 72% 28%, rgba(200,80,0,0.30) 0%, transparent 55%),
-    #f0e8ff;
+    radial-gradient(ellipse 75% 55% at 35% 65%, rgba(100,30,200,0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 72% 28%, rgba(200,80,0,0.25) 0%, transparent 55%),
+    #EAE0FF;
 
   --mesh-d1:
-    radial-gradient(ellipse 75% 55% at 25% 68%, rgba(0,50,200,0.35) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 50% at 75% 28%, rgba(0,160,220,0.30) 0%, transparent 55%),
-    #e0ecff;
+    radial-gradient(ellipse 75% 55% at 25% 68%, rgba(0,50,200,0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 75% 28%, rgba(0,160,220,0.25) 0%, transparent 55%),
+    #D8E8FF;
 
   --mesh-e1:
-    radial-gradient(ellipse 75% 55% at 38% 62%, rgba(0,150,70,0.35) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 50% at 72% 30%, rgba(0,130,160,0.30) 0%, transparent 55%),
-    #e0f7f0;
+    radial-gradient(ellipse 75% 55% at 38% 62%, rgba(0,150,70,0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 50% at 72% 30%, rgba(0,130,160,0.25) 0%, transparent 55%),
+    #D8F0E8;
 
+  /* Roadmap canvas — light mode: neutral warm grey so bubbles stand out */
   --mesh-canvas:
-    radial-gradient(ellipse 90% 70% at 20% 50%, rgba(120,80,255,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 80% 60% at 80% 30%, rgba(0,120,255,0.04) 0%, transparent 65%),
-    #f0f0f8;
+    radial-gradient(ellipse 90% 70% at 20% 50%, rgba(100,60,220,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 60% at 80% 30%, rgba(0,100,200,0.05) 0%, transparent 65%),
+    #E4E4EC;
 }
 
 @theme inline {

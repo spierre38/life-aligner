@@ -35,23 +35,27 @@ const NAV_ITEMS = [
     },
     {
         href: '/todo',
-        label: 'Inbox',
+        label: 'To-Do',
         badge: true,
         icon: (active: boolean) => (
-            <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="5" width="18" height="16" rx="2" fill={active ? 'currentColor' : 'none'} />
                 {active
-                    ? <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" fill="currentColor" />
+                    ? <>
+                        <path d="M7 9l3 3 5-5" stroke="white" strokeWidth={2} />
+                        <path d="M7 15h5" stroke="white" strokeWidth={2} />
+                      </>
                     : <>
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                    </>
+                        <path d="M7 9l3 3 5-5" />
+                        <path d="M7 15h5" />
+                      </>
                 }
             </svg>
         ),
     },
     {
         href: '/reflections',
-        label: 'Chapters',
+        label: 'Reflect',
         icon: (active: boolean) => (
             <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.8} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
