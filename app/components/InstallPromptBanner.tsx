@@ -14,8 +14,11 @@ export default function InstallPromptBanner() {
     const [showIOSModal, setShowIOSModal] = useState(false);
 
     useEffect(() => {
-        // Don't show if already dismissed permanently
-        if (localStorage.getItem('la_install_dismissed') === 'true') return;
+        // Don't show if snoozed (check timestamp — re-show after 3 days)
+        const snoozedUntil = localStorage.getItem('la_install_snoozed_until');
+        if (snoozedUntil && Date.now() < Number(snoozedUntil)) return;
+        // Don't show if user actually installed
+        if (localStorage.getItem('la_install_accepted') === 'true') return;
         // Don't show if already installed (running as PWA)
         if (window.matchMedia('(display-mode: standalone)').matches) return;
         // Only show on mobile screen widths (< 768px)
@@ -51,7 +54,7 @@ export default function InstallPromptBanner() {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-            localStorage.setItem('la_install_dismissed', 'true');
+            localStorage.setItem('la_install_accepted', 'true');
             setShowBanner(false);
         }
         setDeferredPrompt(null);
@@ -63,7 +66,9 @@ export default function InstallPromptBanner() {
     };
 
     const handleDismiss = () => {
-        localStorage.setItem('la_install_dismissed', 'true');
+        // Snooze for 3 days instead of permanent dismiss
+        const threeDays = 3 * 24 * 60 * 60 * 1000;
+        localStorage.setItem('la_install_snoozed_until', String(Date.now() + threeDays));
         setShowBanner(false);
     };
 
