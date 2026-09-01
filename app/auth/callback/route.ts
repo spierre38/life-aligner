@@ -50,9 +50,20 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(new URL(next, requestUrl.origin));
         } else {
             console.error('Error exchanging code for session:', error);
-            // Redirect to login with error message
+
+            // For password recovery, the session IS needed — show a real error
+            if (type === 'recovery') {
+                return NextResponse.redirect(
+                    new URL('/login?error=verification_failed', requestUrl.origin)
+                );
+            }
+
+            // For signup verification: the email IS confirmed by Supabase when the link
+            // is clicked, even if the PKCE code exchange fails (e.g. user opened the
+            // link in a different browser/tab where the code_verifier cookie is missing).
+            // Redirect to login with a success message — they just need to sign in manually.
             return NextResponse.redirect(
-                new URL('/login?error=verification_failed', requestUrl.origin)
+                new URL('/login?verified=true', requestUrl.origin)
             );
         }
     }

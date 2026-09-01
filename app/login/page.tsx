@@ -16,20 +16,26 @@ function LoginFormWithParams() {
         password: '',
     });
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     // Check for URL parameters (verification success/error)
     useEffect(() => {
         const errorParam = searchParams.get('error');
+        const verifiedParam = searchParams.get('verified');
         if (errorParam === 'verification_failed') {
             setError('Email verification failed. Please try signing up again or contact support.');
+        }
+        if (verifiedParam === 'true') {
+            setSuccessMsg('Email verified! Sign in to continue your journey.');
         }
     }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccessMsg('');
 
         if (!formData.email.trim()) { setError('Please enter your email'); return; }
         if (!formData.password) { setError('Please enter your password'); return; }
@@ -54,6 +60,14 @@ function LoginFormWithParams() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            {successMsg && (
+                <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {successMsg}
+                </div>
+            )}
             {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
                     {error}
