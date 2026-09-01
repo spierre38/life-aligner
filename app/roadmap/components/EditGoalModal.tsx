@@ -13,6 +13,7 @@ import type { Goal } from '@/lib/roadmap-types';
 interface EditGoalModalProps {
   goal: Goal;
   allCategories: string[];
+  savedSubcategories?: Record<string, string[]>;
   savedValues: string[];
   savedInterests: string[];
   onClose: () => void;
@@ -75,6 +76,7 @@ function ChipPicker({
 export default function EditGoalModal({
   goal,
   allCategories,
+  savedSubcategories = {},
   savedValues,
   savedInterests,
   onClose,
@@ -86,6 +88,7 @@ export default function EditGoalModal({
   const [selectedCategories, setSelectedCategories] = useState<string[]>(goal.connectedCategories);
   const [selectedValues, setSelectedValues] = useState<string[]>(goal.connectedValues);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(goal.connectedInterests);
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(goal.connectedSubcategories ?? []);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -116,6 +119,7 @@ export default function EditGoalModal({
       title: title.trim(),
       why: why.trim() || undefined,
       connectedCategories: selectedCategories,
+      connectedSubcategories: selectedSubcategories.length > 0 ? selectedSubcategories : undefined,
       connectedValues: selectedValues,
       connectedInterests: selectedInterests,
       updatedAt: new Date().toISOString(),
@@ -235,6 +239,44 @@ export default function EditGoalModal({
               onToggle={item => toggle(selectedCategories, setSelectedCategories, item)}
               accentStyle={{ bg: 'rgba(168,85,247,0.2)', border: 'rgba(168,85,247,0.5)', text: '#c4b5fd' }}
             />
+            {/* Subcategory chips */}
+            {selectedCategories.length > 0 && (() => {
+              const visibleSubs = selectedCategories.flatMap(cat => (savedSubcategories[cat] || []));
+              if (visibleSubs.length === 0) return null;
+              return (
+                <div className="pl-3" style={{ borderLeft: '2px solid rgba(168,85,247,0.25)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(168,85,247,0.5)' }}>
+                    Sub-Categories
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedCategories.map(cat => {
+                      const subs = savedSubcategories[cat];
+                      if (!subs || subs.length === 0) return null;
+                      return subs.map(sub => {
+                        const isOn = selectedSubcategories.includes(sub);
+                        return (
+                          <button
+                            key={`${cat}-${sub}`}
+                            type="button"
+                            onClick={() => {
+                              setSelectedSubcategories(prev => isOn ? prev.filter(s => s !== sub) : [...prev, sub]);
+                            }}
+                            className="px-2.5 py-1 rounded-full text-[11px] font-medium transition-all duration-150 hover:scale-105 active:scale-95"
+                            style={
+                              isOn
+                                ? { background: 'rgba(168,85,247,0.15)', border: '1px solid rgba(168,85,247,0.4)', color: '#c4b5fd' }
+                                : { background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }
+                            }
+                          >
+                            {sub}
+                          </button>
+                        );
+                      });
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
             <ChipPicker
               label="Values"
               labelColor="rgba(96,165,250,0.8)"

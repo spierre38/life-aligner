@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactElement } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import AuthNavbar from '@/app/components/AuthNavbar';
 
@@ -231,61 +230,98 @@ function AccordionItem({ question, answer, accent, isOpen, onToggle }: {
   );
 }
 
-// ─── Tim Collins Slideshow ───────────────────────────────────────────────────
+// ─── Help Page Illustration (animated SVG) ──────────────────────────────────
 
-const TIM_SLIDES = [
-  { src: '/tim-portrait.jpg', alt: 'Tim Collins — portrait' },
-  { src: '/tim-presenting.jpg', alt: 'Tim Collins presenting' },
-  { src: '/tim-podium.jpg', alt: 'Tim Collins at The Chamber podium' },
-  { src: '/timmyC.webp', alt: 'Tim Collins headshot' },
-  { src: '/illustrations/tim-collins.webp', alt: 'Tim Collins at his desk' },
-];
-
-function TimSlideshow() {
-  const [activeIdx, setActiveIdx] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveIdx(prev => (prev + 1) % TIM_SLIDES.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
-
+function HelpIllustration() {
   return (
-    <div className="relative w-full aspect-[3/4] max-w-[280px] sm:max-w-[320px] mx-auto rounded-3xl overflow-hidden" style={{ border: '1px solid rgba(168,85,247,0.2)' }}>
-      {TIM_SLIDES.map((slide, i) => (
-        <div
-          key={slide.src}
-          className="absolute inset-0 transition-opacity duration-1000"
-          style={{ opacity: i === activeIdx ? 1 : 0 }}
-        >
-          <Image
-            src={slide.src}
-            alt={slide.alt}
-            fill
-            className="object-cover"
-            sizes="320px"
-            priority={i === 0}
-          />
-        </div>
-      ))}
-      {/* Gradient overlay at bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-      {/* Dot indicators */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-        {TIM_SLIDES.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveIdx(i)}
-            className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-            style={{
-              background: i === activeIdx ? 'rgba(168,85,247,0.9)' : 'rgba(255,255,255,0.4)',
-              transform: i === activeIdx ? 'scale(1.3)' : 'scale(1)',
-            }}
-            aria-label={`View photo ${i + 1}`}
-          />
-        ))}
-      </div>
+    <div className="relative w-full aspect-[3/4] max-w-[280px] sm:max-w-[320px] mx-auto rounded-3xl overflow-hidden"
+      style={{ background: 'linear-gradient(145deg, rgba(168,85,247,0.08) 0%, rgba(59,130,246,0.06) 50%, rgba(236,72,153,0.04) 100%)', border: '1px solid rgba(168,85,247,0.2)' }}>
+      <style>{`
+        @keyframes help-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes help-pulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+        @keyframes help-orbit { 0% { transform: rotate(0deg) translateX(60px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(60px) rotate(-360deg); } }
+        @keyframes help-grow { 0% { stroke-dashoffset: 200; } 100% { stroke-dashoffset: 0; } }
+        @keyframes help-twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        .help-float { animation: help-float 4s ease-in-out infinite; }
+        .help-pulse { animation: help-pulse 3s ease-in-out infinite; }
+        .help-orbit { animation: help-orbit 12s linear infinite; }
+        .help-twinkle { animation: help-twinkle 2s ease-in-out infinite; }
+      `}</style>
+
+      <svg viewBox="0 0 280 374" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        {/* Background glow circles */}
+        <circle cx="140" cy="170" r="120" fill="url(#help-bg-grad)" opacity="0.12" />
+        <circle cx="140" cy="170" r="80" fill="url(#help-bg-grad)" opacity="0.08" />
+
+        {/* Orbit rings */}
+        <circle cx="140" cy="180" r="90" stroke="rgba(168,85,247,0.15)" strokeWidth="1" strokeDasharray="4 6" />
+        <circle cx="140" cy="180" r="60" stroke="rgba(59,130,246,0.12)" strokeWidth="1" strokeDasharray="3 5" />
+
+        {/* Growth path (curved line from bottom to top) */}
+        <path d="M 60,320 C 80,280 100,250 120,220 S 160,150 180,100 S 200,60 220,50"
+          stroke="url(#help-path-grad)" strokeWidth="2" strokeLinecap="round" fill="none"
+          strokeDasharray="200" className="help-pulse" style={{ animationDuration: '6s' }} />
+
+        {/* Compass center */}
+        <g className="help-float" style={{ transformOrigin: '140px 180px' }}>
+          <circle cx="140" cy="180" r="35" fill="rgba(168,85,247,0.15)" stroke="rgba(168,85,247,0.4)" strokeWidth="1.5" />
+          <circle cx="140" cy="180" r="25" fill="rgba(168,85,247,0.1)" />
+          {/* Compass needle */}
+          <polygon points="140,152 146,176 140,172 134,176" fill="rgba(239,68,68,0.7)" />
+          <polygon points="140,208 146,184 140,188 134,184" fill="rgba(129,140,248,0.7)" />
+          <circle cx="140" cy="180" r="5" fill="#a78bfa" />
+          <circle cx="140" cy="180" r="2.5" fill="white" opacity="0.8" />
+        </g>
+
+        {/* Orbiting dot 1 */}
+        <circle r="6" fill="#a855f7" opacity="0.7" className="help-orbit" style={{ transformOrigin: '140px 180px' }}>
+          <animate attributeName="opacity" values="0.4;0.9;0.4" dur="3s" repeatCount="indefinite" />
+        </circle>
+
+        {/* Orbiting dot 2 */}
+        <circle r="4" fill="#3b82f6" opacity="0.6" className="help-orbit" style={{ transformOrigin: '140px 180px', animationDelay: '-4s', animationDuration: '10s' }}>
+          <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2.5s" repeatCount="indefinite" />
+        </circle>
+
+        {/* Floating stars */}
+        <g className="help-twinkle" style={{ animationDelay: '0s' }}>
+          <path d="M 80,80 l 3,8 8,3 -8,3 -3,8 -3,-8 -8,-3 8,-3z" fill="#fbbf24" />
+        </g>
+        <g className="help-twinkle" style={{ animationDelay: '0.7s' }}>
+          <path d="M 210,120 l 2,6 6,2 -6,2 -2,6 -2,-6 -6,-2 6,-2z" fill="#f472b6" />
+        </g>
+        <g className="help-twinkle" style={{ animationDelay: '1.4s' }}>
+          <path d="M 60,250 l 2,5 5,2 -5,2 -2,5 -2,-5 -5,-2 5,-2z" fill="#a78bfa" />
+        </g>
+        <g className="help-twinkle" style={{ animationDelay: '0.3s' }}>
+          <path d="M 220,260 l 2,6 6,2 -6,2 -2,6 -2,-6 -6,-2 6,-2z" fill="#60a5fa" />
+        </g>
+        <g className="help-twinkle" style={{ animationDelay: '1s' }}>
+          <path d="M 170,60 l 1.5,4 4,1.5 -4,1.5 -1.5,4 -1.5,-4 -4,-1.5 4,-1.5z" fill="#fbbf24" />
+        </g>
+
+        {/* Small floating circles */}
+        <circle cx="100" cy="120" r="3" fill="#a855f7" opacity="0.4" className="help-float" style={{ animationDelay: '1s' }} />
+        <circle cx="190" cy="240" r="4" fill="#3b82f6" opacity="0.3" className="help-float" style={{ animationDelay: '2s' }} />
+        <circle cx="70" cy="200" r="2.5" fill="#ec4899" opacity="0.35" className="help-float" style={{ animationDelay: '0.5s' }} />
+
+        {/* "Tim Collins Framework" text area at bottom */}
+        <text x="140" y="330" textAnchor="middle" fill="rgba(168,85,247,0.6)" fontSize="11" fontWeight="700" letterSpacing="0.15em">TIM COLLINS</text>
+        <text x="140" y="348" textAnchor="middle" fill="rgba(168,85,247,0.35)" fontSize="9" fontWeight="500" letterSpacing="0.1em">FRAMEWORK</text>
+
+        {/* Gradient defs */}
+        <defs>
+          <linearGradient id="help-bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+          <linearGradient id="help-path-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(168,85,247,0.1)" />
+            <stop offset="50%" stopColor="rgba(168,85,247,0.5)" />
+            <stop offset="100%" stopColor="rgba(236,72,153,0.4)" />
+          </linearGradient>
+        </defs>
+      </svg>
     </div>
   );
 }
@@ -318,7 +354,7 @@ export default function GetHelpPage() {
             <div className="grid md:grid-cols-[auto_1fr] gap-10 md:gap-14 items-center">
               {/* Left: Tim slideshow */}
               <div className="hidden md:block">
-                <TimSlideshow />
+                <HelpIllustration />
               </div>
 
               {/* Right: Text + search */}
@@ -355,7 +391,7 @@ export default function GetHelpPage() {
 
             {/* Mobile slideshow — below text on small screens */}
             <div className="md:hidden mt-8">
-              <TimSlideshow />
+              <HelpIllustration />
             </div>
           </div>
         </div>

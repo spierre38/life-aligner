@@ -460,10 +460,20 @@ export default function GoalDetailView({
   const [reflectionMood, setReflectionMood] = useState<'great' | 'okay' | 'hard' | undefined>(undefined);
   const [savingReflection, setSavingReflection] = useState(false);
   const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(t);
+  }, []);
+
+  // Detect mobile
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
 
   // Hide bottom nav while this overlay is open
@@ -594,8 +604,218 @@ export default function GoalDetailView({
       </div>
 
       <div className="flex flex-col lg:flex-row min-h-screen pt-navbar pb-32">
-        {/* ── Tree area (left) ────────────────────────────────────── */}
-        <div className="flex-1 relative overflow-auto" style={{ minHeight: '100vh' }}
+
+        {/* ── MOBILE: Card-based layout ─────────────────────────── */}
+        {isMobile && (
+          <div className="flex-1 overflow-auto px-4 py-5" style={{ paddingTop: 'calc(var(--navbar-height, 100px) + 8px)' }}>
+
+            {/* Goal header card */}
+            <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>{goal.title}</h2>
+              {goal.why && (
+                <p className="text-sm italic mb-3 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>"{goal.why}"</p>
+              )}
+              {goal.connectedCategories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {goal.connectedCategories.map(cat => (
+                    <span key={cat} className="px-2.5 py-1 rounded-full text-[11px] font-medium"
+                      style={{ background: `hsla(${stringToHue(cat)}, 55%, 50%, 0.15)`, color: `hsl(${stringToHue(cat)}, 55%, 65%)`, border: `1px solid hsla(${stringToHue(cat)}, 55%, 50%, 0.25)` }}>
+                      {cat}
+                    </span>
+                  ))}
+                  {(goal.connectedSubcategories ?? []).map(sub => (
+                    <span key={sub} className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text-dim)', border: '1px solid var(--color-border)' }}>{sub}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Progress summary */}
+            {activities.length > 0 && (() => {
+              const done = activities.filter(a => a.completed).length;
+              const pct = Math.round((done / activities.length) * 100);
+              return (
+                <div className="flex items-center gap-3 mb-4 px-1">
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-surface-2)' }}>
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: `hsl(${hue}, 65%, 52%)` }} />
+                  </div>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--color-text-dim)' }}>{done}/{activities.length}</span>
+                </div>
+              );
+            })()}
+
+            {/* Activities header */}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Activities ({activities.length})</h3>
+              <button
+                onClick={() => onAddActivity(goal.id)}
+                className="text-xs font-semibold px-3 py-1.5 rounded-full transition"
+                style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)' }}
+              >
+                + Add
+              </button>
+            </div>
+
+            {/* Activity cards */}
+            {activities.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm mb-3" style={{ color: 'var(--color-text-dim)' }}>No activities yet</p>
+                <button
+                  onClick={() => onAddActivity(goal.id)}
+                  className="text-sm font-semibold px-5 py-2.5 rounded-full transition"
+                  style={{ background: `hsla(${hue}, 65%, 52%, 0.2)`, color: `hsl(${hue}, 65%, 65%)`, border: `1px solid hsla(${hue}, 65%, 52%, 0.3)` }}
+                >
+                  + Add your first activity
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 mb-6">
+                {activities.map(activity => {
+                  const isExpanded = expandedActivities.has(activity.id);
+                  const hasSubs = activity.subActivities.length > 0;
+                  const doneSubs = activity.subActivities.filter(s => s.completed).length;
+                  return (
+                    <div key={activity.id} className="rounded-xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                      {/* Activity row */}
+                      <div className="flex items-start gap-3 p-3.5">
+                        <button
+                          onClick={() => onToggleActivityComplete(activity.id, !activity.completed)}
+                          className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
+                          style={{
+                            borderColor: activity.completed ? `hsl(${hue}, 65%, 52%)` : 'var(--color-border)',
+                            background: activity.completed ? `hsl(${hue}, 65%, 52%)` : 'transparent',
+                          }}
+                        >
+                          {activity.completed && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium leading-snug ${activity.completed ? 'line-through opacity-50' : ''}`} style={{ color: 'var(--color-text)' }}>
+                            {activity.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {activity.includeToday && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>Today</span>
+                            )}
+                            {hasSubs && (
+                              <span className="text-[10px]" style={{ color: 'var(--color-text-dim)' }}>{doneSubs}/{activity.subActivities.length} subs</span>
+                            )}
+                            {activity.connectedGoalIds.length > 1 && (
+                              <span className="text-[10px]" style={{ color: 'var(--color-text-dim)' }}>↔ {activity.connectedGoalIds.length} goals</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => onToggleActivityIncludeToday(activity.id, !activity.includeToday)}
+                            className="p-1.5 rounded-lg transition" style={{ color: activity.includeToday ? '#10b981' : 'var(--color-text-dim)' }} title={activity.includeToday ? 'Remove from today' : 'Add to today'}>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                          </button>
+                          <button onClick={() => onEditActivity(activity)}
+                            className="p-1.5 rounded-lg transition" style={{ color: 'var(--color-text-dim)' }}>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                          </button>
+                        </div>
+                      </div>
+                      {/* Sub-activities (expandable) */}
+                      {hasSubs && (
+                        <>
+                          <button onClick={() => toggleExpand(activity.id)} className="w-full px-3.5 py-2 text-[11px] font-medium flex items-center gap-1.5 transition" style={{ color: 'var(--color-text-dim)', borderTop: '1px solid var(--color-border)' }}>
+                            <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            {activity.subActivities.length} sub-activities
+                          </button>
+                          {isExpanded && (
+                            <div className="px-3.5 pb-3 space-y-1.5">
+                              {activity.subActivities.map(sub => (
+                                <div key={sub.id} className="flex items-center gap-2.5 pl-3">
+                                  <button
+                                    onClick={() => onToggleSubActivityComplete(activity.id, sub.id, !sub.completed)}
+                                    className="flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-all"
+                                    style={{
+                                      borderColor: sub.completed ? `hsl(${hue}, 65%, 52%)` : 'var(--color-border)',
+                                      background: sub.completed ? `hsl(${hue}, 65%, 52%)` : 'transparent',
+                                    }}
+                                  >
+                                    {sub.completed && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                  </button>
+                                  <span className={`text-xs ${sub.completed ? 'line-through opacity-50' : ''}`} style={{ color: 'var(--color-text-muted)' }}>{sub.title}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Mobile Reflect section (inline) */}
+            <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                <span>📝</span> Reflect
+              </h3>
+              {/* Mood */}
+              <div className="flex gap-2 mb-3">
+                {(['great', 'okay', 'hard'] as const).map(m => (
+                  <button key={m} onClick={() => setReflectionMood(prev => prev === m ? undefined : m)}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium transition-all"
+                    style={{
+                      background: reflectionMood === m ? (m === 'great' ? 'rgba(0,200,100,0.15)' : m === 'hard' ? 'rgba(255,80,80,0.15)' : 'var(--color-surface-2)') : 'var(--color-surface-2)',
+                      border: `1px solid ${reflectionMood === m ? (m === 'great' ? 'rgba(0,200,100,0.3)' : m === 'hard' ? 'rgba(255,80,80,0.3)' : 'var(--color-border)') : 'var(--color-border)'}`,
+                      color: reflectionMood === m ? (m === 'great' ? '#34d399' : m === 'hard' ? '#f87171' : 'var(--color-text)') : 'var(--color-text-dim)',
+                    }}>
+                    {m === 'great' ? '✦ Great' : m === 'hard' ? '⊘ Hard' : '~ Okay'}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={reflectionText}
+                onChange={e => setReflectionText(e.target.value)}
+                placeholder="How's this goal going?"
+                rows={3}
+                className="w-full rounded-xl p-3 text-sm resize-none focus:outline-none mb-2"
+                style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              />
+              <button
+                disabled={!reflectionText.trim() || savingReflection}
+                onClick={async () => {
+                  if (!reflectionText.trim()) return;
+                  setSavingReflection(true);
+                  onAddReflection(goal.id, reflectionText.trim(), reflectionMood, undefined);
+                  setReflectionText('');
+                  setReflectionMood(undefined);
+                  await new Promise(r => setTimeout(r, 300));
+                  setSavingReflection(false);
+                }}
+                className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-30"
+                style={{ background: 'var(--color-text)', color: 'var(--color-bg)' }}>
+                {savingReflection ? 'Saving…' : 'Save Entry'}
+              </button>
+              {goal.reflections && goal.reflections.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-dim)' }}>Past ({goal.reflections.length})</p>
+                  {[...goal.reflections].reverse().slice(0, 5).map(r => (
+                    <div key={r.id} className="p-3 rounded-xl text-xs" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span style={{ color: 'var(--color-text-dim)' }}>{new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        {r.mood && <span className="px-1.5 py-0.5 rounded-full text-[10px]" style={{ background: r.mood === 'great' ? 'rgba(0,200,100,0.15)' : r.mood === 'hard' ? 'rgba(255,80,80,0.15)' : 'var(--color-surface-2)', color: r.mood === 'great' ? '#34d399' : r.mood === 'hard' ? '#f87171' : 'var(--color-text-muted)' }}>{r.mood === 'great' ? '✦ Great' : r.mood === 'hard' ? '⊘ Hard' : '~ Okay'}</span>}
+                      </div>
+                      <p style={{ color: 'var(--color-text-muted)' }} className="leading-relaxed">{r.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ── DESKTOP: Tree area (left) ────────────────────────────────────── */}
+        {!isMobile && <div className="flex-1 relative overflow-auto" style={{ minHeight: '100vh' }}
           onClick={() => setSelectedActivityId(null)}
         >
           {/* SVG connector lines */}
@@ -832,7 +1052,7 @@ export default function GoalDetailView({
               </button>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* ── Right panel: AI coach + Reflect tabs ──────────── */}
         <div className="hidden lg:flex flex-col w-96 shrink-0 overflow-y-auto"

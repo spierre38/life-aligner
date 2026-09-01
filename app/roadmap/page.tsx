@@ -53,6 +53,7 @@ export default function RoadmapPage() {
   const [loadError, setLoadError] = useState(false);
 
   const [categories, setCategories] = useState<string[]>([]);
+  const [savedSubcategories, setSavedSubcategories] = useState<Record<string, string[]>>({});
   const [savedValues, setSavedValues] = useState<string[]>([]);
   const [savedInterests, setSavedInterests] = useState<string[]>([]);
   const [roadmap, setRoadmap] = useState<RoadmapData>(emptyRoadmapData());
@@ -118,6 +119,14 @@ export default function RoadmapPage() {
           .map((c: any) => (typeof c === 'string' ? c : c?.name))
           .filter((n: any): n is string => typeof n === 'string' && n.length > 0);
 
+        // Build subcategory lookup: { "Health": ["Mental Health", "Nutrition", ...], ... }
+        const subCatMap: Record<string, string[]> = {};
+        for (const c of rawCats) {
+          if (typeof c === 'object' && c?.name && Array.isArray(c?.subCategories) && c.subCategories.length > 0) {
+            subCatMap[c.name] = c.subCategories;
+          }
+        }
+
         const valRow = worksheets?.find(w => w.category === 'values');
         const valueNames: string[] = ((valRow?.content as any)?.selected_values ?? [])
           .map((v: any) => v?.name)
@@ -140,6 +149,7 @@ export default function RoadmapPage() {
 
         setUserId(userWithProfile.user.id);
         setCategories(categoryNames);
+        setSavedSubcategories(subCatMap);
         setSavedValues(valueNames);
         setSavedInterests(interestNames);
         setRoadmap(result.data);
@@ -601,6 +611,7 @@ export default function RoadmapPage() {
         <AddGoalModal
           preselectedCategory={ftueCategory ?? undefined}
           allCategories={categories}
+          savedSubcategories={savedSubcategories}
           savedValues={savedValues}
           savedInterests={savedInterests}
           onClose={() => { setFtueCategory(null); setAddGoalOpen(false); }}
@@ -613,6 +624,7 @@ export default function RoadmapPage() {
         <EditGoalModal
           goal={editingGoal}
           allCategories={categories}
+          savedSubcategories={savedSubcategories}
           savedValues={savedValues}
           savedInterests={savedInterests}
           onClose={() => setEditingGoal(null)}

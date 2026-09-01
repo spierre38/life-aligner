@@ -18,6 +18,7 @@ import { getVideo } from '@/lib/videos';
 interface AddGoalModalProps {
   preselectedCategory?: string;
   allCategories: string[];
+  savedSubcategories?: Record<string, string[]>;
   savedValues: string[];
   savedInterests: string[];
   onClose: () => void;
@@ -100,6 +101,7 @@ function ChipSection({
 export default function AddGoalModal({
   preselectedCategory,
   allCategories,
+  savedSubcategories = {},
   savedValues,
   savedInterests,
   onClose,
@@ -112,6 +114,7 @@ export default function AddGoalModal({
   );
   const [selectedValues, setSelectedValues]     = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
   const [activityDrafts, setActivityDrafts]     = useState<ActivityDraft[]>([]);
   const [activeVideo, setActiveVideo]           = useState<{ video: any; src: string } | null>(null);
   const [saving, setSaving]                     = useState(false);
@@ -208,6 +211,7 @@ export default function AddGoalModal({
       title: title.trim(),
       why: why.trim() || undefined,
       connectedCategories: selectedCategories,
+      connectedSubcategories: selectedSubcategories.length > 0 ? selectedSubcategories : undefined,
       connectedValues: selectedValues,
       connectedInterests: selectedInterests,
       status: 'active',
@@ -360,6 +364,45 @@ export default function AddGoalModal({
                 items={allCategories} selected={selectedCategories} color="purple"
                 onToggle={item => toggleChip(selectedCategories, setSelectedCategories, item)}
               />
+              {/* Subcategory chips — shown for each selected category that has subs */}
+              {selectedCategories.length > 0 && (() => {
+                const visibleSubs = selectedCategories.flatMap(cat => (savedSubcategories[cat] || []));
+                if (visibleSubs.length === 0) return null;
+                return (
+                  <div className="pl-3" style={{ borderLeft: '2px solid rgba(168,85,247,0.25)' }}>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(168,85,247,0.5)' }}>
+                      Sub-Categories
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedCategories.map(cat => {
+                        const subs = savedSubcategories[cat];
+                        if (!subs || subs.length === 0) return null;
+                        return subs.map(sub => {
+                          const isOn = selectedSubcategories.includes(sub);
+                          return (
+                            <button
+                              key={`${cat}-${sub}`}
+                              type="button"
+                              onClick={() => {
+                                const adding = !isOn;
+                                setSelectedSubcategories(prev => adding ? [...prev, sub] : prev.filter(s => s !== sub));
+                                injectIntoWhy(sub, adding);
+                              }}
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all duration-200 ${
+                                isOn
+                                  ? 'bg-purple-500/15 text-purple-300 border-purple-500/40'
+                                  : 'border-white/8 text-white/40 hover:border-purple-400/30 hover:text-purple-300'
+                              }`}
+                            >
+                              {sub}
+                            </button>
+                          );
+                        });
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
               <ChipSection
                 label="Values" emoji="⚡"
                 items={savedValues} selected={selectedValues} color="indigo"

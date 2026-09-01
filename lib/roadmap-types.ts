@@ -133,6 +133,9 @@ export interface Goal {
   /** Life category names drawn from life_categories.categories[].name */
   connectedCategories: string[];
 
+  /** Subcategory names within the connected categories (e.g. "Mental Health" under "Health"). */
+  connectedSubcategories?: string[];
+
   /** Value names drawn from values.selected_values[].name */
   connectedValues: string[];
 
