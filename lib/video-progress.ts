@@ -84,7 +84,7 @@ function isCriteriaMet(
   }
 }
 
-/** Get the full status of all videos for a user */
+/** Get the full status of all videos for a user (only includes uploaded videos) */
 export function getVideoStatuses(
   completion: LifeFrameCompletion | null,
   roadmap: RoadmapState,
@@ -92,12 +92,14 @@ export function getVideoStatuses(
 ): VideoStatus[] {
   const watchedSet = new Set(progress.watched);
 
-  return VIDEO_CATALOG.map(video => ({
-    video,
-    unlocked: isCriteriaMet(video.unlockCriteria, completion, roadmap, watchedSet),
-    watched: watchedSet.has(video.id),
-    available: video.blobUrl !== null,
-  }));
+  return VIDEO_CATALOG
+    .filter(v => v.blobUrl !== null)
+    .map(video => ({
+      video,
+      unlocked: isCriteriaMet(video.unlockCriteria, completion, roadmap, watchedSet),
+      watched: watchedSet.has(video.id),
+      available: true,
+    }));
 }
 
 /** Get just the unlocked video IDs */
