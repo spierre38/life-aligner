@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -198,6 +198,33 @@ export default function DashboardPage() {
     const [watchedVideoIds, setWatchedVideoIds] = useState<Set<string>>(new Set());
     const [activeVideo, setActiveVideo] = useState<{ video: any; src: string } | null>(null);
     const [completion, setCompletion] = useState<LifeFrameCompletion | null>(null);
+
+    // ── Typewriter greeting ───────────────────────────────────────────────
+    const [typedText, setTypedText] = useState('');
+    const [typewriterDone, setTypewriterDone] = useState(false);
+    const typewriterTriggered = useRef(false);
+
+    const startTypewriter = useCallback((fullText: string) => {
+        // Only play once per session
+        if (sessionStorage.getItem('dash_greeted')) {
+            setTypedText(fullText);
+            setTypewriterDone(true);
+            return;
+        }
+        sessionStorage.setItem('dash_greeted', '1');
+        let i = 0;
+        setTypedText('');
+        const tick = () => {
+            if (i < fullText.length) {
+                setTypedText(fullText.slice(0, i + 1));
+                i++;
+                setTimeout(tick, 38 + Math.random() * 32);
+            } else {
+                setTypewriterDone(true);
+            }
+        };
+        setTimeout(tick, 600); // small delay after page entrance animation
+    }, []);
 
     useEffect(() => {
         let mounted = true;
@@ -397,6 +424,14 @@ export default function DashboardPage() {
                     opacity: 0;
                     animation: dashFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }
+                @keyframes cursorBlink {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0; }
+                }
+                @keyframes cursorFadeOut {
+                    from { opacity: 1; }
+                    to   { opacity: 0; }
+                }
             `}</style>
 
             {user?.user?.id && showOnboarding && (
@@ -432,8 +467,40 @@ export default function DashboardPage() {
                             <h1
                                 className="font-normal text-white mb-4 leading-tight"
                                 style={{ fontSize: 'var(--fs-h2)', letterSpacing: '-0.03em' }}
+                                ref={(el) => {
+                                    if (el && !typewriterTriggered.current && firstName) {
+                                        typewriterTriggered.current = true;
+                                        startTypewriter(`${getGreeting()}, ${firstName}.`);
+                                    }
+                                }}
                             >
-                                {getGreeting()}, {firstName}.
+                                {typedText}
+                                {!typewriterDone && (
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            width: '2px',
+                                            height: '1em',
+                                            background: 'white',
+                                            marginLeft: '2px',
+                                            verticalAlign: 'text-bottom',
+                                            animation: 'cursorBlink 0.8s step-end infinite',
+                                        }}
+                                    />
+                                )}
+                                {typewriterDone && (
+                                    <span
+                                        style={{
+                                            display: 'inline-block',
+                                            width: '2px',
+                                            height: '1em',
+                                            background: 'white',
+                                            marginLeft: '2px',
+                                            verticalAlign: 'text-bottom',
+                                            animation: 'cursorFadeOut 0.6s 0.5s ease forwards',
+                                        }}
+                                    />
+                                )}
                             </h1>
                             <p className="text-white/80 mb-8 max-w-2xl" style={{ fontSize: 'var(--fs-body-l)', letterSpacing: '-0.02em' }}>
                                 <span className="text-white font-medium">{copy.hero.leadBold}</span>{' '}
