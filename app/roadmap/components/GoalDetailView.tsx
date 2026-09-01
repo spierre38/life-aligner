@@ -1109,12 +1109,12 @@ export default function GoalDetailView({
                       className="flex-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                       style={{
                         background: reflectionMood === m
-                          ? m === 'great' ? 'rgba(0,200,100,0.3)' : m === 'hard' ? 'rgba(255,80,80,0.25)' : 'rgba(255,255,255,0.12)'
-                          : 'rgba(255,255,255,0.05)',
+                          ? m === 'great' ? 'rgba(0,200,100,0.18)' : m === 'hard' ? 'rgba(255,80,80,0.15)' : isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'
+                          : isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                         color: reflectionMood === m
-                          ? m === 'great' ? '#34d399' : m === 'hard' ? '#f87171' : '#fff'
-                          : 'rgba(255,255,255,0.35)',
-                        border: reflectionMood === m ? `1px solid ${m === 'great' ? 'rgba(0,200,100,0.4)' : m === 'hard' ? 'rgba(255,80,80,0.35)' : 'rgba(255,255,255,0.15)'}` : '1px solid transparent',
+                          ? m === 'great' ? '#10b981' : m === 'hard' ? '#ef4444' : 'var(--color-text)'
+                          : 'var(--color-text-dim)',
+                        border: reflectionMood === m ? `1px solid ${m === 'great' ? 'rgba(0,200,100,0.35)' : m === 'hard' ? 'rgba(255,80,80,0.3)' : 'var(--color-border)'}` : '1px solid var(--color-border)',
                       }}
                     >
                       {m === 'great' ? '✦ Great' : m === 'hard' ? '⊘ Hard' : '~ Okay'}
