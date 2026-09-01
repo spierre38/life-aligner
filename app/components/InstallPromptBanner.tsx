@@ -78,8 +78,8 @@ export default function InstallPromptBanner() {
         <>
             {/* Install Banner */}
             <div
-                className="fixed bottom-20 left-0 right-0 z-50 px-4 pb-4 pt-2 safe-bottom"
-                style={{ animation: 'slideUp 0.3s ease-out' }}
+                className="fixed bottom-0 left-0 right-0 z-50 px-3 pb-safe-bottom"
+                style={{ animation: 'slideUp 0.3s ease-out', paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}
             >
                 <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
                     {/* Gradient top bar */}
@@ -93,7 +93,7 @@ export default function InstallPromptBanner() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-white font-semibold text-sm">Best on your Home Screen</p>
-                                <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">Add to your home screen for the full app experience — no browser chrome, faster access</p>
+                                <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">Install for the full app experience — faster access, no browser chrome.</p>
                             </div>
                             <button onClick={handleDismiss} className="text-gray-600 hover:text-gray-400 transition p-1 flex-shrink-0">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +130,7 @@ export default function InstallPromptBanner() {
                             {[
                                 { step: '1', icon: '⬆️', text: 'Tap the Share button at the bottom of Safari' },
                                 { step: '2', icon: '➕', text: 'Scroll down and tap "Add to Home Screen"' },
-                                { step: '3', icon: '✅', text: 'Tap "Add" — the Tim Collins Framework app will appear on your home screen!' },
+                                { step: '3', icon: '✅', text: 'Tap "Add" — the app will appear on your home screen!' },
                             ].map(s => (
                                 <div key={s.step} className="flex items-start gap-3">
                                     <div className="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
