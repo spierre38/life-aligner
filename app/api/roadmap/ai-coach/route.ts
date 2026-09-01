@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'AI coaching is not configured yet. Add GEMINI_API_KEY to your environment.' },
+      { error: 'AI coaching is coming soon! This feature is not yet active.' },
       { status: 503 }
     );
   }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
   if (callsToday >= DAILY_CAP) {
     return NextResponse.json(
-      { error: `You've reached your daily limit of ${DAILY_CAP} AI coaching calls. Try again tomorrow!` },
+      { error: `You've used all ${DAILY_CAP} coaching sessions for today. Your sessions reset tomorrow morning — come back then for fresh insights!` },
       { status: 429 }
     );
   }
@@ -187,20 +187,20 @@ Respond ONLY with valid JSON, no markdown, no code fences.`;
 
       if (geminiRes.status === 429) {
         return NextResponse.json(
-          { error: 'Tim is resting — the AI quota has been exceeded. Please wait a minute and try again, or enable billing on your Google Cloud project for higher limits.' },
+          { error: 'Tim\'s coaching is temporarily busy due to high demand. Please try again in a few minutes — your insights will be worth the wait!' },
           { status: 429 }
         );
       }
 
       if (geminiRes.status === 403) {
         return NextResponse.json(
-          { error: 'The API key is not authorized. Check that the Gemini API is enabled in your Google Cloud project.' },
-          { status: 403 }
+          { error: 'AI coaching is temporarily unavailable. The team has been notified and is working on it.' },
+          { status: 503 }
         );
       }
 
       return NextResponse.json(
-        { error: 'AI service returned an error. Please try again later.' },
+        { error: 'Tim\'s coaching hit a snag. Please try again in a moment.' },
         { status: 502 }
       );
     }

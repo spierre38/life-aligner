@@ -80,8 +80,7 @@ function AiCoachPanel({
       });
       const data = await res.json();
       if (!res.ok) {
-        const errDetail = data.debug ? `\n\nDebug: ${data.debug}` : '';
-        setErrorMsg((data.error || 'Something went wrong.') + errDetail);
+        setErrorMsg(data.error || 'Something went wrong. Please try again.');
         setStatus('error');
         return;
       }
