@@ -660,6 +660,7 @@ export default function DesktopTodoPad() {
                                                                 if (e.key === 'Enter') saveEditTodo(todo.id);
                                                                 if (e.key === 'Escape') { setEditingTodo(null); setEditText(''); }
                                                             }}
+                                                            maxLength={200}
                                                             className="flex-1 bg-white border-2 border-yellow-500 rounded px-2 text-gray-900"
                                                             style={{ fontFamily: 'Courier New, monospace', fontSize: '18px', height: '28px' }}
                                                             autoFocus
@@ -1123,6 +1124,7 @@ export default function DesktopTodoPad() {
                                 value={newTodoText}
                                 onChange={(e) => setNewTodoText(e.target.value)}
                                 placeholder="What do you need to do?"
+                                maxLength={200}
                                 className={`w-full px-4 py-3 border-2 rounded-xl ${t.inputBorder}`}
                                 style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
                                 autoFocus
@@ -1221,6 +1223,7 @@ export default function DesktopTodoPad() {
                                 value={newSubGoalText}
                                 onChange={(e) => setNewSubGoalText(e.target.value)}
                                 placeholder="Enter sub-goal..."
+                                maxLength={200}
                                 className={`w-full px-4 py-3 border-2 rounded-xl ${t.inputBorder}`}
                                 style={{ fontFamily: 'Courier New, monospace', backgroundColor: theme === 'dark' ? '#1e293b' : 'white', color: t.text }}
                                 autoFocus

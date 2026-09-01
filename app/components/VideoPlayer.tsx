@@ -121,6 +121,7 @@ export default function VideoPlayer({ video, src, onClose, onWatched, isWatched 
             className="w-full h-full object-contain"
             src={src}
             controls
+            controlsList="nodownload"
             playsInline
             preload="metadata"
             autoPlay
