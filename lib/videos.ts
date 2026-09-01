@@ -92,7 +92,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     number: 4,
     title: 'Goals — Begin with the End in Mind',
     description: 'How to set meaningful goals that connect your daily activities to your larger purpose.',
-    duration: '3:82',
+    duration: '3:42',
     blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v4-goals.mp4',
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'values' },
     unlockHint: 'Complete your Values worksheet to unlock',

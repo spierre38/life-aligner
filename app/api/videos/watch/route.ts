@@ -2,7 +2,7 @@
  * app/api/videos/watch/route.ts
  *
  * POST { videoId } — marks a video as watched in the user's profile.
- * Called by VideoPlayer at 95% completion.
+ * Called by VideoPlayer at 90% completion.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
