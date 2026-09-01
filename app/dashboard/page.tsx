@@ -387,6 +387,18 @@ export default function DashboardPage() {
         <>
             <AuthNavbar />
 
+            {/* Dashboard entrance animation keyframes */}
+            <style>{`
+                @keyframes dashFadeUp {
+                    from { opacity: 0; transform: translateY(28px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                .dash-entrance {
+                    opacity: 0;
+                    animation: dashFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+            `}</style>
+
             {user?.user?.id && showOnboarding && (
                 <OnboardingModal
                     userId={user.user.id}
@@ -399,9 +411,9 @@ export default function DashboardPage() {
 
                     {/* ── Hero — Tim 2026 mesh gradient A1 ─────────────── */}
                     <section
-                        className="relative rounded-3xl overflow-hidden mb-14"
+                        className="relative rounded-3xl overflow-hidden mb-14 dash-entrance"
                         aria-label="Greeting"
-                        style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.5)' }}
+                        style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.5)', animationDelay: '0.05s' }}
                     >
                         {/* Mesh gradient A1: Black + Magenta + Cyan */}
                         <div
@@ -465,7 +477,7 @@ export default function DashboardPage() {
 
                     {/* ── Today's Focus Card (only when tasks need attention) ── */}
                     {urgentTodos.length > 0 && (
-                        <section className="mb-10" aria-label="Today's Focus">
+                        <section className="mb-10 dash-entrance" aria-label="Today's Focus" style={{ animationDelay: '0.18s' }}>
                             <div
                                 className="rounded-2xl p-5"
                                 style={{
@@ -534,7 +546,7 @@ export default function DashboardPage() {
                     )}
 
                     {/* ── Journey cards ────────────────────────────────── */}
-                    <section className="mb-14" aria-labelledby="journey-heading">
+                    <section className="mb-14 dash-entrance" aria-labelledby="journey-heading" style={{ animationDelay: '0.28s' }}>
                         <div className="text-center mb-10">
                             <p className="text-xs font-medium mb-2 uppercase tracking-widest" style={{ color: 'var(--color-text-dim)' }}>
                                 Three steps to build your foundation
@@ -552,18 +564,19 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-5 pt-4">
-                            {CARDS.map(card => {
+                            {CARDS.map((card, i) => {
                                 const pill = copy.badge[card.key];
                                 const muted = pill === 'Incomplete';
                                 return (
                                     <Link
                                         key={card.key}
                                         href={card.href}
-                                        className={`group relative rounded-3xl transition-all duration-300 ${muted ? 'opacity-50' : 'hover:-translate-y-1.5'}`}
+                                        className={`group relative rounded-3xl transition-all duration-300 dash-entrance ${muted ? 'opacity-50' : 'hover:-translate-y-1.5'}`}
                                         style={{
                                             background: 'var(--color-surface)',
                                             border: '1px solid var(--color-border)',
                                             boxShadow: muted ? 'none' : '0 8px 32px rgba(0,0,0,0.3)',
+                                            animationDelay: `${0.32 + i * 0.1}s`,
                                         }}
                                         aria-label={`${card.title}: ${card.description}`}
                                     >
@@ -613,7 +626,7 @@ export default function DashboardPage() {
                     )}
 
                     {/* ── Guide / Next step CTA ───────────────────────────── */}
-                    <section className="mb-16 text-center" aria-labelledby="guide-heading">
+                    <section className="mb-16 text-center dash-entrance" aria-labelledby="guide-heading" style={{ animationDelay: '0.42s' }}>
                         <p className="text-xs font-medium uppercase tracking-widest mb-4" style={{ color: 'var(--color-text-dim)' }}>
                             {copy.guide.eyebrow}
                         </p>
@@ -634,10 +647,10 @@ export default function DashboardPage() {
                         </Link>
                     </section>
 
-                    <hr style={{ borderColor: 'var(--color-border)', marginBottom: '3.5rem' }} />
+                    <hr className="dash-entrance" style={{ borderColor: 'var(--color-border)', marginBottom: '3.5rem', animationDelay: '0.50s' }} />
 
                     {/* ── Resources / Community / Get Help ────────────────── */}
-                    <section aria-labelledby="resources-heading" className="pb-16">
+                    <section aria-labelledby="resources-heading" className="pb-16 dash-entrance" style={{ animationDelay: '0.55s' }}>
                         <div className="text-center mb-10">
                             <p className="text-xs font-medium uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-dim)' }}>
                                 Need some inspiration or help?
