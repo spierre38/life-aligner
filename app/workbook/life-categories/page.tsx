@@ -1437,20 +1437,64 @@ export default function LifeCategoriesWorksheet() {
                                 </button>
                                 <button
                                     onClick={() => {
-                                        const catText = categoryDetails.map(c =>
-                                            `${c.name}${c.subCategories.length > 0 ? '\n  Sub-categories: ' + c.subCategories.join(', ') : ''}`
-                                        ).join('\n\n');
-                                        const purposeText = purposeElements.filter(p => p.name.trim()).map(p =>
-                                            `• ${p.name}${p.description ? '\n  ' + p.description : ''}`
-                                        ).join('\n');
-                                        const text = `My Life Categories\n${'='.repeat(30)}\n\n${catText}\n\nPurpose Elements\n${'-'.repeat(20)}\n${purposeText || '(None defined yet)'}`;
-                                        const blob = new Blob([text], { type: 'text/plain' });
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement('a');
-                                        a.href = url;
-                                        a.download = 'my-life-categories.txt';
-                                        a.click();
-                                        URL.revokeObjectURL(url);
+                                        const win = window.open('', '_blank', 'width=800,height=900');
+                                        if (!win) return;
+                                        const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                                        const filteredPurpose = purposeElements.filter(p => p.name.trim());
+                                        win.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Life Categories — Tim Collins Framework</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Georgia', serif; background: #fff; color: #111; padding: 48px 56px; max-width: 720px; margin: 0 auto; }
+    .header { border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 32px; }
+    .brand { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #555; margin-bottom: 12px; }
+    h1 { font-size: 32px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 6px; }
+    .date { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #888; }
+    .section-label { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #888; margin-bottom: 20px; margin-top: 32px; }
+    .cat-item { padding: 16px 0; border-bottom: 1px solid #eee; }
+    .cat-num { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; color: #bbb; display: inline-block; min-width: 24px; }
+    .cat-name { font-size: 16px; font-weight: 600; margin-bottom: 6px; letter-spacing: -0.01em; }
+    .sub-cats { font-size: 13px; color: #555; line-height: 1.6; padding-left: 24px; }
+    .sub-chip { display: inline-block; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 12px; padding: 2px 10px; margin: 2px 4px 2px 0; font-size: 12px; color: #444; }
+    .purpose-item { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #eee; align-items: flex-start; }
+    .purpose-bullet { color: #bbb; font-size: 18px; line-height: 1; padding-top: 2px; }
+    .purpose-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+    .purpose-desc { font-size: 13px; color: #555; line-height: 1.6; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 10px; color: #aaa; text-align: center; letter-spacing: 0.08em; }
+    @media print { body { padding: 32px 40px; } .no-print { display: none; } }
+    .print-btn { font-family: 'Helvetica Neue', Arial, sans-serif; background: #111; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 32px; }
+  </style>
+</head>
+<body>
+  <button class="print-btn no-print" onclick="window.print()">&#8595; Save as PDF / Print</button>
+  <div class="header">
+    <div class="brand">Tim Collins Framework</div>
+    <h1>My Life Categories</h1>
+    <div class="date">Completed ${date}</div>
+  </div>
+  <div class="section-label">Life Categories (${categoryDetails.length})</div>
+  ${categoryDetails.map((c, i) => `
+  <div class="cat-item">
+    <div class="cat-name"><span class="cat-num">${String(i + 1).padStart(2, '0')}</span> ${c.name}</div>
+    ${c.subCategories.length > 0 ? `<div class="sub-cats">${c.subCategories.map(s => `<span class="sub-chip">${s}</span>`).join('')}</div>` : ''}
+  </div>`).join('')}
+  ${filteredPurpose.length > 0 ? `
+  <div class="section-label">Purpose Elements (${filteredPurpose.length})</div>
+  ${filteredPurpose.map(p => `
+  <div class="purpose-item">
+    <div class="purpose-bullet">•</div>
+    <div>
+      <div class="purpose-name">${p.name}</div>
+      ${p.description ? `<div class="purpose-desc">${p.description}</div>` : ''}
+    </div>
+  </div>`).join('')}` : ''}
+  <div class="footer">Generated by timcollinsframework.com &nbsp;•&nbsp; Tim Collins Framework &copy; ${new Date().getFullYear()}</div>
+</body>
+</html>`);
+                                        win.document.close();
                                     }}
                                     disabled={categoryDetails.length === 0 && purposeElements.filter(p => p.name.trim()).length === 0}
                                     className="px-6 py-3 rounded-full font-semibold transition flex items-center gap-2 disabled:opacity-30"
@@ -1459,7 +1503,7 @@ export default function LifeCategoriesWorksheet() {
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    Export
+                                    Export PDF
                                 </button>
                                 <button
                                     onClick={saveCategories}

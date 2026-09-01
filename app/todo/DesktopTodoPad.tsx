@@ -511,12 +511,12 @@ export default function DesktopTodoPad() {
                             </div>
 
                             <button
-                                onClick={() => window.open('/lifeframe/print', '_blank')}
+                                onClick={exportToCSV}
                                 className={`px-4 py-3 border-2 rounded-lg font-bold shadow-md transition-all ${t.accentBg} ${t.accentText}`}
                                 style={{ fontFamily: 'Courier New, monospace' }}
-                                title="Export / Print as PDF"
+                                title="Download your to-do list as a spreadsheet"
                             >
-                                Export PDF
+                                📥 Download List
                             </button>
 
                             {todos.filter(t => t.completed).length > 0 && (
@@ -539,7 +539,7 @@ export default function DesktopTodoPad() {
                                 style={{ fontFamily: 'Courier New, monospace' }}
                                 title={groupByGoal ? 'Switch to flat list' : 'Group tasks by goal'}
                             >
-                                {groupByGoal ? '📂 Grouped' : '📂 Group'}
+                                {groupByGoal ? '📂 By Goal ✓' : '📂 By Goal'}
                             </button>
 
                             <button
