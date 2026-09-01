@@ -129,20 +129,6 @@ export default function ResourcesPage() {
     loadStatuses();
   }, [loadStatuses]);
 
-  // Quick mark-as-watched handler from card
-  const handleDirectMarkWatched = useCallback(async (videoId: string) => {
-    handleVideoWatched(videoId);
-    try {
-      await fetch('/api/videos/watch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId }),
-      });
-    } catch {
-      // Best-effort
-    }
-  }, [handleVideoWatched]);
-
   // Filtered statuses
   const filtered = filter === 'all'
     ? statuses
@@ -180,14 +166,20 @@ export default function ResourcesPage() {
             >
               Tim Collins Framework
             </h1>
-            <p className="text-base sm:text-lg max-w-lg mx-auto" style={{ color: 'var(--color-text-muted)' }}>
-              {stats.availableCount} videos available • {stats.watchedCount} watched
+            <p
+              className="text-sm sm:text-base max-w-lg mx-auto mb-6"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              Watch coaching videos as you progress through your LifeFrame and Roadmap.
             </p>
 
-            {/* Progress bar */}
+            {/* Overall Progress */}
             {stats.availableCount > 0 && (
-              <div className="mt-6 max-w-xs mx-auto">
-                <div className="flex justify-between text-xs mb-1.5" style={{ color: 'var(--color-text-dim)' }}>
+              <div className="max-w-xs mx-auto">
+                <div
+                  className="flex justify-between text-xs font-semibold mb-2"
+                  style={{ color: 'var(--color-text-dim)' }}
+                >
                   <span>Progress</span>
                   <span>{stats.watchedCount}/{stats.availableCount}</span>
                 </div>
@@ -241,7 +233,6 @@ export default function ResourcesPage() {
                     setActiveVideo({ video: status.video, src: status.video.blobUrl });
                     trackVideoEvent('video_started', status.video.id, status.video.title);
                   }}
-                  onMarkWatched={handleDirectMarkWatched}
                 />
               ))}
             </div>
@@ -253,7 +244,7 @@ export default function ResourcesPage() {
             </p>
           )}
 
-          {/* Downloads Section */}
+          {/* Downloads & Exports Section */}
           <section className="mt-16 mb-8">
             <h2
               className="text-xl font-semibold mb-6 flex items-center gap-3"
@@ -267,59 +258,104 @@ export default function ResourcesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               </span>
-              Downloads
+              Downloads &amp; Exports
             </h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
                 {
-                  title: 'The Tim Collins Framework',
-                  desc: 'Complete book (PDF)',
+                  title: 'Download LifeFrame (PDF)',
+                  desc: 'Export your Values, Interests & Categories summary',
                   icon: (
-                    <svg className="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   ),
-                  href: '/downloads/lifealigner-book.pdf',
+                  href: '/lifeframe/print',
                   available: true,
+                  badge: 'PDF Export',
                 },
                 {
-                  title: 'Printable Workbook',
-                  desc: 'Physical worksheets for offline use',
+                  title: 'Download Roadmap (PDF)',
+                  desc: 'Export your active goals, activities, and milestones',
                   icon: (
-                    <svg className="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   ),
-                  href: '/downloads/lifealigner-workbook.pdf',
+                  href: '/roadmap/print',
                   available: true,
+                  badge: 'PDF Export',
                 },
-              ].map(dl => (
-                <a
-                  key={dl.title}
-                  href={dl.available ? dl.href : undefined}
-                  download={dl.available}
-                  className="rounded-xl p-4 flex items-center gap-4 transition-all hover:-translate-y-0.5"
-                  style={{
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    opacity: dl.available ? 1 : 0.5,
-                    cursor: dl.available ? 'pointer' : 'not-allowed',
-                  }}
-                >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-surface-2)' }}>
-                    {dl.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{dl.title}</h3>
-                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{dl.desc}</p>
-                  </div>
-                  {dl.available && (
-                    <svg className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(167,139,250,0.7)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                {
+                  title: 'The Tim Collins Framework Book',
+                  desc: 'Complete official book & framework guide (PDF)',
+                  icon: (
+                    <svg className="w-6 h-6 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                  )}
-                </a>
-              ))}
+                  ),
+                  available: false,
+                  badge: 'Coming Soon',
+                },
+                {
+                  title: 'Printable Physical Workbook',
+                  desc: 'Worksheet templates for offline journaling',
+                  icon: (
+                    <svg className="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  ),
+                  available: false,
+                  badge: 'Coming Soon',
+                },
+              ].map(dl => {
+                const content = (
+                  <div
+                    className="rounded-xl p-4 flex items-center gap-4 transition-all hover:-translate-y-0.5"
+                    style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      opacity: dl.available ? 1 : 0.6,
+                      cursor: dl.available ? 'pointer' : 'default',
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-surface-2)' }}>
+                      {dl.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>{dl.title}</h3>
+                        <span
+                          className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full flex-shrink-0"
+                          style={{
+                            background: dl.available ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.06)',
+                            color: dl.available ? '#c084fc' : 'var(--color-text-dim)',
+                            border: `1px solid ${dl.available ? 'rgba(168,85,247,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                          }}
+                        >
+                          {dl.badge}
+                        </span>
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{dl.desc}</p>
+                    </div>
+                    {dl.available && (
+                      <svg className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(167,139,250,0.7)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    )}
+                  </div>
+                );
+
+                return dl.available && dl.href ? (
+                  <Link key={dl.title} href={dl.href}>
+                    {content}
+                  </Link>
+                ) : (
+                  <div key={dl.title}>
+                    {content}
+                  </div>
+                );
+              })}
             </div>
           </section>
 
@@ -406,11 +442,9 @@ export default function ResourcesPage() {
 function VideoCard({
   status,
   onPlay,
-  onMarkWatched,
 }: {
   status: VideoStatus;
   onPlay: () => void;
-  onMarkWatched?: (videoId: string) => void;
 }) {
   const { video, unlocked, watched, available } = status;
 
@@ -549,7 +583,7 @@ function VideoCard({
         <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-dim)' }}>
           {video.description}
         </p>
-        <div className="mt-3 pt-2.5 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="mt-3">
           <span
             className="text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded-full"
             style={{
@@ -560,21 +594,6 @@ function VideoCard({
           >
             {getCategoryLabel(video.category)}
           </span>
-
-          {isPlayable && !watched && onMarkWatched && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onMarkWatched(video.id);
-              }}
-              className="text-[11px] font-medium transition hover:underline flex items-center gap-1 cursor-pointer"
-              style={{ color: 'rgba(167,139,250,0.9)' }}
-              title="Click to mark this video as watched and unlock prerequisites"
-            >
-              <span>Mark as watched</span>
-              <span>✓</span>
-            </button>
-          )}
         </div>
       </div>
     </div>

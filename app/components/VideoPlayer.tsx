@@ -95,32 +95,7 @@ export default function VideoPlayer({ video, src, onClose, onWatched, isWatched 
               {video.title}
             </h2>
           </div>
-          <div className="flex items-center gap-3">
-            {!hasCompleted ? (
-              <button
-                onClick={markWatched}
-                className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105 flex items-center gap-1.5"
-                style={{
-                  background: 'rgba(168,85,247,0.2)',
-                  color: '#c084fc',
-                  border: '1px solid rgba(168,85,247,0.4)',
-                }}
-                title="Mark this video as watched to unlock prerequisites"
-              >
-                <span>Mark as watched</span>
-              </button>
-            ) : (
-              <div
-                className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"
-                style={{
-                  background: 'rgba(34,197,94,0.15)',
-                  color: '#4ade80',
-                  border: '1px solid rgba(34,197,94,0.3)',
-                }}
-              >
-                <span>✓ Watched</span>
-              </div>
-            )}
+          <div>
             <button
               onClick={onClose}
               className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
