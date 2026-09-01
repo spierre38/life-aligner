@@ -327,15 +327,25 @@ function ActivityBubble({
       <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden className="cursor-pointer">
         <defs>
           <linearGradient id={`act-grad-${activity.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={`hsl(${hue}, 55%, ${activity.completed ? 25 : 48}%)`} />
-            <stop offset="100%" stopColor={`hsl(${(hue + 25) % 360}, 65%, ${activity.completed ? 18 : 35}%)`} />
+            <stop offset="0%" stopColor={`hsl(${hue}, 60%, ${activity.completed ? 30 : 55}%)`} />
+            <stop offset="100%" stopColor={`hsl(${(hue + 25) % 360}, 70%, ${activity.completed ? 22 : 42}%)`} />
           </linearGradient>
+          <filter id={`act-shadow-${activity.id}`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+            <feOffset dx="1" dy="4" result="offset" />
+            <feFlood floodColor="rgba(0,0,0,0.25)" result="color" />
+            <feComposite in="color" in2="offset" operator="in" result="shadow" />
+            <feMerge>
+              <feMergeNode in="shadow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
-        <path d={blob} fill={`url(#act-grad-${activity.id})`} opacity={activity.completed ? 0.5 : 1} />
+        <path d={blob} fill={`url(#act-grad-${activity.id})`} filter={`url(#act-shadow-${activity.id})`} opacity={activity.completed ? 0.5 : 1} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
-        <p className={`text-white text-[10px] font-bold text-center leading-tight ${activity.completed ? 'line-through opacity-50' : ''}`}
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+        <p className={`text-white text-xs font-bold text-center leading-tight ${activity.completed ? 'line-through opacity-50' : ''}`}
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
           {activity.title.length > 30 ? activity.title.slice(0, 28) + '…' : activity.title}
         </p>
         {goalCount > 1 && (
@@ -904,15 +914,15 @@ export default function GoalDetailView({
               <path d={ROOT_BLOB} fill="url(#root-sheen)" opacity="0.12" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-5">
-              <p className="text-base font-bold text-center leading-tight drop-shadow-sm"
-                style={{ color: 'var(--color-text)', textShadow: isDark ? '0 1px 3px rgba(0,0,0,0.4)' : 'none' }}>
+              <p className="text-lg font-bold text-center leading-tight text-white"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                 {goal.title}
               </p>
               {goal.connectedCategories.length > 0 && (
                 <div className="flex gap-1 mt-2 flex-wrap justify-center">
                   {goal.connectedCategories.slice(0, 2).map(cat => (
-                    <span key={cat} className="text-[9px] font-medium px-2 py-0.5 rounded-full"
-                      style={{ background: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)', color: 'var(--color-text)' }}>
+                    <span key={cat} className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full"
+                      style={{ background: isDark ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.85)', color: isDark ? '#fff' : '#333', textShadow: isDark ? '0 1px 2px rgba(0,0,0,0.3)' : 'none' }}>
                       {cat}
                     </span>
                   ))}
@@ -936,16 +946,17 @@ export default function GoalDetailView({
               <svg viewBox="0 0 100 100" width={70} height={70} aria-hidden>
                 <defs>
                   <linearGradient id="why-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={rootGrad.from} stopOpacity="0.6" />
-                    <stop offset="100%" stopColor={rootGrad.to} stopOpacity="0.4" />
+                    <stop offset="0%" stopColor={rootGrad.from} stopOpacity="0.8" />
+                    <stop offset="100%" stopColor={rootGrad.to} stopOpacity="0.6" />
                   </linearGradient>
                 </defs>
                 <path d={WHY_BLOB} fill="url(#why-grad)" />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white/80 text-[10px] font-bold">why</span>
+                <span className="text-white text-[11px] font-bold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>why</span>
               </div>
-              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 bg-slate-800/95 text-white text-xs rounded-xl px-4 py-3 shadow-2xl border border-white/10 z-10">
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-52 text-xs rounded-xl px-4 py-3 shadow-2xl z-10"
+                style={{ background: isDark ? 'rgba(30,30,40,0.95)' : '#fff', color: isDark ? '#e2e8f0' : '#333', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
                 <p className="leading-relaxed italic">"{goal.why}"</p>
               </div>
             </div>
