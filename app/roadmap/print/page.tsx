@@ -162,16 +162,17 @@ export default function RoadmapPrintView() {
             <div className="no-print" style={{
                 position: 'sticky', top: 0, zIndex: 10,
                 background: '#fff', borderBottom: '1px solid #e5e7eb',
-                padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)',
             }}>
                 <button
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => router.push('/roadmap')}
                     style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: 14, fontWeight: 600 }}
                 >
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    Back to Dashboard
+                    Back to Roadmap
                 </button>
                 <button
                     onClick={() => window.print()}
@@ -183,6 +184,27 @@ export default function RoadmapPrintView() {
                     Print / Save as PDF
                 </button>
             </div>
+
+            {/* ── Fixed floating back button (always visible, critical for PWA) ─── */}
+            <button
+                className="no-print"
+                onClick={() => router.push('/roadmap')}
+                style={{
+                    position: 'fixed', bottom: 24, left: 24, zIndex: 50,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: '#000', color: '#fff', border: 'none',
+                    borderRadius: 999, padding: '12px 20px',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                    marginBottom: 'env(safe-area-inset-bottom, 0px)',
+                }}
+                aria-label="Back to Roadmap"
+            >
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+            </button>
 
             {/* ── Printable document ──────────────────────────────────── */}
             <div style={{ background: '#fff', minHeight: '100vh' }}>
