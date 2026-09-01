@@ -45,13 +45,15 @@ export interface FrameworkVideo {
 }
 
 // ─── Catalog ────────────────────────────────────────────────────────────────
+// Ordered by unlock progression so numbers always go up as users progress.
+// Phase 1: Signup (1-6)  →  Phase 2: Watch 1 & 2 (7)  →  Phase 3: Values (8-10)
+// Phase 4: Interests (11-15)  →  Phase 5: LifeFrame (16-18)  →  Phase 6: First Goal (19)
 
 export const VIDEO_CATALOG: FrameworkVideo[] = [
-  // ── INTRO VIDEOS (unlocked at signup + sequential watching) ────────────
+  // ── PHASE 1: SIGNUP — available immediately (1-6) ─────────────────────
   {
     id: 'v1-welcome',
-    order: 1,
-    number: 1,
+    order: 1, number: 1,
     title: 'Welcome to the Tim Collins Framework',
     description: 'Tim introduces the framework and explains how defining your values, interests, and purpose creates a foundation for lasting contentment.',
     duration: '5:17',
@@ -62,8 +64,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v2-contentment',
-    order: 2,
-    number: 2,
+    order: 2, number: 2,
     title: 'What is Contentment?',
     description: 'Understanding the difference between happiness and sustained contentment — and why values-aligned action is the key.',
     duration: '4:33',
@@ -73,60 +74,8 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     category: 'intro',
   },
   {
-    id: 'v3-improvement',
-    order: 3,
-    number: 3,
-    title: 'The Process of Continuous Improvement',
-    description: 'How the cycle of vision, goals, activities, action, and learning creates lasting change.',
-    duration: '7:25',
-    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v3-improvement.mp4',
-    unlockCriteria: { type: 'watched', videoIds: ['v1-welcome', 'v2-contentment'] },
-    unlockHint: 'Watch videos 1 & 2 to unlock',
-    category: 'intro',
-  },
-
-  // ── LIFEFRAME VIDEOS (unlock as worksheets become relevant) ────────────
-  {
-    id: 'v4-goals',
-    order: 4,
-    number: 4,
-    title: 'Goals — Begin with the End in Mind',
-    description: 'How to set meaningful goals that connect your daily activities to your larger purpose.',
-    duration: '3:42',
-    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v4-goals.mp4',
-    unlockCriteria: { type: 'worksheet_complete', worksheet: 'values' },
-    unlockHint: 'Complete your Values worksheet to unlock',
-    category: 'lifeframe',
-  },
-  {
-    id: 'v5-lifeframe-roadmap',
-    order: 5,
-    number: 5,
-    title: 'The LifeFrame & Roadmap',
-    description: 'How to use the LifeFrame to organize your life into categories and build a personal roadmap.',
-    duration: '2:50',
-    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v5-lifeframe-roadmap.mp4',
-    unlockCriteria: { type: 'worksheet_complete', worksheet: 'life_categories' },
-    unlockHint: 'Complete your Life Categories to unlock',
-    category: 'lifeframe',
-  },
-  {
-    id: 'v6-your-story',
-    order: 6,
-    number: 6,
-    title: 'Your Story — Tim\'s Life Story',
-    description: 'Tim shares his personal story and how the framework shaped his path.',
-    duration: '4:33',
-    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v6-your-story.mp4',
-    unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
-    unlockHint: 'Complete your LifeFrame to unlock',
-    category: 'lifeframe',
-  },
-
-  // ── LIFEFRAME & VALUES VIDEOS ─────────────────────────────────────────
-  {
     id: 'v7-tools',
-    order: 7, number: 7,
+    order: 3, number: 3,
     title: 'How to Use the Tools',
     description: 'A walkthrough of the digital tools and how Values, Interests, and Life Categories build your LifeFrame.',
     duration: '1:15',
@@ -137,7 +86,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v8-values-interests-categories',
-    order: 8, number: 8,
+    order: 4, number: 4,
     title: 'What Type of Person Do You Want to Be?',
     description: 'Exploring core character traits: doing good, seeking truth, and staying open-minded.',
     duration: '3:00',
@@ -148,7 +97,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v9-character',
-    order: 9, number: 9,
+    order: 5, number: 5,
     title: 'Core Character & Personal Standards',
     description: 'Living with positivity, honoring your word, and practicing generosity on the path to contentment.',
     duration: '3:17',
@@ -159,7 +108,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v10-values-worksheet',
-    order: 10, number: 10,
+    order: 6, number: 6,
     title: 'Values — Worksheet 1 Guide',
     description: 'Step-by-step guidance from Tim on identifying, prioritizing, and completing your core values list.',
     duration: '1:00',
@@ -168,9 +117,35 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     unlockHint: 'Available on the Values worksheet',
     category: 'lifeframe',
   },
+
+  // ── PHASE 2: WATCH FIRST TWO — unlocks after watching #1 & #2 (7) ────
+  {
+    id: 'v3-improvement',
+    order: 7, number: 7,
+    title: 'The Process of Continuous Improvement',
+    description: 'How the cycle of vision, goals, activities, action, and learning creates lasting change.',
+    duration: '7:25',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v3-improvement.mp4',
+    unlockCriteria: { type: 'watched', videoIds: ['v1-welcome', 'v2-contentment'] },
+    unlockHint: 'Watch videos 1 & 2 to unlock',
+    category: 'intro',
+  },
+
+  // ── PHASE 3: VALUES COMPLETE — unlocks after Values worksheet (8-10) ──
+  {
+    id: 'v4-goals',
+    order: 8, number: 8,
+    title: 'Goals — Begin with the End in Mind',
+    description: 'How to set meaningful goals that connect your daily activities to your larger purpose.',
+    duration: '3:42',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v4-goals.mp4',
+    unlockCriteria: { type: 'worksheet_complete', worksheet: 'values' },
+    unlockHint: 'Complete your Values worksheet to unlock',
+    category: 'lifeframe',
+  },
   {
     id: 'v11-interests',
-    order: 11, number: 11,
+    order: 9, number: 9,
     title: 'Understanding Your Interests',
     description: 'Discovering activities that bring genuine joy, rejuvenation, and energy into your routine.',
     duration: '3:50',
@@ -181,7 +156,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v12-life-categories-1',
-    order: 12, number: 12,
+    order: 10, number: 10,
     title: 'Interests — Worksheet 2 Guide',
     description: 'How to fill out your Interests worksheet: balancing existing hobbies with new things to explore.',
     duration: '1:00',
@@ -190,9 +165,22 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     unlockHint: 'Complete your Values worksheet to unlock',
     category: 'lifeframe',
   },
+
+  // ── PHASE 4: INTERESTS COMPLETE — unlocks after Interests worksheet (11-15)
+  {
+    id: 'v5-lifeframe-roadmap',
+    order: 11, number: 11,
+    title: 'The LifeFrame & Roadmap',
+    description: 'How to use the LifeFrame to organize your life into categories and build a personal roadmap.',
+    duration: '2:50',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v5-lifeframe-roadmap.mp4',
+    unlockCriteria: { type: 'worksheet_complete', worksheet: 'interests' },
+    unlockHint: 'Complete your Interests worksheet to unlock',
+    category: 'lifeframe',
+  },
   {
     id: 'v13-life-categories-2',
-    order: 13, number: 13,
+    order: 12, number: 12,
     title: 'Structuring Your Life Categories',
     description: 'How to divide your life into balanced focus areas, with real-life case studies and examples.',
     duration: '3:50',
@@ -203,7 +191,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v14-community',
-    order: 14, number: 14,
+    order: 13, number: 13,
     title: 'Relationships & Community',
     description: 'The vital role of relationships, family, and community in building sustained fulfillment.',
     duration: '2:15',
@@ -214,7 +202,7 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v15-purpose',
-    order: 15, number: 15,
+    order: 14, number: 14,
     title: 'Finding & Defining Your Purpose',
     description: 'Key reflective questions to uncover a personal purpose that is meaningful to you and beneficial to others.',
     duration: '3:08',
@@ -225,13 +213,26 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
   },
   {
     id: 'v16-worksheet3',
-    order: 16, number: 16,
+    order: 15, number: 15,
     title: 'Life Categories & Purpose — Worksheet 3 Guide',
     description: "Tim's instructions for completing your Life Categories and crafting your Purpose statement.",
     duration: '0:50',
     blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v16-worksheet3.mp4',
     unlockCriteria: { type: 'worksheet_complete', worksheet: 'interests' },
     unlockHint: 'Complete your Interests worksheet to unlock',
+    category: 'lifeframe',
+  },
+
+  // ── PHASE 5: LIFEFRAME COMPLETE (16-18) ───────────────────────────────
+  {
+    id: 'v6-your-story',
+    order: 16, number: 16,
+    title: 'Your Story — Tim\'s Life Story',
+    description: 'Tim shares his personal story and how the framework shaped his path.',
+    duration: '4:33',
+    blobUrl: 'https://qbk24sf1xk0oeoky.public.blob.vercel-storage.com/framework-videos/v6-your-story.mp4',
+    unlockCriteria: { type: 'milestone', milestone: 'lifeframe_complete' },
+    unlockHint: 'Complete your LifeFrame to unlock',
     category: 'lifeframe',
   },
   {
@@ -256,6 +257,8 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     unlockHint: 'Complete your LifeFrame to unlock',
     category: 'roadmap',
   },
+
+  // ── PHASE 6: FIRST GOAL (19) ──────────────────────────────────────────
   {
     id: 'v19-chart-your-course',
     order: 19, number: 19,
@@ -267,6 +270,8 @@ export const VIDEO_CATALOG: FrameworkVideo[] = [
     unlockHint: 'Add your first goal to unlock',
     category: 'bonus',
   },
+
+  // ── HIDDEN: Not yet uploaded (filtered out by getVideoStatuses) ───────
   {
     id: 'v20-tough-farmer',
     order: 20, number: 20,

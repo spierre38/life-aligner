@@ -465,7 +465,7 @@ export default function LifeCategoriesWorksheet() {
                                             style={selectedStep2VideoId === 'v5-lifeframe-roadmap' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-indigo-400" />
-                                            <span>Video 5: The LifeFrame & Roadmap (2:50)</span>
+                                            <span>Video 11: The LifeFrame & Roadmap (2:50)</span>
                                             {watchedVideoIds.has('v5-lifeframe-roadmap') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                         <button
@@ -474,7 +474,7 @@ export default function LifeCategoriesWorksheet() {
                                             style={selectedStep2VideoId === 'v13-life-categories-2' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-purple-400" />
-                                            <span>Video 13: Case Studies & Categories (3:50)</span>
+                                            <span>Video 12: Case Studies & Categories (3:50)</span>
                                             {watchedVideoIds.has('v13-life-categories-2') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                     </div>
@@ -642,7 +642,7 @@ export default function LifeCategoriesWorksheet() {
                                             style={selectedStep3VideoId === 'v15-purpose' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-purple-400" />
-                                            <span>Video 15: Purpose & Meaning (3:40)</span>
+                                            <span>Video 14: Purpose & Meaning (3:08)</span>
                                             {watchedVideoIds.has('v15-purpose') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                         <button
@@ -651,7 +651,7 @@ export default function LifeCategoriesWorksheet() {
                                             style={selectedStep3VideoId === 'v6-your-story' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-indigo-400" />
-                                            <span>Video 6: Tim's Story (4:33)</span>
+                                            <span>Video 16: Tim's Story (4:33)</span>
                                             {watchedVideoIds.has('v6-your-story') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                         <button
@@ -660,7 +660,7 @@ export default function LifeCategoriesWorksheet() {
                                             style={selectedStep3VideoId === 'v16-worksheet3' ? { background: 'var(--color-text)', color: 'var(--color-bg)' } : { color: 'var(--color-text)' }}
                                         >
                                             <span className="w-2 h-2 rounded-full bg-amber-400" />
-                                            <span>Video 16: Worksheet 3 Guide (0:50)</span>
+                                            <span>Video 15: Worksheet 3 Guide (0:50)</span>
                                             {watchedVideoIds.has('v16-worksheet3') && <span className="text-emerald-400 font-bold text-[11px] ml-0.5">✓</span>}
                                         </button>
                                     </div>

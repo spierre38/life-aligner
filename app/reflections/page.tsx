@@ -641,6 +641,48 @@ export default function ReflectionsPage() {
             </button>
           </div>
 
+          {/* Tim's Life Story video card */}
+          <div
+            className="rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+            style={{
+              background: 'linear-gradient(135deg, rgba(20,184,166,0.08), rgba(6,182,212,0.04))',
+              border: '1px solid rgba(20,184,166,0.15)',
+            }}
+          >
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(20,184,166,0.15)' }}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#14b8a6' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#14b8a6' }}>Tim's Story</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(20,184,166,0.15)', color: '#14b8a6' }}>4:33</span>
+                </div>
+                <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Your Story — Tim's Life Story</h3>
+                <p className="text-xs leading-relaxed max-w-xl" style={{ color: 'var(--color-text-muted)' }}>
+                  Tim shares his personal journey and how the framework shaped his path — inspiration for writing your own chapters.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const v6 = getVideo('v6-your-story');
+                if (v6?.blobUrl) setActiveVideo({ video: v6, src: v6.blobUrl });
+              }}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white transition-all hover:scale-105 shadow-md flex-shrink-0 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, #14b8a6, #06b6d4)' }}
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span>Watch Video</span>
+            </button>
+          </div>
+
           {/* Loading state */}
           {loading && (
             <div className="space-y-6">
