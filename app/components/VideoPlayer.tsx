@@ -45,13 +45,11 @@ export default function VideoPlayer({ video, src, onClose, onWatched, isWatched 
     }
   }, [video.id, video.title, hasCompleted, onWatched]);
 
-  // Track completion (30% or 15+ seconds)
+  // Track 90% completion
   const handleTimeUpdate = useCallback(() => {
     const el = videoRef.current;
     if (!el || hasCompleted || !el.duration) return;
-    if (el.currentTime / el.duration >= WATCH_THRESHOLD || el.currentTime >= 15) {
-      markWatched();
-    }
+    if (el.currentTime / el.duration >= WATCH_THRESHOLD) markWatched();
   }, [hasCompleted, markWatched]);
 
   // Track video start for GA

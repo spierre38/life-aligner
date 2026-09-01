@@ -186,6 +186,5 @@ export function trackVideoEvent(
 
 // ─── Watch Threshold ────────────────────────────────────────────────────────
 
-/** Percentage of video that must be watched to count as "completed" (30% or onEnded) */
-export const WATCH_THRESHOLD = 0.30;
-
+/** Percentage of video that must be watched to count as "completed" (90% or onEnded) */
+export const WATCH_THRESHOLD = 0.90;
