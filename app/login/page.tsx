@@ -145,6 +145,14 @@ function LoginFormWithParams() {
                     Sign up
                 </Link>
             </p>
+
+            {/* Support help */}
+            <p className="text-xs text-center text-gray-400 pt-3 border-t border-gray-100">
+                Need help? Contact{' '}
+                <a href="mailto:support@timcollinsframework.com" className="text-gray-600 hover:text-gray-900 underline transition">
+                    support@timcollinsframework.com
+                </a>
+            </p>
         </form>
     );
 }

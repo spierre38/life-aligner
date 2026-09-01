@@ -81,6 +81,14 @@ export default function ResetPasswordPage() {
                                 Send another email
                             </button>
                         </div>
+
+                        {/* Support help */}
+                        <p className="text-xs text-center text-gray-400 mt-5 pt-4 border-t border-gray-100">
+                            Still need help? Email us at{' '}
+                            <a href="mailto:support@timcollinsframework.com" className="text-gray-600 hover:text-gray-900 underline transition">
+                                support@timcollinsframework.com
+                            </a>
+                        </p>
                     </div>
 
                     <div className="mt-6 text-center">
@@ -167,6 +175,14 @@ export default function ResetPasswordPage() {
                             >
                                 Sign in
                             </button>
+                        </p>
+
+                        {/* Support help */}
+                        <p className="text-xs text-center text-gray-400 pt-3 border-t border-gray-100">
+                            Need assistance? Contact{' '}
+                            <a href="mailto:support@timcollinsframework.com" className="text-gray-600 hover:text-gray-900 underline transition">
+                                support@timcollinsframework.com
+                            </a>
                         </p>
                     </form>
                 </div>
