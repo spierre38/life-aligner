@@ -618,7 +618,7 @@ export default function ReflectionsPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#8b5cf6' }}>Tim's Reflection Corner</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: '#8b5cf6' }}>Tim's Reflection</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(168,85,247,0.15)', color: '#8b5cf6' }}>4:17</span>
                 </div>
                 <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Behavior Change & Lessons on Regret</h3>
