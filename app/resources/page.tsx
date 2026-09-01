@@ -110,17 +110,38 @@ export default function ResourcesPage() {
 
   useEffect(() => { loadStatuses(); }, [loadStatuses]);
 
-  // Handle video watched callback - update local state immediately
-  const handleVideoWatched = useCallback((videoId: string) => {
-    setStatuses(prev => prev.map(s =>
-      s.video.id === videoId ? { ...s, watched: true } : s
-    ));
-    // Also close the player if it was the active one
-    setActiveVideo(prev => {
-      if (prev && prev.video.id === videoId) return null;
-      return prev;
+  // Handle video watched callback - update and re-evaluate unlock statuses
+  const handleVideoWatched = useCallback(async (videoId: string) => {
+    // Update local state optimistically
+    setStatuses(prev => {
+      const updated = prev.map(s => s.video.id === videoId ? { ...s, watched: true } : s);
+      const watchedSet = new Set(updated.filter(s => s.watched).map(s => s.video.id));
+      return updated.map(s => {
+        if (s.video.unlockCriteria.type === 'watched') {
+          const isUnlocked = s.video.unlockCriteria.videoIds.every(id => watchedSet.has(id));
+          return { ...s, unlocked: isUnlocked };
+        }
+        return s;
+      });
     });
-  }, []);
+
+    // Also trigger background server refresh to sync all completions
+    loadStatuses();
+  }, [loadStatuses]);
+
+  // Quick mark-as-watched handler from card
+  const handleDirectMarkWatched = useCallback(async (videoId: string) => {
+    handleVideoWatched(videoId);
+    try {
+      await fetch('/api/videos/watch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoId }),
+      });
+    } catch {
+      // Best-effort
+    }
+  }, [handleVideoWatched]);
 
   // Filtered statuses
   const filtered = filter === 'all'
@@ -220,6 +241,7 @@ export default function ResourcesPage() {
                     setActiveVideo({ video: status.video, src: status.video.blobUrl });
                     trackVideoEvent('video_started', status.video.id, status.video.title);
                   }}
+                  onMarkWatched={handleDirectMarkWatched}
                 />
               ))}
             </div>
@@ -372,6 +394,7 @@ export default function ResourcesPage() {
           src={activeVideo.src}
           onClose={() => setActiveVideo(null)}
           onWatched={handleVideoWatched}
+          isWatched={statuses.find(s => s.video.id === activeVideo.video.id)?.watched}
         />
       )}
     </>
@@ -380,7 +403,15 @@ export default function ResourcesPage() {
 
 // ─── Video Card Component ───────────────────────────────────────────────────
 
-function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void }) {
+function VideoCard({
+  status,
+  onPlay,
+  onMarkWatched,
+}: {
+  status: VideoStatus;
+  onPlay: () => void;
+  onMarkWatched?: (videoId: string) => void;
+}) {
   const { video, unlocked, watched, available } = status;
 
   // Three states: playable, locked, coming soon
@@ -518,7 +549,7 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
         <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-dim)' }}>
           {video.description}
         </p>
-        <div className="mt-2">
+        <div className="mt-3 pt-2.5 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <span
             className="text-[10px] font-medium tracking-wider uppercase px-2 py-0.5 rounded-full"
             style={{
@@ -529,6 +560,21 @@ function VideoCard({ status, onPlay }: { status: VideoStatus; onPlay: () => void
           >
             {getCategoryLabel(video.category)}
           </span>
+
+          {isPlayable && !watched && onMarkWatched && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkWatched(video.id);
+              }}
+              className="text-[11px] font-medium transition hover:underline flex items-center gap-1 cursor-pointer"
+              style={{ color: 'rgba(167,139,250,0.9)' }}
+              title="Click to mark this video as watched and unlock prerequisites"
+            >
+              <span>Mark as watched</span>
+              <span>✓</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

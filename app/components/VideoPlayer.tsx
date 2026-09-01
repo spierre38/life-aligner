@@ -10,6 +10,7 @@ interface VideoPlayerProps {
   src: string;
   onClose: () => void;
   onWatched?: (videoId: string) => void;
+  isWatched?: boolean;
 }
 
 /**
@@ -17,12 +18,13 @@ interface VideoPlayerProps {
  *
  * - Streams directly from Vercel Blob CDN (no API round-trip)
  * - Native HTML5 <video> with controls
- * - Tracks playback: fires GA event at start, marks "watched" at 95%
+ * - Tracks playback: fires GA event at start, marks "watched" at 30% or onEnded
+ * - Includes manual "Mark as watched" button for instant unlocking
  * - Reports watched status to server via POST /api/videos/watch
  */
-export default function VideoPlayer({ video, src, onClose, onWatched }: VideoPlayerProps) {
+export default function VideoPlayer({ video, src, onClose, onWatched, isWatched = false }: VideoPlayerProps) {
   const [hasStarted, setHasStarted] = useState(false);
-  const [hasCompleted, setHasCompleted] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(isWatched);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Mark video as watched (server + callback)
@@ -39,15 +41,17 @@ export default function VideoPlayer({ video, src, onClose, onWatched }: VideoPla
         body: JSON.stringify({ videoId: video.id }),
       });
     } catch {
-      // Silent fail â€” watch progress is best-effort
+      // Silent fail — watch progress is best-effort
     }
   }, [video.id, video.title, hasCompleted, onWatched]);
 
-  // Track 95% completion
+  // Track completion (30% or 15+ seconds)
   const handleTimeUpdate = useCallback(() => {
     const el = videoRef.current;
     if (!el || hasCompleted || !el.duration) return;
-    if (el.currentTime / el.duration >= WATCH_THRESHOLD) markWatched();
+    if (el.currentTime / el.duration >= WATCH_THRESHOLD || el.currentTime >= 15) {
+      markWatched();
+    }
   }, [hasCompleted, markWatched]);
 
   // Track video start for GA
@@ -91,16 +95,43 @@ export default function VideoPlayer({ video, src, onClose, onWatched }: VideoPla
               {video.title}
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
-            aria-label="Close video"
-          >
-            <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-3">
+            {!hasCompleted ? (
+              <button
+                onClick={markWatched}
+                className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105 flex items-center gap-1.5"
+                style={{
+                  background: 'rgba(168,85,247,0.2)',
+                  color: '#c084fc',
+                  border: '1px solid rgba(168,85,247,0.4)',
+                }}
+                title="Mark this video as watched to unlock prerequisites"
+              >
+                <span>Mark as watched</span>
+              </button>
+            ) : (
+              <div
+                className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"
+                style={{
+                  background: 'rgba(34,197,94,0.15)',
+                  color: '#4ade80',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                }}
+              >
+                <span>✓ Watched</span>
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+              aria-label="Close video"
+            >
+              <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Video */}
