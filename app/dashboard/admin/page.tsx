@@ -1,9 +1,10 @@
 'use client';
 
 // app/dashboard/admin/page.tsx
-// Admin overview dashboard with key stats from Supabase
+// Executive Admin Overview & Platform Command Center
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -22,65 +23,112 @@ interface Stats {
     freeUsers: number;
     paidUsers: number;
     lifetimeUsers: number;
+    // Curriculum stats
+    totalVideosWatched: number;
+    usersStartedVideos: number;
+    usersCompletedAllVideos: number;
 }
 
 interface RecentUser {
     id: string;
-    email: string;
     full_name: string | null;
     created_at: string;
     subscription_status: string;
     workbook_completed: boolean;
     role: string;
+    videosWatchedCount: number;
 }
 
-// ─── Stat Card Component ──────────────────────────────────────────────────────
+// ─── Glassmorphic Stat Card ───────────────────────────────────────────────────
 
-function StatCard({
+function ModernStatCard({
     title,
     value,
     subtitle,
-    trend,
+    badge,
     color = 'purple',
     icon,
 }: {
     title: string;
     value: string | number;
     subtitle?: string;
-    trend?: { value: number; label: string };
-    color?: 'purple' | 'blue' | 'green' | 'orange' | 'pink';
+    badge?: string;
+    color?: 'purple' | 'blue' | 'emerald' | 'amber' | 'cyan';
     icon: React.ReactNode;
 }) {
-    const colors = {
-        purple: 'from-purple-500/20 to-purple-600/10 border-purple-500/30',
-        blue: 'from-blue-500/20 to-blue-600/10 border-blue-500/30',
-        green: 'from-green-500/20 to-green-600/10 border-green-500/30',
-        orange: 'from-orange-500/20 to-orange-600/10 border-orange-500/30',
-        pink: 'from-pink-500/20 to-pink-600/10 border-pink-500/30',
+    const accents = {
+        purple: {
+            border: 'border-purple-500/20 hover:border-purple-500/40',
+            bg: 'from-purple-500/[0.08] to-purple-600/[0.02]',
+            iconBg: 'bg-purple-500/15 text-purple-400 border border-purple-500/30',
+            badge: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+            glow: 'rgba(168, 85, 247, 0.15)',
+        },
+        blue: {
+            border: 'border-blue-500/20 hover:border-blue-500/40',
+            bg: 'from-blue-500/[0.08] to-blue-600/[0.02]',
+            iconBg: 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
+            badge: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+            glow: 'rgba(59, 130, 246, 0.15)',
+        },
+        emerald: {
+            border: 'border-emerald-500/20 hover:border-emerald-500/40',
+            bg: 'from-emerald-500/[0.08] to-emerald-600/[0.02]',
+            iconBg: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+            badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+            glow: 'rgba(16, 185, 129, 0.15)',
+        },
+        amber: {
+            border: 'border-amber-500/20 hover:border-amber-500/40',
+            bg: 'from-amber-500/[0.08] to-amber-600/[0.02]',
+            iconBg: 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+            badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+            glow: 'rgba(245, 158, 11, 0.15)',
+        },
+        cyan: {
+            border: 'border-cyan-500/20 hover:border-cyan-500/40',
+            bg: 'from-cyan-500/[0.08] to-cyan-600/[0.02]',
+            iconBg: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
+            badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+            glow: 'rgba(6, 182, 212, 0.15)',
+        },
     };
 
-    const iconColors = {
-        purple: 'text-purple-400',
-        blue: 'text-blue-400',
-        green: 'text-green-400',
-        orange: 'text-orange-400',
-        pink: 'text-pink-400',
-    };
+    const c = accents[color];
 
     return (
-        <div className={`bg-gradient-to-br ${colors[color]} border rounded-2xl p-6 backdrop-blur-sm`}>
-            <div className="flex items-start justify-between mb-4">
-                <div className={`${iconColors[color]}`}>{icon}</div>
-                {trend && (
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${trend.value >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                        }`}>
-                        {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)} {trend.label}
+        <div
+            className={`relative group rounded-2xl p-5 bg-gradient-to-b ${c.bg} border ${c.border} backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 shadow-lg shadow-black/40 overflow-hidden`}
+        >
+            <div
+                className="pointer-events-none absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl transition-opacity group-hover:opacity-100 opacity-60"
+                style={{ background: c.glow }}
+            />
+
+            <div className="flex items-start justify-between mb-3 relative z-10">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.iconBg}`}>
+                    {icon}
+                </div>
+                {badge && (
+                    <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${c.badge}`}>
+                        {badge}
                     </span>
                 )}
             </div>
-            <div className="text-3xl font-bold text-white mb-1">{value}</div>
-            <div className="text-sm font-medium text-gray-300">{title}</div>
-            {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
+
+            <div className="relative z-10">
+                <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+                    {value}
+                </div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    {title}
+                </div>
+                {subtitle && (
+                    <div className="text-xs text-gray-500 mt-1">
+                        {subtitle}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -99,24 +147,22 @@ export default function AdminOverviewPage() {
             setLoading(true);
             setError(null);
 
-            // Get today's start
             const todayStart = new Date();
             todayStart.setHours(0, 0, 0, 0);
 
-            // Get week start
             const weekStart = new Date();
             weekStart.setDate(weekStart.getDate() - 7);
 
-            // Run all queries in parallel for speed
+            // Parallel queries across profiles and workbook entries
             const [
                 profilesResult,
                 newTodayResult,
                 newWeekResult,
                 workbookResult,
-                subscriptionResult,
+                allProfilesResult,
                 recentUsersResult,
             ] = await Promise.all([
-                // Total users
+                // Total users count
                 supabase.from('profiles').select('id', { count: 'exact' }),
 
                 // New users today
@@ -134,43 +180,54 @@ export default function AdminOverviewPage() {
                 // Workbook completions per category
                 supabase
                     .from('workbook_entries')
-                    .select('category', { count: 'exact' }),
+                    .select('category, user_id'),
 
-                // Subscription breakdown
+                // Video progress and subscription breakdown across profiles
                 supabase
                     .from('profiles')
-                    .select('subscription_status, workbook_completed'),
+                    .select('subscription_status, workbook_completed, video_progress'),
 
-                // Recent 5 users
+                // Recent 6 users
                 supabase
                     .from('profiles')
-                    .select('id, full_name, subscription_status, workbook_completed, role, created_at')
+                    .select('id, full_name, subscription_status, workbook_completed, role, created_at, video_progress')
                     .order('created_at', { ascending: false })
-                    .limit(5),
+                    .limit(6),
             ]);
 
-            // Count workbook entries per category
             const workbookData = workbookResult.data || [];
             const valuesSaved = workbookData.filter(e => e.category === 'values').length;
             const interestsSaved = workbookData.filter(e => e.category === 'interests').length;
             const categoriesSaved = workbookData.filter(e => e.category === 'life_categories').length;
             const roadmapsSaved = workbookData.filter(e => e.category === 'roadmap').length;
 
-            // Subscription breakdown
-            const subData = subscriptionResult.data || [];
-            const freeUsers = subData.filter(p => p.subscription_status === 'free').length;
-            const paidUsers = subData.filter(p => p.subscription_status === 'paid').length;
-            const lifetimeUsers = subData.filter(p => p.subscription_status === 'lifetime').length;
-            const workbookCompletions = subData.filter(p => p.workbook_completed).length;
+            const allProfiles = allProfilesResult.data || [];
+            const freeUsers = allProfiles.filter(p => p.subscription_status === 'free').length;
+            const paidUsers = allProfiles.filter(p => p.subscription_status === 'paid').length;
+            const lifetimeUsers = allProfiles.filter(p => p.subscription_status === 'lifetime').length;
+            const workbookCompletions = allProfiles.filter(p => p.workbook_completed).length;
+
+            // Video engagement calculations
+            let totalVideosWatched = 0;
+            let usersStartedVideos = 0;
+            let usersCompletedAllVideos = 0;
+
+            allProfiles.forEach(p => {
+                const prog = p.video_progress as { watched?: string[] } | null;
+                const watchedCount = Array.isArray(prog?.watched) ? prog.watched.length : 0;
+                if (watchedCount > 0) {
+                    usersStartedVideos++;
+                    totalVideosWatched += watchedCount;
+                }
+                if (watchedCount >= 19) {
+                    usersCompletedAllVideos++;
+                }
+            });
 
             const totalUsers = profilesResult.count || 0;
             const completionRate = totalUsers > 0
                 ? Math.round((workbookCompletions / totalUsers) * 100)
                 : 0;
-
-            // Get emails for recent users from auth.users via RPC
-            // Note: we can only get what's in profiles table directly
-            const recentProfiles = recentUsersResult.data || [];
 
             setStats({
                 totalUsers,
@@ -186,17 +243,25 @@ export default function AdminOverviewPage() {
                 freeUsers,
                 paidUsers,
                 lifetimeUsers,
+                totalVideosWatched,
+                usersStartedVideos,
+                usersCompletedAllVideos,
             });
 
-            setRecentUsers(recentProfiles.map(p => ({
-                id: p.id,
-                email: 'Loading...', // Can't get email from profiles table directly
-                full_name: p.full_name,
-                created_at: p.created_at,
-                subscription_status: p.subscription_status,
-                workbook_completed: p.workbook_completed,
-                role: p.role,
-            })));
+            const recentProfiles = recentUsersResult.data || [];
+            setRecentUsers(recentProfiles.map(p => {
+                const prog = p.video_progress as { watched?: string[] } | null;
+                const watchedCount = Array.isArray(prog?.watched) ? prog.watched.length : 0;
+                return {
+                    id: p.id,
+                    full_name: p.full_name,
+                    created_at: p.created_at,
+                    subscription_status: p.subscription_status || 'free',
+                    workbook_completed: !!p.workbook_completed,
+                    role: p.role || 'user',
+                    videosWatchedCount: watchedCount,
+                };
+            }));
 
             setLastRefreshed(new Date());
         } catch (err) {
@@ -216,10 +281,10 @@ export default function AdminOverviewPage() {
             <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 animate-pulse">
-                            <div className="h-4 bg-gray-700 rounded mb-4 w-1/2" />
-                            <div className="h-8 bg-gray-700 rounded mb-2 w-1/3" />
-                            <div className="h-3 bg-gray-700 rounded w-2/3" />
+                        <div key={i} className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 animate-pulse">
+                            <div className="h-4 bg-white/10 rounded mb-4 w-1/2" />
+                            <div className="h-8 bg-white/10 rounded mb-2 w-1/3" />
+                            <div className="h-3 bg-white/5 rounded w-2/3" />
                         </div>
                     ))}
                 </div>
@@ -233,7 +298,7 @@ export default function AdminOverviewPage() {
                 <p className="text-red-400 mb-4">{error}</p>
                 <button
                     onClick={fetchStats}
-                    className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg transition"
+                    className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-xl transition font-medium"
                 >
                     Try Again
                 </button>
@@ -241,186 +306,357 @@ export default function AdminOverviewPage() {
         );
     }
 
+    const totalUsers = stats?.totalUsers || 1;
+
     return (
         <div className="space-y-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+            {/* Top Command Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Overview</h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Last updated: {lastRefreshed.toLocaleTimeString()}
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Executive Command Center</h1>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Live System
+                        </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                        Tim Collins Framework · Last synced {lastRefreshed.toLocaleTimeString()}
                     </p>
                 </div>
-                <button
-                    onClick={fetchStats}
-                    className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white px-4 py-2 rounded-xl transition text-sm"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh
-                </button>
+
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/dashboard/admin/cohorts"
+                        className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-purple-600/25 transition-all hover:scale-[1.02]"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                        </svg>
+                        Instructor Cohorts
+                    </Link>
+
+                    <button
+                        onClick={fetchStats}
+                        className="inline-flex items-center gap-2 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-gray-300 hover:text-white px-3.5 py-2.5 rounded-xl transition text-xs font-semibold"
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
             </div>
 
-            {/* Primary Stats */}
+            {/* Primary KPI Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
-                    title="Total Users"
+                <ModernStatCard
+                    title="Total Registered"
                     value={stats?.totalUsers ?? 0}
-                    subtitle="All time registrations"
+                    subtitle={`+${stats?.newUsersThisWeek ?? 0} this week · +${stats?.newUsersToday ?? 0} today`}
+                    badge="Platform"
                     color="purple"
-                    icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    }
                 />
-                <StatCard
-                    title="New Today"
-                    value={stats?.newUsersToday ?? 0}
-                    subtitle="Signups in last 24h"
-                    color="blue"
-                    icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>}
-                />
-                <StatCard
-                    title="Completions"
+
+                <ModernStatCard
+                    title="LifeFrame Complete"
                     value={stats?.workbookCompletions ?? 0}
-                    subtitle="Full workbooks done"
-                    color="green"
-                    icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                    subtitle={`${stats?.completionRate ?? 0}% student completion rate`}
+                    badge="Milestone"
+                    color="emerald"
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    }
                 />
-                <StatCard
-                    title="Completion Rate"
-                    value={`${stats?.completionRate ?? 0}%`}
-                    subtitle="Users who finished"
-                    color="orange"
-                    icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
+
+                <ModernStatCard
+                    title="Videos Completed"
+                    value={stats?.totalVideosWatched ?? 0}
+                    subtitle={`${stats?.usersStartedVideos ?? 0} active video learners`}
+                    badge="Curriculum"
+                    color="cyan"
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    }
+                />
+
+                <ModernStatCard
+                    title="Roadmaps Active"
+                    value={stats?.roadmapsSaved ?? 0}
+                    subtitle="Students setting live goals"
+                    badge="Execution"
+                    color="amber"
+                    icon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    }
                 />
             </div>
 
-            {/* Secondary Stats Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard
-                    title="Free Users"
-                    value={stats?.freeUsers ?? 0}
-                    color="blue"
-                    icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
-                />
-                <StatCard
-                    title="Paid Users"
-                    value={stats?.paidUsers ?? 0}
-                    color="green"
-                    icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                />
-                <StatCard
-                    title="New This Week"
-                    value={stats?.newUsersThisWeek ?? 0}
-                    color="pink"
-                    icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
-                />
+            {/* University Cohort Highlight Card */}
+            <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-purple-900/30 via-indigo-900/20 to-blue-900/30 border border-purple-500/30 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+                <div className="pointer-events-none absolute right-0 top-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="max-w-xl">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30 mb-3">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                            </svg>
+                            Academic & Cohort Management
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                            Instructor Cohort Progress Matrix
+                        </h2>
+                        <p className="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+                            Track student milestones step-by-step, review who is stuck, audit video watching progression, and export accreditation-ready grade sheets in CSV format.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Link
+                            href="/dashboard/admin/cohorts"
+                            className="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm shadow-xl shadow-purple-600/30 transition-all hover:scale-105 flex items-center gap-2"
+                        >
+                            Open Cohort Roster
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </Link>
+                    </div>
+                </div>
             </div>
 
-            {/* Workbook Progress + Recent Users */}
+            {/* LifeFrame Pedagogical Funnel + Video Progress */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Progression Funnel */}
+                <div className="bg-white/[0.02] border border-white/[0.08] rounded-3xl p-6 sm:p-7 backdrop-blur-xl shadow-xl">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-white font-bold text-base">LifeFrame Progression Funnel</h3>
+                            <p className="text-xs text-gray-400 mt-0.5">Drop-off and completion at each pedagogical milestone</p>
+                        </div>
+                        <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 font-semibold border border-purple-500/20">
+                            Funnel
+                        </span>
+                    </div>
 
-                {/* Workbook Section Completion */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                    <h3 className="text-white font-semibold mb-5">Workbook Section Completion</h3>
                     <div className="space-y-4">
                         {[
-                            { label: 'Values', count: stats?.valuesSaved ?? 0, color: 'bg-purple-500' },
-                            { label: 'Interests', count: stats?.interestsSaved ?? 0, color: 'bg-blue-500' },
-                            { label: 'Life Categories', count: stats?.categoriesSaved ?? 0, color: 'bg-green-500' },
-                            { label: 'Roadmap', count: stats?.roadmapsSaved ?? 0, color: 'bg-orange-500' },
-                        ].map((section) => {
-                            const max = Math.max(
-                                stats?.valuesSaved ?? 0,
-                                stats?.interestsSaved ?? 0,
-                                stats?.categoriesSaved ?? 0,
-                                stats?.roadmapsSaved ?? 0,
-                                1
-                            );
-                            const pct = Math.round((section.count / max) * 100);
-
-                            return (
-                                <div key={section.label}>
-                                    <div className="flex justify-between text-sm mb-1.5">
-                                        <span className="text-gray-300">{section.label}</span>
-                                        <span className="text-gray-400 font-medium">{section.count} users</span>
-                                    </div>
-                                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full ${section.color} rounded-full transition-all duration-700`}
-                                            style={{ width: `${pct}%` }}
-                                        />
-                                    </div>
+                            {
+                                step: '1. Registered Users',
+                                count: stats?.totalUsers ?? 0,
+                                pct: 100,
+                                color: 'from-purple-500 to-indigo-500',
+                            },
+                            {
+                                step: '2. Values Defined (Step 1)',
+                                count: stats?.valuesSaved ?? 0,
+                                pct: Math.round(((stats?.valuesSaved ?? 0) / totalUsers) * 100),
+                                color: 'from-indigo-500 to-blue-500',
+                            },
+                            {
+                                step: '3. Interests Explored (Step 2)',
+                                count: stats?.interestsSaved ?? 0,
+                                pct: Math.round(((stats?.interestsSaved ?? 0) / totalUsers) * 100),
+                                color: 'from-blue-500 to-cyan-500',
+                            },
+                            {
+                                step: '4. Life Categories & Purpose (Step 3)',
+                                count: stats?.categoriesSaved ?? 0,
+                                pct: Math.round(((stats?.categoriesSaved ?? 0) / totalUsers) * 100),
+                                color: 'from-cyan-500 to-emerald-500',
+                            },
+                            {
+                                step: '5. Roadmap Goals Active',
+                                count: stats?.roadmapsSaved ?? 0,
+                                pct: Math.round(((stats?.roadmapsSaved ?? 0) / totalUsers) * 100),
+                                color: 'from-emerald-500 to-teal-400',
+                            },
+                        ].map((s) => (
+                            <div key={s.step} className="space-y-1.5">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-300 font-medium">{s.step}</span>
+                                    <span className="text-gray-400 font-semibold">
+                                        {s.count} <span className="text-gray-500 font-normal">({s.pct}%)</span>
+                                    </span>
                                 </div>
-                            );
-                        })}
+                                <div className="h-2.5 bg-white/[0.04] rounded-full overflow-hidden border border-white/[0.05]">
+                                    <div
+                                        className={`h-full bg-gradient-to-r ${s.color} rounded-full transition-all duration-1000`}
+                                        style={{ width: `${Math.min(s.pct, 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Recent Signups */}
-                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-5">
-                        <h3 className="text-white font-semibold">Recent Signups</h3>
-                        <a href="/dashboard/admin/users" className="text-xs text-purple-400 hover:text-purple-300 transition">
-                            View all →
-                        </a>
-                    </div>
-                    <div className="space-y-3">
-                        {recentUsers.length === 0 ? (
-                            <p className="text-gray-500 text-sm text-center py-4">No users yet</p>
-                        ) : (
-                            recentUsers.map((user) => (
-                                <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-800/50 hover:bg-gray-800 transition">
-                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                                        {(user.full_name || 'U').charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">
-                                            {user.full_name || 'Unknown User'}
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            {new Date(user.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {user.workbook_completed && (
-                                            <span className="w-2 h-2 bg-green-400 rounded-full" title="Workbook complete" />
-                                        )}
-                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${user.subscription_status === 'paid'
-                                            ? 'bg-green-500/20 text-green-400'
-                                            : user.subscription_status === 'lifetime'
-                                                ? 'bg-purple-500/20 text-purple-400'
-                                                : 'bg-gray-700 text-gray-400'
-                                            }`}>
-                                            {user.subscription_status}
-                                        </span>
-                                    </div>
+                {/* Curriculum & Video Engagement */}
+                <div className="bg-white/[0.02] border border-white/[0.08] rounded-3xl p-6 sm:p-7 backdrop-blur-xl shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-white font-bold text-base">Video Curriculum Engagement</h3>
+                                <p className="text-xs text-gray-400 mt-0.5">Tracking engagement across all 19 Framework videos</p>
+                            </div>
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-500/20">
+                                19 Videos Live
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                                <div className="text-2xl font-black text-white">
+                                    {stats?.totalUsers ? (Math.round(((stats.totalVideosWatched || 0) / (stats.totalUsers * 19)) * 100)) : 0}%
                                 </div>
-                            ))
-                        )}
+                                <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">
+                                    Curriculum Progress
+                                </div>
+                                <div className="text-[11px] text-gray-500 mt-0.5">Average cohort completion</div>
+                            </div>
+
+                            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                                <div className="text-2xl font-black text-emerald-400">
+                                    {stats?.usersCompletedAllVideos ?? 0}
+                                </div>
+                                <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-1">
+                                    100% Watched
+                                </div>
+                                <div className="text-[11px] text-gray-500 mt-0.5">Finished all 19 videos</div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/[0.08] to-blue-500/[0.08] border border-purple-500/20">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center flex-shrink-0">
+                                    ✓
+                                </div>
+                                <div className="text-xs text-gray-300">
+                                    <strong className="text-white font-semibold">90% Watch Threshold Enabled:</strong> Video completion badges sync instantly with local optimistic updates.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-white/[0.08] flex items-center justify-between text-xs text-gray-400">
+                        <span>External Analytics:</span>
+                        <a
+                            href={`https://analytics.google.com/analytics/web/#/p${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.replace('G-', '')}/reports/overview`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 font-semibold inline-flex items-center gap-1.5 transition"
+                        >
+                            Open GA4 Dashboard →
+                        </a>
                     </div>
                 </div>
             </div>
 
-            {/* GA4 Embed hint */}
-            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-white font-semibold">Google Analytics</h3>
-                    <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">External</span>
+            {/* Recent Signups Table */}
+            <div className="bg-white/[0.02] border border-white/[0.08] rounded-3xl p-6 sm:p-7 backdrop-blur-xl shadow-xl">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 className="text-white font-bold text-base">Recent Registrations</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">Latest students joining the framework</p>
+                    </div>
+                    <Link
+                        href="/dashboard/admin/users"
+                        className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition"
+                    >
+                        View all users →
+                    </Link>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">
-                    View detailed traffic analytics, user journeys, and conversion funnels in your GA4 dashboard.
-                </p>
-                <a
-                    href={`https://analytics.google.com/analytics/web/#/p${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.replace('G-', '')}/reports/overview`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition text-sm font-medium"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Open GA4 Dashboard
-                </a>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                        <thead>
+                            <tr className="border-b border-white/[0.08] text-gray-400 font-semibold uppercase tracking-wider">
+                                <th className="pb-3 pr-4">Student</th>
+                                <th className="pb-3 px-4">Joined</th>
+                                <th className="pb-3 px-4">LifeFrame</th>
+                                <th className="pb-3 px-4">Videos</th>
+                                <th className="pb-3 px-4">Plan</th>
+                                <th className="pb-3 pl-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.04]">
+                            {recentUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="py-8 text-center text-gray-500">
+                                        No users registered yet
+                                    </td>
+                                </tr>
+                            ) : (
+                                recentUsers.map((user) => (
+                                    <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="py-3.5 pr-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-bold text-xs flex-shrink-0">
+                                                    {(user.full_name || 'U').charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold text-white truncate text-xs">
+                                                        {user.full_name || 'Anonymous User'}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-500 font-mono">
+                                                        {user.id.slice(0, 8)}...
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="py-3.5 px-4 text-gray-400">
+                                            {new Date(user.created_at).toLocaleDateString(undefined, {
+                                                month: 'short',
+                                                day: 'numeric',
+                                            })}
+                                        </td>
+                                        <td className="py-3.5 px-4">
+                                            {user.workbook_completed ? (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                                    ✓ Complete
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                                    In Progress
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="py-3.5 px-4">
+                                            <span className="text-gray-300 font-medium">
+                                                {user.videosWatchedCount} <span className="text-gray-500">/ 19</span>
+                                            </span>
+                                        </td>
+                                        <td className="py-3.5 px-4">
+                                            <span className="capitalize text-gray-400 text-[11px]">
+                                                {user.subscription_status}
+                                            </span>
+                                        </td>
+                                        <td className="py-3.5 pl-4 text-right">
+                                            <Link
+                                                href={`/dashboard/admin/cohorts?user=${user.id}`}
+                                                className="text-purple-400 hover:text-purple-300 font-medium text-[11px] hover:underline"
+                                            >
+                                                Inspect →
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

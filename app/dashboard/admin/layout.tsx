@@ -29,6 +29,18 @@ const NAV_ITEMS = [
         ),
     },
     {
+        href: '/dashboard/admin/cohorts',
+        label: 'Cohorts (Instructor)',
+        badge: 'New',
+        icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7" />
+            </svg>
+        ),
+    },
+    {
         href: '/dashboard/admin/workbooks',
         label: 'Workbook Stats',
         icon: (
@@ -198,7 +210,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <span className={`transition-transform duration-200 ${isActive(item) ? 'scale-110' : 'group-hover:scale-110'}`}>
                                 {item.icon}
                             </span>
-                            <span className="font-medium text-sm">{item.label}</span>
+                            <span className="font-medium text-sm flex-1">{item.label}</span>
+                            {'badge' in item && item.badge && (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${isActive(item) ? 'bg-white/20 text-white' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'}`}>
+                                    {item.badge}
+                                </span>
+                            )}
                         </Link>
                     ))}
                 </nav>
