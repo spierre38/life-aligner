@@ -112,7 +112,7 @@ export default function ResourcesPage() {
 
   // Handle video watched callback - update and re-evaluate unlock statuses
   const handleVideoWatched = useCallback(async (videoId: string) => {
-    // Update local state optimistically
+    // Update local state optimistically (instant UI feedback)
     setStatuses(prev => {
       const updated = prev.map(s => s.video.id === videoId ? { ...s, watched: true } : s);
       const watchedSet = new Set(updated.filter(s => s.watched).map(s => s.video.id));
@@ -125,8 +125,8 @@ export default function ResourcesPage() {
       });
     });
 
-    // Also trigger background server refresh to sync all completions
-    loadStatuses();
+    // Delay server refresh to let the /api/videos/watch write complete
+    setTimeout(() => loadStatuses(), 1500);
   }, [loadStatuses]);
 
   // Filtered statuses
@@ -191,10 +191,35 @@ export default function ResourcesPage() {
                     className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: `${stats.watchProgress}%`,
-                      background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
+                      background: stats.watchedCount === stats.availableCount
+                        ? 'linear-gradient(90deg, #22c55e, #14b8a6)'
+                        : 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
                     }}
                   />
                 </div>
+              </div>
+            )}
+
+            {/* 🎉 All Videos Watched Celebration */}
+            {stats.watchedCount > 0 && stats.watchedCount === stats.availableCount && (
+              <div
+                className="max-w-md mx-auto mt-6 rounded-2xl p-5 text-center"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(20,184,166,0.06))',
+                  border: '1px solid rgba(34,197,94,0.2)',
+                  animation: 'fadeInUp 0.6s ease-out',
+                }}
+              >
+                <div className="text-3xl mb-2">🎓</div>
+                <h3
+                  className="text-base font-bold mb-1"
+                  style={{ color: 'rgba(34,197,94,0.95)' }}
+                >
+                  Framework Complete!
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                  You&apos;ve watched all {stats.availableCount} videos. Now it&apos;s about putting the framework into practice — revisit any video anytime.
+                </p>
               </div>
             )}
           </div>
