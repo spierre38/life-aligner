@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import StudentDossierModal from '@/app/dashboard/admin/components/StudentDossierModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -506,8 +507,8 @@ export default function AdminUsersPage() {
 
             {/* User detail modal */}
             {selectedUser && (
-                <UserDetailModal
-                    user={selectedUser}
+                <StudentDossierModal
+                    userId={selectedUser.id}
                     onClose={() => setSelectedUser(null)}
                 />
             )}

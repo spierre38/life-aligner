@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { VIDEO_CATALOG } from '@/lib/videos';
+import StudentDossierModal from '@/app/dashboard/admin/components/StudentDossierModal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ function CohortDashboardContent() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
     const [sortField, setSortField] = useState<SortField>('progress');
-    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
     const [nudgeStudent, setNudgeStudent] = useState<Student | null>(null);
     const [copiedToast, setCopiedToast] = useState(false);
 
@@ -190,8 +191,7 @@ function CohortDashboardContent() {
             // If a user query param was passed, automatically open their inspection modal
             const targetUserId = searchParams.get('user');
             if (targetUserId) {
-                const match = aggregated.find(s => s.id === targetUserId);
-                if (match) setSelectedStudent(match);
+                setSelectedStudentId(targetUserId);
             }
         } catch (err: any) {
             console.error('Failed to load cohort data:', err);
@@ -636,7 +636,7 @@ function CohortDashboardContent() {
                                         <td className="py-4 pr-6 pl-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                    onClick={() => setSelectedStudent(student)}
+                                                    onClick={() => setSelectedStudentId(student.id)}
                                                     className="px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-purple-600 hover:text-white text-gray-300 font-semibold text-[11px] transition cursor-pointer"
                                                     title="View student breakdown"
                                                 >
@@ -662,160 +662,12 @@ function CohortDashboardContent() {
                 </div>
             </div>
 
-            {/* ─── Student Detail Modal ────────────────────────────────────────── */}
-            {selectedStudent && (
-                <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-gray-950 border border-white/[0.12] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6">
-                        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-black text-base">
-                                    {selectedStudent.fullName.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-bold text-white">{selectedStudent.fullName}</h2>
-                                    <p className="text-xs text-gray-400 font-mono">User ID: {selectedStudent.id}</p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedStudent(null)}
-                                className="p-2 text-gray-400 hover:text-white rounded-xl bg-white/[0.04] transition cursor-pointer"
-                            >
-                                ✕
-                            </button>
-                        </div>
-
-                        {/* Overall Progress Bar */}
-                        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-2">
-                            <div className="flex justify-between text-xs font-semibold">
-                                <span className="text-gray-400">Total Program Completion</span>
-                                <span className="text-purple-400">{selectedStudent.overallProgressPct}%</span>
-                            </div>
-                            <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 rounded-full"
-                                    style={{ width: `${selectedStudent.overallProgressPct}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Milestones Breakdown */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Values */}
-                            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="font-bold text-white">Step 1: Core Values</span>
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                        selectedStudent.valuesDone ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'
-                                    }`}>
-                                        {selectedStudent.valuesDone ? 'Completed' : 'Pending'}
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 pt-1">
-                                    {selectedStudent.valuesList.length > 0 ? (
-                                        selectedStudent.valuesList.map(v => (
-                                            <span key={v} className="text-[11px] px-2 py-0.5 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/20">
-                                                {v}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <p className="text-xs text-gray-500 italic">No values saved yet</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Categories */}
-                            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="font-bold text-white">Step 3: Life Categories</span>
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                        selectedStudent.categoriesDone ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-400'
-                                    }`}>
-                                        {selectedStudent.categoriesDone ? 'Completed' : 'Pending'}
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 pt-1">
-                                    {selectedStudent.categoriesList.length > 0 ? (
-                                        selectedStudent.categoriesList.map(c => (
-                                            <span key={c} className="text-[11px] px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">
-                                                {c}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <p className="text-xs text-gray-500 italic">No categories defined yet</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Videos Watched List */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300">
-                                    Framework Videos Watched ({selectedStudent.videoCount} of 19)
-                                </h3>
-                                <span className="text-xs text-purple-400 font-semibold">{selectedStudent.videoPct}% Watched</span>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1">
-                                {VIDEO_CATALOG.map(v => {
-                                    const isWatched = selectedStudent.videosWatched.includes(v.id);
-                                    return (
-                                        <div
-                                            key={v.id}
-                                            className={`flex items-center gap-2 p-2 rounded-xl text-xs border transition ${
-                                                isWatched
-                                                    ? 'bg-emerald-500/[0.08] border-emerald-500/30 text-emerald-300'
-                                                    : 'bg-white/[0.01] border-white/[0.04] text-gray-500'
-                                            }`}
-                                        >
-                                            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                                                isWatched ? 'bg-emerald-400 text-black' : 'bg-white/10 text-gray-400'
-                                            }`}>
-                                                {isWatched ? '✓' : v.number}
-                                            </span>
-                                            <span className="truncate flex-1">{v.title}</span>
-                                            <span className="text-[10px] opacity-70">{v.duration}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Roadmap Goals */}
-                        {selectedStudent.goalTitles.length > 0 && (
-                            <div className="space-y-2">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300">Active Goals</h3>
-                                <div className="space-y-1.5">
-                                    {selectedStudent.goalTitles.map((gt, i) => (
-                                        <div key={i} className="flex items-center gap-2 text-xs text-gray-300 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
-                                            <span className="text-purple-400">◉</span>
-                                            <span className="truncate">{gt}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Footer Action */}
-                        <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between">
-                            <button
-                                onClick={() => {
-                                    setSelectedStudent(null);
-                                    setNudgeStudent(selectedStudent);
-                                }}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold transition cursor-pointer"
-                            >
-                                ✉ Send Encouragement Nudge
-                            </button>
-                            <button
-                                onClick={() => setSelectedStudent(null)}
-                                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold transition cursor-pointer"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {/* ─── Granular 360° Student Dossier Modal ────────────────────────── */}
+            {selectedStudentId && (
+                <StudentDossierModal
+                    userId={selectedStudentId}
+                    onClose={() => setSelectedStudentId(null)}
+                />
             )}
 
             {/* ─── Nudge Email Template Modal ─────────────────────────────────── */}
